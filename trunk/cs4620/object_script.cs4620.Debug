@@ -1,4 +1,6 @@
 INPUT(
+./debug\World.o
+./debug\RectSplitter.o
 ./debug\Rectangle.o
 ./debug\Matrix.o
 ./debug\Point.o

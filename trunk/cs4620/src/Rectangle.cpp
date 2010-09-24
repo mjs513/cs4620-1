@@ -8,6 +8,9 @@
 #include "Rectangle.h"
 
 
+namespace Geo {
+
+
 Rectangle::Rectangle() { }
 
 Rectangle::Rectangle(const Point &origin, const Vector &size)
@@ -37,36 +40,63 @@ Rectangle& Rectangle::setSize(const Vector &size)
 	return *this;
 }
 
-const Point Rectangle::center() const
+std::pair<Rectangle,Rectangle> Rectangle::splitX(double x) const
 {
-	return _origin + 0.5*_size;
-}
-
-Rectangle& Rectangle::setCenter(const Point &center)
-{
-	_origin = center - 0.5*_size;
-
-	return *this;
-}
-
-const Vector Rectangle::offset() const
-{
-	return 0.5*_size;
-}
-
-Rectangle& Rectangle::setOffset(const Vector &offset)
-{
-	_size = 2*offset;
-
-	return *this;
-}
-
-std::pair<Rectangle,Rectangle> splitX(double x)
-{
-
-}
-
-std::pair<Rectangle,Rectangle> splitY(double x)
-{
+	std::pair<Rectangle,Rectangle> rects;
+	Vector size = this->size();
 	
+	size.x = x - this->origin().x;
+	
+	rects.first.setOrigin(this->origin());
+	rects.first.setSize(size);
+	
+	Point origin = this->origin();
+	
+	origin.x = x;
+	size.x = this->origin().x + this->size().x - x;
+	
+	rects.second.setOrigin(origin);
+	rects.second.setSize(size);
+	
+	return rects;
+}
+
+std::pair<Rectangle,Rectangle> Rectangle::splitY(double y) const
+{
+	std::pair<Rectangle,Rectangle> rects;
+	Vector size = this->size();
+	
+	size.y = y - this->origin().y;
+	
+	rects.first.setOrigin(this->origin());
+	rects.first.setSize(size);
+	
+	Point origin = this->origin();
+	
+	origin.y = y;
+	size.y = this->origin().y + this->size().y - y;
+	
+	rects.second.setOrigin(origin);
+	rects.second.setSize(size);
+	
+	return rects;
+}
+
+const Rectangle Rectangle::inset(double border) const
+{
+	Rectangle rect = *this;
+	
+	rect.setSize(rect.size() - 2*border*Vector(1,1));
+	rect.setOrigin(rect.origin() + border*Vector(1,1));
+	
+	return rect;
+}
+
+
+} // namespace Geo
+
+
+std::ostream& operator<<(std::ostream &out, const Geo::Rectangle &rect)
+{
+	return out << "[" << rect.origin() << ", " << rect.size() << "]";
 }
