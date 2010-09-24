@@ -14,6 +14,11 @@
 #include "GLWidget.h"
 #include "MainWindow.h"
 #include "OpenGL.h"
+#include "RectSplitter.h"
+#include "Color.h"
+
+#include <vector>
+#include <cstdlib>
 
 GLWidget::GLWidget(QWidget *parent)
 	: QGLWidget(parent), cameraPos(0,0,10), cameraForward(0,0,-1), cameraUp(0,1,0), cameraLeft(Vector::cross(cameraUp,cameraForward))
@@ -108,6 +113,7 @@ void GLWidget::paintGL()
 // ****** Start of example code ******
 	glCallList(axes); // Show X, Y, Z axes
 
+	/*
 	// Transform the box
 	glScalef(.5f, .5f, .5f);
 	glTranslatef(3.0f, 0.0f, 2.0f);
@@ -115,10 +121,10 @@ void GLWidget::paintGL()
 
 	glBindTexture(GL_TEXTURE_2D, boxTexture);
 	glCallList(box); // Show the box
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);*/
 // ****** End of example code ******
-
-
+	
+	world.display();
 
 	// TODO: Put your drawing here
 
@@ -219,7 +225,7 @@ void GLWidget::resizeGL(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 10, 1000);
 
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -259,7 +265,7 @@ switch (event->key())
 	case Qt::Key_D: cameraFreeMove(Vector(-1,0,0)); break;
 	case Qt::Key_Q: cameraFreeMove(Vector(0,1,0)); break;
 	case Qt::Key_Z: cameraFreeMove(Vector(0,-1,0)); break;
-
+	
 	case Qt::Key_R: setRecording(!isRecording); break;
 	//case Qt::Key_C: enableUserControl = !enableUserControl; break;
 }

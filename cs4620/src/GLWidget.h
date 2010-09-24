@@ -11,6 +11,7 @@
 #include <QtOpenGL/QGLWidget>
 #include "Vector.h"
 #include "Point.h"
+#include "World.h"
 
 #define CAMERA_MOVING_STEP 0.5
 #define MOUSE_SENSITIVITY_FACTOR 0.25
@@ -91,6 +92,8 @@ private:
 
 	bool isRecording;
 	FrameExporter* frameExporter;
+	
+	World world;
 };
 
 #endif /* GLWIDGET_H_ */

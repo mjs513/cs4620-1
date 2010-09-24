@@ -13,6 +13,9 @@
 #include "Point.h"
 
 
+namespace Geo {
+
+
 class Rectangle
 {
 public:
@@ -25,19 +28,21 @@ public:
 	const Vector size() const;
 	Rectangle& setSize(const Vector &size);
 
-	const Point center() const;
-	Rectangle& setCenter(const Point &center);
+	std::pair<Rectangle,Rectangle> splitX(double x) const;
+	std::pair<Rectangle,Rectangle> splitY(double x) const;
 
-	const Vector offset() const;
-	Rectangle& setOffset(const Vector &offset);
-
-	std::pair<Rectangle,Rectangle> splitX(double x);
-	std::pair<Rectangle,Rectangle> splitY(double x);
+	const Rectangle inset(double border) const;
 
 private:
 	Point _origin;
 	Vector _size;
 };
+
+
+} // namespace Geo
+
+
+std::ostream& operator<<(std::ostream &out, const Geo::Rectangle &rect);
 
 
 #endif /* RECTANGLE_H_ */
