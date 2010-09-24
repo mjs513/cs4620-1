@@ -1,0 +1,13 @@
+INPUT(
+./debug\Rectangle.o
+./debug\Matrix.o
+./debug\Point.o
+./debug\Vector.o
+./debug\Color.o
+./debug\OpenGL.o
+./debug\GLWidget.o
+./debug\MainWindow.o
+./debug\main.o
+./debug\moc_GLWidget.o
+./debug\moc_MainWindow.o
+);

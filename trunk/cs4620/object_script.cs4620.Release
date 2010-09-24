@@ -1,0 +1,13 @@
+INPUT(
+./release\Rectangle.o
+./release\Matrix.o
+./release\Point.o
+./release\Vector.o
+./release\Color.o
+./release\OpenGL.o
+./release\GLWidget.o
+./release\MainWindow.o
+./release\main.o
+./release\moc_GLWidget.o
+./release\moc_MainWindow.o
+);
