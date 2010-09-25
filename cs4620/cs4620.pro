@@ -3,7 +3,9 @@ TARGET = cs4620
 QT += core \
     opengl \
     gui
-HEADERS += src/World.h \
+HEADERS += src/Block.h \
+    src/Building.h \
+    src/World.h \
     src/RectSplitter.h \
     src/Rectangle.h \
     src/Matrix.h \
@@ -14,7 +16,9 @@ HEADERS += src/World.h \
     src/Pointer.h \
     src/GLWidget.h \
     src/MainWindow.h
-SOURCES += src/World.cpp \
+SOURCES += src/Block.cpp \
+    src/Building.cpp \
+    src/World.cpp \
     src/RectSplitter.cpp \
     src/Rectangle.cpp \
     src/Matrix.cpp \

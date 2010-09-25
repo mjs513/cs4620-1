@@ -1,4 +1,6 @@
 INPUT(
+./release\Block.o
+./release\Building.o
 ./release\World.o
 ./release\RectSplitter.o
 ./release\Rectangle.o

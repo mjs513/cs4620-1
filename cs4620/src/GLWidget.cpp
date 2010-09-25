@@ -71,7 +71,16 @@ void GLWidget::initializeGL()
 	cameraFreeMove(Vector(2,2,0));
 	cameraRotateY(-20.0f);
 
+	glEnable(GL_FOG);
 	
+	double minSizeCoord = world.size().x < world.size().y ? world.size().x : world.size().y;
+	
+	OpenGL::fogColor(Color(0,0,0));
+	glFogi(GL_FOG_MODE,GL_LINEAR);
+	glFogf(GL_FOG_DENSITY,1.0);
+	glFogf(GL_FOG_START,minSizeCoord*0.5);
+	glFogf(GL_FOG_END,minSizeCoord);
+	glHint(GL_FOG,GL_NICEST);
 
 	setRecording(false);
 }
@@ -182,7 +191,7 @@ void GLWidget::resizeGL(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 10, 1000);
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1, 1000);
 
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -270,20 +279,20 @@ void GLWidget::cameraFreeMove(Vector dir)
 		cameraPos += dir.x*cameraLeft + dir.y*cameraUp + dir.z*cameraForward;
 		
 		// Wrap the camera position inside the middle world tile
-		if(cameraPos.x < 0) {
-			cameraPos.x = world.size().x;
+		while(cameraPos.x < 0) {
+			cameraPos.x += world.size().x;
 		}
 		
-		if(cameraPos.y < 0) {
-			cameraPos.y = world.size().y;
+		while(cameraPos.y < 0) {
+			cameraPos.y += world.size().y;
 		}
 		
-		if(cameraPos.x > world.size().x) {
-			cameraPos.x = 0;
+		while(cameraPos.x > world.size().x) {
+			cameraPos.x -= world.size().x;
 		}
 		
-		if(cameraPos.y > world.size().y) {
-			cameraPos.y = 0;
+		while(cameraPos.y > world.size().y) {
+			cameraPos.y -= world.size().y;
 		}
 	}
 }

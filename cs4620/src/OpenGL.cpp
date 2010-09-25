@@ -34,6 +34,11 @@ void lightColor(GLenum light, GLenum param, const Color &c)
     glLightfv(light,param,c.v);
 }
 
+void fogColor(const Color &c)
+{
+	glFogfv(GL_FOG_COLOR,c.v);
+}
+
 void color(const Color &c)
 {
     glColor4fv(c.v);

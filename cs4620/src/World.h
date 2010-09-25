@@ -11,14 +11,14 @@
 
 #include <vector>
 
-#include "Rectangle.h"
+#include "Building.h"
+#include "Block.h"
 
 
 class World
 {
 private:
-	typedef std::vector<Geo::Rectangle> WorldBlock;
-	typedef std::vector<WorldBlock> WorldRow;
+	typedef std::vector<Block> WorldRow;
 	typedef std::vector<WorldRow> WorldMatrix;
 	
 public:
