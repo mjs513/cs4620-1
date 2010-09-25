@@ -72,13 +72,22 @@ const Vector World::size() const
 void World::display()
 {
 	std::srand(0);
+
+	OpenGL::color(Color(0.2,0.2,0.2));
 	
-	glBegin(GL_QUADS); {
-		for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
-			for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
-				i_row->display();
-			}
+	Geo::Rectangle base(Point(),this->size());
+
+	glPushMatrix();
+	
+	OpenGL::translate(Vector(0,0,-0.01));
+	
+	base.display();
+	
+	glPopMatrix();
+	
+	for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
+		for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
+			i_row->display();
 		}
 	}
-	glEnd();
 }

@@ -32,6 +32,8 @@ public:
 	std::pair<Rectangle,Rectangle> splitY(double y) const;
 
 	const Rectangle inset(double border) const;
+	
+	void display() const;
 
 private:
 	Point _origin;

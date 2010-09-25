@@ -54,9 +54,6 @@ void GLWidget::initializeGL()
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_COLOR_MATERIAL);
-
-	glShadeModel(GL_SMOOTH);
 
 	// Depth buffer setup
 	glClearDepth(1.0f);
@@ -71,6 +68,7 @@ void GLWidget::initializeGL()
 	cameraFreeMove(Vector(2,2,0));
 	cameraRotateY(-20.0f);
 
+	// Initialize fog
 	glEnable(GL_FOG);
 	
 	double minSizeCoord = world.size().x < world.size().y ? world.size().x : world.size().y;
@@ -81,6 +79,17 @@ void GLWidget::initializeGL()
 	glFogf(GL_FOG_START,minSizeCoord*0.5);
 	glFogf(GL_FOG_END,minSizeCoord);
 	glHint(GL_FOG,GL_NICEST);
+
+	// Initialize lighting
+    glEnable(GL_LIGHTING);
+    glEnable(GL_COLOR_MATERIAL);
+	glShadeModel(GL_SMOOTH);
+    
+    glEnable(GL_LIGHT0);
+
+    OpenGL::lightColor(GL_LIGHT0,GL_AMBIENT,Color(0.2,0.2,0.2));
+    OpenGL::lightColor(GL_LIGHT0,GL_DIFFUSE,Color(1,1,1));
+    OpenGL::lightColor(GL_LIGHT0,GL_SPECULAR,Color(1,1,1));
 
 	setRecording(false);
 }
@@ -103,6 +112,9 @@ void GLWidget::paintGL()
 	// Position the camera
 	OpenGL::lookAt(cameraPos,cameraForward,cameraUp);
 
+	// Place the light
+    OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
+    
 	// Total of 9 tiles are drawn, so the camera is always surrounded by an intinitely repeating world
 	Vector tiles[] = {
 			Vector(0,0),Vector(0,1),Vector(1,0),Vector(1,1),Vector(0,-1),Vector(-1,0),Vector(-1,-1),Vector(1,-1),Vector(-1,1)
