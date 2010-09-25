@@ -61,27 +61,20 @@ protected slots:
 	void animate();
 
 private:
-	void buildAxesLines();
-	void buildBox();
-
 	void cameraRotateX(double angle);
 	void cameraRotateY(double angle);
 
 	void cameraFreeMove(Vector dir);
 	void cameraGameMove(double dx, double dy, double dz);
 
-	void loadTextures();
 	void setRecording(bool state);
 
 private:
+	World world;
+	
 	// Camera position up/left/right vectors
 	Point cameraPos;
 	Vector cameraForward, cameraUp, cameraLeft;
-
-	GLuint	box;
-	GLuint axes;
-	double boxRotAngle; // Box rotation angle (used for animation)
-	GLuint boxTexture;
 
 	QTimer* animationTimer; // Used to call our animation routine
 	QTime* fpsTime; // Measure time interval between 2 fully drawn frames
@@ -92,8 +85,6 @@ private:
 
 	bool isRecording;
 	FrameExporter* frameExporter;
-	
-	World world;
 };
 
 #endif /* GLWIDGET_H_ */

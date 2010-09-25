@@ -24,6 +24,8 @@ private:
 public:
 	World();
 	
+	const Vector size() const;
+	
 	void display();
 	
 private:
