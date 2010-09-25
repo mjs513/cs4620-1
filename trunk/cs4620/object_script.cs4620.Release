@@ -1,4 +1,7 @@
 INPUT(
+./release\Plane.o
+./release\Frustum.o
+./release\Random.o
 ./release\Block.o
 ./release\Building.o
 ./release\World.o
