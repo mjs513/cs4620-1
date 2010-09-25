@@ -31,4 +31,3 @@ SOURCES += src/Block.cpp \
     src/main.cpp
 FORMS += cs4620.ui
 RESOURCES += 
-
