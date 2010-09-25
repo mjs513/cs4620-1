@@ -25,6 +25,8 @@ void lightPosition(GLenum light, const Point &p);
 
 void lightColor(GLenum light, GLenum param, const Color &c);
 
+void fogColor(const Color &c);
+
 void color(const Color &c);
 void clearColor(const Color &c);
 

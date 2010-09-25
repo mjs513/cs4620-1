@@ -15,7 +15,7 @@
 
 World::World()
 {
-	int nrows = 1,ncols = 1;
+	int nrows = 5,ncols = 5;
 	
 	// Define blocks size.height
 	for(int i = 0; i < nrows; ++i) {
@@ -43,9 +43,9 @@ World::World()
 		double x = 0;
 		
 		for(int j = 0; j < ncols; ++j) {
-			Geo::Rectangle block = Geo::Rectangle(Point(x,y),Vector(_colWidths[j],_rowHeights[i]));
+			Geo::Rectangle blockRect = Geo::Rectangle(Point(x,y),Vector(_colWidths[j],_rowHeights[i])).inset(6);
 			
-			row.push_back(splitter.split(block.inset(3)));
+			row.push_back(Block(blockRect,splitter));
 			
 			x += _colWidths[j];
 		}
@@ -74,24 +74,9 @@ void World::display()
 	std::srand(0);
 	
 	glBegin(GL_QUADS); {
-		for(WorldMatrix::const_iterator i = _blockMatrix.begin(); i != _blockMatrix.end(); ++i) {
-			for(WorldRow::const_iterator j = i->begin(); j != i->end(); ++j) {
-				for(WorldBlock::const_iterator i_rect = j->begin(); i_rect != j->end(); ++i_rect) {
-					Color c;
-					
-					for(int j = 0; j < 3; ++j) {
-						c.v[j] = 0.5 + 0.5*float(rand())/RAND_MAX;
-					}
-					
-					OpenGL::color(c);
-					
-					const Geo::Rectangle &rect = *i_rect;
-	
-					OpenGL::vertex(rect.origin());
-					OpenGL::vertex(rect.origin() + Vector(rect.size().x,0));
-					OpenGL::vertex(rect.origin() + rect.size());
-					OpenGL::vertex(rect.origin() + Vector(0,rect.size().y));
-				}
+		for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
+			for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
+				i_row->display();
 			}
 		}
 	}
