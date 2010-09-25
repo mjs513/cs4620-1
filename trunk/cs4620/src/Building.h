@@ -25,6 +25,7 @@ public:
 private:
 	Geo::Rectangle _base;
 	double _height;
+	int _numberOfFloors,_numberOfColumnsX,_numberOfColumnsY;
 };
 
 #endif /* BUILDING_H_ */

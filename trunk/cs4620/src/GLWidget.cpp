@@ -19,6 +19,8 @@
 
 #include <vector>
 #include <cstdlib>
+#include <iostream>
+
 
 GLWidget::GLWidget(QWidget *parent)
 	: QGLWidget(parent), cameraPos(0.5*world.size() + Point() + Vector(0,0,10)), cameraForward(0,1,0), cameraUp(0,0,1),
@@ -54,20 +56,20 @@ void GLWidget::initializeGL()
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	glEnable(GL_TEXTURE_2D);
-
+	
 	// Depth buffer setup
 	glClearDepth(1.0f);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_DEPTH_TEST);
-
+	
 	glEnable(GL_CULL_FACE);
-
+	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
+	
 	// Set initial position for the camera
 	cameraFreeMove(Vector(2,2,0));
 	cameraRotateY(-20.0f);
-
+	
 	// Initialize fog
 	glEnable(GL_FOG);
 	
@@ -79,18 +81,18 @@ void GLWidget::initializeGL()
 	glFogf(GL_FOG_START,minSizeCoord*0.5);
 	glFogf(GL_FOG_END,minSizeCoord);
 	glHint(GL_FOG,GL_NICEST);
-
+	
 	// Initialize lighting
     glEnable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
 	glShadeModel(GL_SMOOTH);
     
     glEnable(GL_LIGHT0);
-
+    
     OpenGL::lightColor(GL_LIGHT0,GL_AMBIENT,Color(0.2,0.2,0.2));
     OpenGL::lightColor(GL_LIGHT0,GL_DIFFUSE,Color(1,1,1));
     OpenGL::lightColor(GL_LIGHT0,GL_SPECULAR,Color(1,1,1));
-
+    
 	setRecording(false);
 }
 
@@ -104,6 +106,9 @@ void GLWidget::animate()
 
 void GLWidget::paintGL()
 {
+	static int fps = 0;
+	static QTime time = QTime::currentTime();
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -139,6 +144,18 @@ void GLWidget::paintGL()
 
 	if(isRecording) { // Save frame to disk, if recording is enabled
 		frameExporter->writeFrame(grabFrameBuffer());
+	}
+	
+	++fps;
+	
+	QTime now = QTime::currentTime();
+	int elapsed = time.msecsTo(now);
+	
+	if(elapsed > 1000) {
+		std::cout << "FPS: " << fps << std::endl;
+		
+		time = now;
+		fps = 0;
 	}
 }
 /*
