@@ -6,6 +6,7 @@
  */
 
 #include "Rectangle.h"
+#include "OpenGL.h"
 
 
 namespace Geo {
@@ -90,6 +91,19 @@ const Rectangle Rectangle::inset(double border) const
 	rect.setOrigin(rect.origin() + border*Vector(1,1));
 	
 	return rect;
+}
+
+void Rectangle::display() const
+{
+	glBegin(GL_QUADS); {
+		OpenGL::normal(Vector(0,0,1));
+		
+		OpenGL::vertex(_origin);
+		OpenGL::vertex(_origin + Vector(_size.x,0));
+		OpenGL::vertex(_origin + _size);
+		OpenGL::vertex(_origin + Vector(0,_size.y));
+	}
+	glEnd();
 }
 
 
