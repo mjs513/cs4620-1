@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "Color.h"
 #include "OpenGL.h"
+#include "Random.h"
 
 #include <cstdlib>
 
@@ -33,10 +34,11 @@ void Block::display()
 		
 		_base.display();
 		
+		RandomDouble drand(0.15,0.85);
 		Color c;
 		
 		for(int j = 0; j < 3; ++j) {
-			c.v[j] = 0.15 + 0.7*float(rand())/RAND_MAX;
+			c.v[j] = drand.rand();
 		}
 		
 		OpenGL::color(c);

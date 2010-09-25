@@ -27,6 +27,8 @@ public:
 
 	const Vector size() const;
 	Rectangle& setSize(const Vector &size);
+	
+	double area() const;
 
 	std::pair<Rectangle,Rectangle> splitX(double x) const;
 	std::pair<Rectangle,Rectangle> splitY(double y) const;

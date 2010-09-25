@@ -7,12 +7,39 @@
 
 #include "Building.h"
 #include "OpenGL.h"
+#include "Random.h"
 
 #include <cstdlib>
+#include <cstdio>
 
 
 Building::Building(const Geo::Rectangle &base, double height)
-	: _base(base), _height(height > 0 ? height : 10 + 50*double(std::rand())/RAND_MAX) { }
+	: _base(base)
+{
+	if(height > 0) {
+		_height = height;
+	}
+	else {
+		RandomDouble drand;
+		double r = drand.rand();
+		
+		if(r < 0.3) {
+			RandomNormal nrand(20,10);
+			
+			_height = nrand.rand();
+		}
+		else if(r < 0.98) {
+			RandomNormal nrand(50,30);
+			
+			_height = nrand.rand();
+		}
+		else {
+			RandomNormal nrand(90,40);
+			
+			_height = nrand.rand();
+		}
+	}
+}
 
 const Geo::Rectangle& Building::base() const
 {
@@ -32,13 +59,6 @@ void Building::display()
 	OpenGL::scale(0.5*(_base.size() + Vector(0,0,_height)));
 	
 	glBegin(GL_QUADS); {
-		// Bottom face
-		OpenGL::normal(Vector(0,-1,0));
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-
 		// Front Face
 		OpenGL::normal(Vector(0,0,1));
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
@@ -73,6 +93,7 @@ void Building::display()
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
 		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+		
 	}
 	glEnd();
 	

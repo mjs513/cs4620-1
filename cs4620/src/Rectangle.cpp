@@ -41,6 +41,11 @@ Rectangle& Rectangle::setSize(const Vector &size)
 	return *this;
 }
 
+double Rectangle::area() const
+{
+	return size().x*size().y;
+}
+
 std::pair<Rectangle,Rectangle> Rectangle::splitX(double x) const
 {
 	std::pair<Rectangle,Rectangle> rects;
