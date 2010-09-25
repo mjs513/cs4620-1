@@ -29,7 +29,7 @@ public:
 	Rectangle& setSize(const Vector &size);
 
 	std::pair<Rectangle,Rectangle> splitX(double x) const;
-	std::pair<Rectangle,Rectangle> splitY(double x) const;
+	std::pair<Rectangle,Rectangle> splitY(double y) const;
 
 	const Rectangle inset(double border) const;
 

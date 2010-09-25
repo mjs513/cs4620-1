@@ -15,12 +15,14 @@
 
 World::World()
 {
-	int nrows = std::rand()%10 + 5,ncols = std::rand()%10 + 5;
+	int nrows = 1,ncols = 1;
 	
+	// Define blocks size.height
 	for(int i = 0; i < nrows; ++i) {
 		_rowHeights.push_back(80 + 100*double(std::rand())/RAND_MAX);
 	}
 	
+	// Define blocks size.width
 	for(int i = 0; i < ncols; ++i) {
 		_colWidths.push_back(80 + 100*double(std::rand())/RAND_MAX);
 	}
@@ -41,15 +43,30 @@ World::World()
 		double x = 0;
 		
 		for(int j = 0; j < ncols; ++j) {
-			Vector size(_colWidths[j],_rowHeights[i]);
+			Geo::Rectangle block = Geo::Rectangle(Point(x,y),Vector(_colWidths[j],_rowHeights[i]));
 			
-			row.push_back(splitter.split(Geo::Rectangle(Point(x,y),size)));
+			row.push_back(splitter.split(block.inset(3)));
 			
-			x += _colWidths[i];
+			x += _colWidths[j];
 		}
 		
 		y += _rowHeights[i];
 	}
+}
+
+const Vector World::size() const
+{
+	Vector size;
+
+	for(std::vector<double>::const_iterator i = _colWidths.begin(); i != _colWidths.end(); ++i) {
+		size.x += *i;
+	}
+
+	for(std::vector<double>::const_iterator i = _rowHeights.begin(); i != _rowHeights.end(); ++i) {
+		size.y += *i;
+	}
+	
+	return size;
 }
 
 void World::display()

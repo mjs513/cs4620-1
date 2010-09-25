@@ -21,9 +21,9 @@
 #include <cstdlib>
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), cameraPos(0,0,10), cameraForward(0,0,-1), cameraUp(0,1,0), cameraLeft(Vector::cross(cameraUp,cameraForward))
+	: QGLWidget(parent), cameraPos(0.5*world.size() + Point() + Vector(0,0,10)), cameraForward(0,1,0), cameraUp(0,0,1),
+	  cameraLeft(Vector::cross(cameraUp,cameraForward))
 {
-	boxRotAngle = 0;
 	frameExporter = 0;
 	enableUserControl = true;
 	isRecording = false;
@@ -34,11 +34,8 @@ GLWidget::GLWidget(QWidget *parent)
 	animationTimer->start(ANIMATION_TIME_MS);
 }
 
-GLWidget::~GLWidget() {
-	glDeleteLists(box, 1);
-	glDeleteLists(axes, 1);
-	glDeleteTextures(1, &boxTexture);
-
+GLWidget::~GLWidget()
+{
 	delete animationTimer;
 }
 
@@ -55,9 +52,7 @@ QSize GLWidget::sizeHint() const
 void GLWidget::initializeGL()
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-	loadTextures(); // Load textures
-
+	
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_COLOR_MATERIAL);
 
@@ -76,27 +71,16 @@ void GLWidget::initializeGL()
 	cameraFreeMove(Vector(2,2,0));
 	cameraRotateY(-20.0f);
 
-// ****** Start of example code ******
-	buildBox();
-	buildAxesLines();
-// ****** End of example code ******
+	
 
 	setRecording(false);
 }
 
 // This routine will be called 25 times per second, you
 // can tweak this parameter by changing ANIMATION_TIME_MS
-void GLWidget::animate() {
-
-	// TODO: Update your animation here
-
-// ****** Start of example code ******
-	boxRotAngle += BOX_ROTATION_SPEED;
-	if (boxRotAngle > 360) {
-		boxRotAngle = (int)boxRotAngle % 360;
-	}
-// ****** End of example code ******
-
+void GLWidget::animate()
+{
+	
 	updateGL();
 }
 
@@ -110,60 +94,33 @@ void GLWidget::paintGL()
 	// Position the camera
 	OpenGL::lookAt(cameraPos,cameraForward,cameraUp);
 
-// ****** Start of example code ******
-	glCallList(axes); // Show X, Y, Z axes
-
-	/*
-	// Transform the box
-	glScalef(.5f, .5f, .5f);
-	glTranslatef(3.0f, 0.0f, 2.0f);
-	glRotatef(boxRotAngle, 0.0f, 1.0f, 0.0f);
-
-	glBindTexture(GL_TEXTURE_2D, boxTexture);
-	glCallList(box); // Show the box
-	glBindTexture(GL_TEXTURE_2D, 0);*/
-// ****** End of example code ******
+	// Total of 9 tiles are drawn, so the camera is always surrounded by an intinitely repeating world
+	Vector tiles[] = {
+			Vector(0,0),Vector(0,1),Vector(1,0),Vector(1,1),Vector(0,-1),Vector(-1,0),Vector(-1,-1),Vector(1,-1),Vector(-1,1)
+	};
 	
-	world.display();
-
-	// TODO: Put your drawing here
-
-
-
+	for(unsigned int i = 0; i < sizeof(tiles)/sizeof(tiles[0]); ++i) {
+		glPushMatrix();
+		
+		Vector offset(world.size().x*tiles[i].x,world.size().y*tiles[i].y);
+		
+		OpenGL::translate(offset);
+		
+		world.display();
+		
+		glPopMatrix();
+	}
+	
+	// Commands below removed because of Windows flickering issues
+	
 	//glFlush(); // Send the commands to the OpenGL state machine
 	//this->swapBuffers(); // Display the off-screen rendered buffer
 
-	if (isRecording) { // Save frame to disk, if recording is enabled
+	if(isRecording) { // Save frame to disk, if recording is enabled
 		frameExporter->writeFrame(grabFrameBuffer());
 	}
 }
-
-void GLWidget::buildAxesLines() {
-	axes = glGenLists(1);
-
-	glNewList(axes, GL_COMPILE);
-
-	glPushMatrix();
-
-	glBegin(GL_LINES);
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glVertex3f(0.0, 0.0, 0.0);
-		glVertex3f(3.0, 0.0, 0.0);
-
-		glColor3f(0.0f, 1.0f, 0.0f);
-		glVertex3f(0.0, 0.0, 0.0);
-		glVertex3f(0.0, 3.0, 0.0);
-
-		glColor3f(0.0f, 0.0f, 1.0f);
-		glVertex3f(0.0, 0.0, 0.0);
-		glVertex3f(0.0, 0.0, 3.0);
-	glEnd();
-
-	glPopMatrix();
-
-	glEndList();
-}
-
+/*
 void GLWidget::buildBox() {
 	box = glGenLists(1);
 
@@ -213,7 +170,7 @@ void GLWidget::buildBox() {
 	glEnd();
 	glPopMatrix();
 	glEndList();
-}
+}*/
 
 void GLWidget::resizeGL(int width, int height)
 {
@@ -230,8 +187,7 @@ void GLWidget::resizeGL(int width, int height)
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void GLWidget::mousePressEvent(QMouseEvent*) {
-}
+void GLWidget::mousePressEvent(QMouseEvent*) { }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
@@ -255,25 +211,25 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	lastPos = event->pos();
 }
 
-void GLWidget::keyPressEvent(QKeyEvent * event) {
-
-switch (event->key())
+void GLWidget::keyPressEvent(QKeyEvent * event)
 {
-	case Qt::Key_W: cameraFreeMove(Vector(0,0,1)); break;
-	case Qt::Key_S: cameraFreeMove(Vector(0,0,-1)); break;
-	case Qt::Key_A: cameraFreeMove(Vector(1,0,0)); break;
-	case Qt::Key_D: cameraFreeMove(Vector(-1,0,0)); break;
-	case Qt::Key_Q: cameraFreeMove(Vector(0,1,0)); break;
-	case Qt::Key_Z: cameraFreeMove(Vector(0,-1,0)); break;
+	switch (event->key()) {
+		case Qt::Key_W: cameraFreeMove(Vector(0,0,1)); break;
+		case Qt::Key_S: cameraFreeMove(Vector(0,0,-1)); break;
+		case Qt::Key_A: cameraFreeMove(Vector(1,0,0)); break;
+		case Qt::Key_D: cameraFreeMove(Vector(-1,0,0)); break;
+		case Qt::Key_Q: cameraFreeMove(Vector(0,1,0)); break;
+		case Qt::Key_Z: cameraFreeMove(Vector(0,-1,0)); break;
+		
+		case Qt::Key_R: setRecording(!isRecording); break;
+		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
+	}
 	
-	case Qt::Key_R: setRecording(!isRecording); break;
-	//case Qt::Key_C: enableUserControl = !enableUserControl; break;
+	update(); // update the screen
 }
 
-update(); // update the screen
-}
-
-void GLWidget::cameraRotateX(double theta) {
+void GLWidget::cameraRotateX(double theta)
+{
 	// X' = X
 
 	// Z' = -sin(theta) * Y + cos(theta) * Z
@@ -289,7 +245,8 @@ void GLWidget::cameraRotateX(double theta) {
 	cameraLeft.normalize();
 }
 
-void GLWidget::cameraRotateY(double theta) {
+void GLWidget::cameraRotateY(double theta)
+{
 	// Y` = Y
 
 	// Z` = sin(theta) + cos(theta) * Z
@@ -305,14 +262,32 @@ void GLWidget::cameraRotateY(double theta) {
 	cameraLeft.normalize();
 }
 
-void GLWidget::cameraFreeMove(Vector dir) {
+void GLWidget::cameraFreeMove(Vector dir)
+{
 	dir *= CAMERA_MOVING_STEP;
 
 	if(enableUserControl) {
 		cameraPos += dir.x*cameraLeft + dir.y*cameraUp + dir.z*cameraForward;
+		
+		// Wrap the camera position inside the middle world tile
+		if(cameraPos.x < 0) {
+			cameraPos.x = world.size().x;
+		}
+		
+		if(cameraPos.y < 0) {
+			cameraPos.y = world.size().y;
+		}
+		
+		if(cameraPos.x > world.size().x) {
+			cameraPos.x = 0;
+		}
+		
+		if(cameraPos.y > world.size().y) {
+			cameraPos.y = 0;
+		}
 	}
 }
-
+/*
 void GLWidget::loadTextures() {
 	QImage box_image;
 
@@ -331,7 +306,7 @@ void GLWidget::loadTextures() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 // ****** End of example code ******
 
-}
+}*/
 
 void GLWidget::setRecording(bool state) {
 	isRecording = state;
