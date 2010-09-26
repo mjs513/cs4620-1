@@ -10,13 +10,14 @@
 
 
 #include "Rectangle.h"
+#include "OpenGL.h"
 #include "Displayable.h"
 
 
 class Building : public Displayable
 {
 public:
-	Building(const Geo::Rectangle &base, double height = 0);
+	Building(const Geo::Rectangle &base, GLuint texture = NULL);
 
 	const Geo::Rectangle& base() const;
 	double height() const;
@@ -24,11 +25,16 @@ public:
 	void draw(const Frustum &frustum);
 	
 	bool testFrustum() const;
-	
+
+	void loadTextures();
+	GLuint _buildingWallTexture;
+
 private:
 	Geo::Rectangle _base;
 	double _height;
 	int _numberOfFloors,_numberOfColumnsX,_numberOfColumnsY;
+
+	GLuint _texture;
 };
 
 #endif /* BUILDING_H_ */

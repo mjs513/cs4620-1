@@ -20,7 +20,7 @@
 class Block : public Displayable
 {
 public:
-	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter);
+	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint);
 
 	void draw(const Frustum &frustum);
 
