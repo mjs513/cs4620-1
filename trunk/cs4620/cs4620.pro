@@ -3,7 +3,8 @@ TARGET = cs4620
 QT += core \
     opengl \
     gui
-HEADERS += src/Displayable.h \
+HEADERS += src/TexturePool.h \
+    src/Displayable.h \
     src/BoundingSphere.h \
     src/Plane.h \
     src/Frustum.h \
@@ -21,7 +22,8 @@ HEADERS += src/Displayable.h \
     src/Pointer.h \
     src/GLWidget.h \
     src/MainWindow.h
-SOURCES += src/Displayable.cpp \
+SOURCES += src/TexturePool.cpp \
+    src/Displayable.cpp \
     src/BoundingSphere.cpp \
     src/Plane.cpp \
     src/Frustum.cpp \

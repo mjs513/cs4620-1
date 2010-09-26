@@ -32,12 +32,13 @@ public:
 	void draw(const Frustum &frustum);
 	
 	bool testFrustum() const;
+
+private:
+	void _loadTextures();
 	
 private:
 	std::vector<double> _rowHeights,_colWidths;
 	WorldMatrix _blockMatrix;
-
-	void loadTextures();
 };
 
 

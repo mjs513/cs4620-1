@@ -57,6 +57,8 @@ void Building::draw(const Frustum &frustum)
 	OpenGL::translate(_base.origin() + 0.5*(_base.size() + Vector(0,0,_height)));
 	OpenGL::scale(0.5*(_base.size() + Vector(0,0,_height)));
 	
+	//glBindTexture(GL_TEXTURE_2D,_texture);
+	
 	glBegin(GL_QUADS); {
 		// Back Face
 		OpenGL::normal(Vector(0,-1,0));

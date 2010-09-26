@@ -20,7 +20,8 @@
 class Block : public Displayable
 {
 public:
-	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint);
+	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint texture);
+	~Block();
 
 	void draw(const Frustum &frustum);
 
@@ -29,6 +30,7 @@ public:
 private:
 	Geo::Rectangle _base;
 	std::vector<Building> _buildings;
+	GLuint _displayList;
 };
 
 
