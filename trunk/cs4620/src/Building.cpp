@@ -13,31 +13,28 @@
 #include <cstdio>
 
 
-Building::Building(const Geo::Rectangle &base, double height)
+Building::Building(const Geo::Rectangle &base, GLuint texture)
 	: _base(base)
 {
-	if(height > 0) {
-		_height = height;
+	_texture = texture;
+
+	RandomDouble drand;
+	double r = drand.rand();
+
+	if(r < 0.3) {
+		RandomNormal nrand(20,10);
+
+		_height = nrand.rand();
+	}
+	else if(r < 0.98) {
+		RandomNormal nrand(50,30);
+
+		_height = nrand.rand();
 	}
 	else {
-		RandomDouble drand;
-		double r = drand.rand();
+		RandomNormal nrand(90,40);
 		
-		if(r < 0.3) {
-			RandomNormal nrand(20,10);
-			
-			_height = nrand.rand();
-		}
-		else if(r < 0.98) {
-			RandomNormal nrand(50,30);
-			
-			_height = nrand.rand();
-		}
-		else {
-			RandomNormal nrand(90,40);
-			
-			_height = nrand.rand();
-		}
+		_height = nrand.rand();
 	}
 	
 	setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));

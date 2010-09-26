@@ -110,7 +110,7 @@ void World::loadTextures() {
 		buildingWall_image = QGLWidget::convertToGLFormat(buildingWall_image);
 		glGenTextures(1, &_buildingWallTexture);
 		glBindTexture(GL_TEXTURE_2D, _buildingWallTexture);
-		printf("%d\n", _buildingWallTexture);
+		printf("World::loadTextures: _buildingWallTexture = %d\n", _buildingWallTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, buildingWall_image.width(), buildingWall_image.height(), 0,
 				GL_RGBA, GL_UNSIGNED_BYTE, buildingWall_image.bits());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
