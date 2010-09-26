@@ -13,9 +13,10 @@
 
 #include "Building.h"
 #include "Block.h"
+#include "Displayable.h"
 
 
-class World
+class World : public Displayable
 {
 private:
 	typedef std::vector<Block> WorldRow;
@@ -26,7 +27,9 @@ public:
 	
 	const Vector size() const;
 	
-	void display();
+	void draw(const Frustum &frustum);
+	
+	bool testFrustum() const;
 	
 private:
 	std::vector<double> _rowHeights,_colWidths;

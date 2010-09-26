@@ -39,6 +39,8 @@ Building::Building(const Geo::Rectangle &base, double height)
 			_height = nrand.rand();
 		}
 	}
+	
+	setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));
 }
 
 const Geo::Rectangle& Building::base() const
@@ -51,7 +53,7 @@ double Building::height() const
 	return _height;
 }
 
-void Building::display()
+void Building::draw(const Frustum &frustum)
 {
 	glPushMatrix();
 	
@@ -59,19 +61,19 @@ void Building::display()
 	OpenGL::scale(0.5*(_base.size() + Vector(0,0,_height)));
 	
 	glBegin(GL_QUADS); {
-		// Front Face
+		// Back Face
+		OpenGL::normal(Vector(0,-1,0));
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+		
+		// Top Face
 		OpenGL::normal(Vector(0,0,1));
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
 		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
 		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-
-		// Back Face
-		OpenGL::normal(Vector(0,0,-1));
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
 
 		// Right face
 		OpenGL::normal(Vector(-1,0,0));
@@ -87,7 +89,7 @@ void Building::display()
 		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
 
-		// Top Face
+		// Front Face
 		OpenGL::normal(Vector(0,1,0));
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
@@ -98,4 +100,9 @@ void Building::display()
 	glEnd();
 	
 	glPopMatrix();
+}
+
+bool Building::testFrustum() const
+{
+	return false;
 }

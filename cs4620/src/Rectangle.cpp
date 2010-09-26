@@ -98,7 +98,7 @@ const Rectangle Rectangle::inset(double border) const
 	return rect;
 }
 
-void Rectangle::display() const
+void Rectangle::draw() const
 {
 	glBegin(GL_QUADS); {
 		OpenGL::normal(Vector(0,0,1));

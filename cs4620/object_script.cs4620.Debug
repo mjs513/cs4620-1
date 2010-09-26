@@ -1,4 +1,6 @@
 INPUT(
+./debug\Displayable.o
+./debug\BoundingSphere.o
 ./debug\Plane.o
 ./debug\Frustum.o
 ./debug\Random.o

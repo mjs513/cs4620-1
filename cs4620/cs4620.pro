@@ -3,7 +3,9 @@ TARGET = cs4620
 QT += core \
     opengl \
     gui
-HEADERS += src/Plane.h \
+HEADERS += src/Displayable.h \
+    src/BoundingSphere.h \
+    src/Plane.h \
     src/Frustum.h \
     src/Random.h \
     src/Block.h \
@@ -19,7 +21,9 @@ HEADERS += src/Plane.h \
     src/Pointer.h \
     src/GLWidget.h \
     src/MainWindow.h
-SOURCES += src/Plane.cpp \
+SOURCES += src/Displayable.cpp \
+    src/BoundingSphere.cpp \
+    src/Plane.cpp \
     src/Frustum.cpp \
     src/Random.cpp \
     src/Block.cpp \

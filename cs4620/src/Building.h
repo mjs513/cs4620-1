@@ -10,9 +10,10 @@
 
 
 #include "Rectangle.h"
+#include "Displayable.h"
 
 
-class Building
+class Building : public Displayable
 {
 public:
 	Building(const Geo::Rectangle &base, double height = 0);
@@ -20,7 +21,9 @@ public:
 	const Geo::Rectangle& base() const;
 	double height() const;
 	
-	void display();
+	void draw(const Frustum &frustum);
+	
+	bool testFrustum() const;
 	
 private:
 	Geo::Rectangle _base;

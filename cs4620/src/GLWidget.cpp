@@ -16,6 +16,7 @@
 #include "OpenGL.h"
 #include "RectSplitter.h"
 #include "Color.h"
+#include "Frustum.h"
 
 #include <vector>
 #include <cstdlib>
@@ -115,8 +116,9 @@ void GLWidget::paintGL()
 	glLoadIdentity();
 
 	// Position the camera
-	OpenGL::lookAt(cameraPos,cameraForward,cameraUp);
-
+	//OpenGL::lookAt(cameraPos,cameraForward,cameraUp);
+	frustum.applyCamera(cameraPos,cameraForward,cameraUp);
+	
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
     
@@ -132,7 +134,7 @@ void GLWidget::paintGL()
 		
 		OpenGL::translate(offset);
 		
-		world.display();
+		world.display(frustum);
 		
 		glPopMatrix();
 	}
@@ -220,8 +222,12 @@ void GLWidget::resizeGL(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1, 1000);
+	//gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1, 1000);
 
+	frustum.setProperties(45,double(width)/height,1,1000);
+	
+	frustum.setPerspective();
+	
 	glMatrixMode(GL_MODELVIEW);
 }
 

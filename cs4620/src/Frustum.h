@@ -10,14 +10,21 @@
 
 
 #include "Plane.h"
+#include "BoundingSphere.h"
 
 
 class Frustum
 {
 public:
-	Frustum(double fieldOfViewY, double aspectRatio, double zNear, double zFar);
+	Frustum();
+
+	void setProperties(double fieldOfViewY, double aspectRatio, double zNear, double zFar);
 	
 	void setPerspective() const;
+	
+	void applyCamera(const Point &position, const Vector &front, const Vector &up);
+	
+	bool includes(BoundingSphere sphere) const;
 	
 private:
 	double _fovy,_aspect,_zNear,_zFar;
