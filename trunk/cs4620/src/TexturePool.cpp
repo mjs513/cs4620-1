@@ -20,13 +20,9 @@ TexturePool::TexturePool()
 	for(int i = 0; i <= 4; ++i) {
 		std::string name = "wallTexture";
 		name += i;
-		name += ".jpg";
+		name += ".bmp";
 		
-		QImage image;
-		
-		if(!image.load(name.c_str())) {
-			image = QImage(512,512,QImage::Format_RGB32);
-		}
+		QImage image(name.c_str());
 
 		image = QGLWidget::convertToGLFormat(image);
 		
