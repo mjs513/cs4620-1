@@ -17,12 +17,16 @@
 class TexturePool
 {
 public:
+	TexturePool();
 	
+	GLuint getRandomWall() const;
+	GLuint getRandomWindow() const;
+	GLuint getRoad() const;
 	
 private:
-	std::vector<GLuint> _wallTextures;
-	std::vector<GLuint> _windowTextures;
-	GLuint _roadTexture;
+	std::vector<GLuint> _walls;
+	std::vector<GLuint> _windows;
+	GLuint _road;
 };
 
 
