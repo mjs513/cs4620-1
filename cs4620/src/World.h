@@ -13,6 +13,7 @@
 
 #include "Block.h"
 #include "Displayable.h"
+#include "OpenGL.h"
 
 
 class World : public Displayable

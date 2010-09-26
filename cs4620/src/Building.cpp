@@ -10,7 +10,7 @@
 #include "Random.h"
 
 #include <cstdlib>
-#include <cstdio>
+#include <iostream>
 
 
 Building::Building(const Geo::Rectangle &base, GLuint texture)

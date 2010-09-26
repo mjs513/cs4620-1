@@ -70,14 +70,12 @@ private:
 	void setRecording(bool state);
 
 private:
-	World world;
+	World *world;
 	
 	// Camera position up/left/right vectors
 	Point cameraPos;
 	Vector cameraForward, cameraUp, cameraLeft;
 	
-	Frustum frustum;
-
 	QTimer* animationTimer; // Used to call our animation routine
 	QTime* fpsTime; // Measure time interval between 2 fully drawn frames
 						  // we will use this to create frame-independent animation

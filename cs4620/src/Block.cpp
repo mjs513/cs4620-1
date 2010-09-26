@@ -25,6 +25,8 @@ Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint tex
 		
 		_buildings.push_back(Building(base, texture));
 	}
+	
+	setBoundingSphere(BoundingSphere::createWithAABox(_base.origin(),_base.origin() + _base.size()));
 }
 
 void Block::draw(const Frustum &frustum)
