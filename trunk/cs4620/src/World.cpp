@@ -52,6 +52,8 @@ World::World()
 		
 		y += _rowHeights[i];
 	}
+	
+	setBoundingSphere(BoundingSphere::createWithAABox(Point(),Point() + size()));
 }
 
 const Vector World::size() const
@@ -69,7 +71,7 @@ const Vector World::size() const
 	return size;
 }
 
-void World::display()
+void World::draw(const Frustum &frustum)
 {
 	std::srand(0);
 
@@ -81,13 +83,18 @@ void World::display()
 	
 	OpenGL::translate(Vector(0,0,-0.01));
 	
-	base.display();
+	base.draw();
 	
 	glPopMatrix();
 	
 	for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
 		for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
-			i_row->display();
+			i_row->display(frustum);
 		}
 	}
+}
+
+bool World::testFrustum() const
+{
+	return false;
 }

@@ -35,7 +35,7 @@ public:
 
 	const Rectangle inset(double border) const;
 	
-	void display() const;
+	void draw() const;
 
 private:
 	Point _origin;

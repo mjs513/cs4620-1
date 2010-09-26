@@ -25,14 +25,16 @@ Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter)
 		
 		_buildings.push_back(Building(base));
 	}
+	
+	setBoundingSphere(BoundingSphere::createWithAABox(_base.origin(),_base.origin() + _base.size()));
 }
 
-void Block::display()
+void Block::draw(const Frustum &frustum)
 {
 	for(std::vector<Building>::iterator i = _buildings.begin(); i != _buildings.end(); ++i) {
 		OpenGL::color(Color::gray());
 		
-		_base.display();
+		_base.draw();
 		
 		RandomDouble drand(0.15,0.85);
 		Color c;
@@ -43,6 +45,11 @@ void Block::display()
 		
 		OpenGL::color(c);
 		
-		i->display();
+		i->display(frustum);
 	}
+}
+
+bool Block::testFrustum() const
+{
+	return false;
 }

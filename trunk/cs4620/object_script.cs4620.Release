@@ -1,4 +1,6 @@
 INPUT(
+./release\Displayable.o
+./release\BoundingSphere.o
 ./release\Plane.o
 ./release\Frustum.o
 ./release\Random.o

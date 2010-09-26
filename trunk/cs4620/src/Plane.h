@@ -25,6 +25,8 @@ public:
 	const Point& point() const;
 	Plane& setPoint(const Point &point);
 	
+	double distance(const Point &p) const;
+	
 	double evaluate(const Point &p) const;
 	
 private:

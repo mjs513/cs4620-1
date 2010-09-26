@@ -12,16 +12,19 @@
 #include "Rectangle.h"
 #include "RectSplitter.h"
 #include "Building.h"
+#include "Displayable.h"
 
 #include <vector>
 
 
-class Block
+class Block : public Displayable
 {
 public:
 	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter);
 
-	void display();
+	void draw(const Frustum &frustum);
+
+	bool testFrustum() const;
 	
 private:
 	Geo::Rectangle _base;

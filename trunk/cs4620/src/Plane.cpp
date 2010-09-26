@@ -7,6 +7,8 @@
 
 #include "Plane.h"
 
+#include <cmath>
+
 
 Plane::Plane() { }
 
@@ -20,7 +22,7 @@ const Vector& Plane::normal() const
 
 Plane& Plane::setNormal(const Vector &normal)
 {
-	_normal = normal;
+	_normal = normal.normalized();
 	
 	return *this;
 }
@@ -35,6 +37,11 @@ Plane& Plane::setPoint(const Point &point)
 	_point = point;
 	
 	return *this;
+}
+
+double Plane::distance(const Point &p) const
+{
+	return std::abs(evaluate(p));
 }
 
 double Plane::evaluate(const Point &p) const
