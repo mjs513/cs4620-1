@@ -17,7 +17,7 @@
 class Building : public Displayable
 {
 public:
-	Building(const Geo::Rectangle &base, GLuint texture = NULL);
+	Building(const Geo::Rectangle &base, GLuint texture);
 	
 	const Geo::Rectangle& base() const;
 	double height() const;

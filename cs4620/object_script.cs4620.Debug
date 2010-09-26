@@ -1,4 +1,5 @@
 INPUT(
+./debug\TexturePool.o
 ./debug\Displayable.o
 ./debug\BoundingSphere.o
 ./debug\Plane.o

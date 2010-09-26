@@ -11,10 +11,11 @@
 #include "Random.h"
 
 #include <cstdlib>
+#include <iostream>
 
 
 Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint texture)
-	: _base(base)
+	: _base(base), _displayList(0)
 {
 	std::vector<Geo::Rectangle> bases = splitter.split(_base);
 	
@@ -29,23 +30,40 @@ Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint tex
 	setBoundingSphere(BoundingSphere::createWithAABox(_base.origin(),_base.origin() + _base.size()));
 }
 
+Block::~Block()
+{
+	if(_displayList >= 0) {
+		glDeleteLists(_displayList,1);
+	}
+}
+
 void Block::draw(const Frustum &frustum)
 {
-	for(std::vector<Building>::iterator i = _buildings.begin(); i != _buildings.end(); ++i) {
-		OpenGL::color(Color::gray());
-		
-		_base.draw();
-		
-		RandomDouble drand(0.15,0.85);
-		Color c;
-		
-		for(int j = 0; j < 3; ++j) {
-			c.v[j] = drand.rand();
+	if(!_displayList) {
+		_displayList = glGenLists(1);
+
+		glNewList(_displayList,GL_COMPILE_AND_EXECUTE); {
+			for(std::vector<Building>::iterator i = _buildings.begin(); i != _buildings.end(); ++i) {
+				OpenGL::color(Color::gray());
+				
+				_base.draw();
+				
+				RandomDouble drand(0.15,0.85);
+				Color c;
+				
+				for(int j = 0; j < 3; ++j) {
+					c.v[j] = drand.rand();
+				}
+				
+				OpenGL::color(c);
+				
+				i->draw(frustum);
+			}
 		}
-		
-		OpenGL::color(c);
-		
-		i->display(frustum);
+		glEndList();
+	}
+	else {
+		glCallList(_displayList);
 	}
 }
 

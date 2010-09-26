@@ -13,16 +13,6 @@
 #include "Point.h"
 #include "World.h"
 
-#define CAMERA_MOVING_STEP 0.5
-#define MOUSE_SENSITIVITY_FACTOR 0.25
-
-#define BASE_CAP_FRAMES_DIR "frames"
-#define BASE_CAP_FRAMES_NAME "exporter"
-
-#define BOX_ROTATION_SPEED 1 // in degrees per frame
-
-// How often (in ms) the animation routine will be called
-#define ANIMATION_TIME_MS 40 // Update our scene 25 times per second
 
 class GLWidget : public QGLWidget
 {

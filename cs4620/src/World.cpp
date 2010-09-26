@@ -16,10 +16,11 @@
 
 
 World::World()
+	: _buildingWallTexture(0)
 {
-	loadTextures();
+	_loadTextures();
 
-	int nrows = 5,ncols = 5;
+	int nrows = 6,ncols = 6;
 	
 	// Define blocks size.height
 	for(int i = 0; i < nrows; ++i) {
@@ -99,7 +100,8 @@ void World::draw(const Frustum &frustum)
 }
 
 
-void World::loadTextures() {
+void World::_loadTextures()
+{
 	QImage buildingWall_image;
 
 	if (!buildingWall_image.load("buildingWall64_texture.bmp")) {

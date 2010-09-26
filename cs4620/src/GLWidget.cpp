@@ -23,6 +23,19 @@
 #include <iostream>
 
 
+namespace {
+
+const double CAMERA_MOVING_STEP = 1;
+const double MOUSE_SENSITIVITY_FACTOR = 0.25;
+
+const char *BASE_CAP_FRAMES_DIR = "frames";
+const char *BASE_CAP_FRAMES_NAME = "exporter";
+
+const double MAX_VISIBILITY_RANGE = 500;
+
+}  // namespace
+
+
 GLWidget::GLWidget(QWidget *parent)
 	: QGLWidget(parent), world(0), cameraPos(Vector(0,0,3)), cameraForward(0,1,0), cameraUp(0,0,1),
 	  cameraLeft(Vector::cross(cameraUp,cameraForward))
@@ -31,10 +44,11 @@ GLWidget::GLWidget(QWidget *parent)
 	enableUserControl = true;
 	isRecording = false;
 
+	/*
 	// Create animation timer
 	animationTimer = new QTimer(this);
 	connect(animationTimer, SIGNAL(timeout()), this, SLOT(animate()));
-	animationTimer->start(ANIMATION_TIME_MS);
+	animationTimer->start(ANIMATION_TIME_MS);*/
 }
 
 GLWidget::~GLWidget()
@@ -55,7 +69,9 @@ QSize GLWidget::sizeHint() const
 
 void GLWidget::initializeGL()
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	Color clearColor(0.1,0.1,0.11);
+	
+	OpenGL::clearColor(clearColor);
 	
 	glEnable(GL_TEXTURE_2D);
 
@@ -75,7 +91,11 @@ void GLWidget::initializeGL()
 	
 	double minSizeCoord = world->size().x < world->size().y ? world->size().x : world->size().y;
 	
-	OpenGL::fogColor(Color(0,0,0));
+	if(minSizeCoord > MAX_VISIBILITY_RANGE) {
+		minSizeCoord = MAX_VISIBILITY_RANGE;
+	}
+	
+	OpenGL::fogColor(clearColor);
 	glFogi(GL_FOG_MODE,GL_LINEAR);
 	glFogf(GL_FOG_DENSITY,1.0);
 	glFogf(GL_FOG_START,minSizeCoord*0.5);
@@ -222,7 +242,7 @@ void GLWidget::resizeGL(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1, 1000);
+	gluPerspective(45,double(width)/height,1,MAX_VISIBILITY_RANGE);
 	
 	glMatrixMode(GL_MODELVIEW);
 }
