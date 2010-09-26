@@ -11,7 +11,6 @@
 
 #include <vector>
 
-#include "Building.h"
 #include "Block.h"
 #include "Displayable.h"
 
@@ -22,6 +21,8 @@ private:
 	typedef std::vector<Block> WorldRow;
 	typedef std::vector<WorldRow> WorldMatrix;
 	
+	GLuint _buildingWallTexture;
+
 public:
 	World();
 	
@@ -34,6 +35,8 @@ public:
 private:
 	std::vector<double> _rowHeights,_colWidths;
 	WorldMatrix _blockMatrix;
+
+	void loadTextures();
 };
 
 
