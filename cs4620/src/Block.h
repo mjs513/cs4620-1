@@ -31,6 +31,7 @@ private:
 	Geo::Rectangle _base;
 	std::vector<Building> _buildings;
 	GLuint _displayList;
+	GLuint _sidewalkTexture;
 };
 
 

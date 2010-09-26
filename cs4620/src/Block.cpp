@@ -12,10 +12,12 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <QtGui>
+#include <QtOpenGL/QtOpenGL>
 
 
 Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint texture)
-	: _base(base), _displayList(0)
+	: _base(base), _displayList(0), _sidewalkTexture(0)
 {
 	std::vector<Geo::Rectangle> bases = splitter.split(_base);
 	
@@ -44,9 +46,26 @@ void Block::draw(const Frustum &frustum)
 
 		glNewList(_displayList,GL_COMPILE_AND_EXECUTE); {
 			for(std::vector<Building>::iterator i = _buildings.begin(); i != _buildings.end(); ++i) {
-				OpenGL::color(Color::gray());
+				OpenGL::color(Color(0.8,0.8,0.8));
 				
-				_base.draw();
+				glBindTexture(GL_TEXTURE_2D,_sidewalkTexture);
+				
+				glBegin(GL_QUADS); {
+					OpenGL::normal(Vector(0,0,1));
+					
+					OpenGL::texture2(Point());
+					OpenGL::vertex(_base.origin());
+					
+					OpenGL::texture2(Point(floor(0.33*_base.size().x),0));
+					OpenGL::vertex(_base.origin() + Vector(_base.size().x,0));
+					
+					OpenGL::texture2(Point(floor(0.33*_base.size().x),floor(0.33*_base.size().y)));
+					OpenGL::vertex(_base.origin() + _base.size());
+					
+					OpenGL::texture2(Point(0,floor(0.33*_base.size().y)));
+					OpenGL::vertex(_base.origin() + Vector(0,_base.size().y));
+				}
+				glEnd();
 				
 				RandomDouble drand(0.15,0.85);
 				Color c;
