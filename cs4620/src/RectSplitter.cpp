@@ -6,6 +6,7 @@
  */
 
 #include "RectSplitter.h"
+#include "Random.h"
 
 #include <cstdlib>
 
@@ -27,6 +28,12 @@ const std::vector<Rectangle>& RectSplitter::split(const Rectangle &rect)
 
 bool RectSplitter::_split(const Rectangle &rect)
 {
+	RandomDouble drand;
+	
+	if((rect.area() < 4*_minSize.x*_minSize.y) && (drand.rand() < 0.2)) {
+		return false;
+	}
+	
 	if(std::rand()%2) {
 		if(_trySplitX(rect)) {
 			return true;
