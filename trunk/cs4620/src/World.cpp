@@ -102,23 +102,22 @@ void World::draw(const Frustum &frustum)
 void World::loadTextures() {
 	QImage buildingWall_image;
 
-		if (!buildingWall_image.load("buildingWall64_texture.bmp")) {
-			buildingWall_image = QImage(16, 16, QImage::Format_RGB32);
-			buildingWall_image.fill(Qt::red);
-		}
+	if (!buildingWall_image.load("buildingWall64_texture.bmp")) {
+		buildingWall_image = QImage(16, 16, QImage::Format_RGB32);
+		buildingWall_image.fill(Qt::red);
+	}
 
-		buildingWall_image = QGLWidget::convertToGLFormat(buildingWall_image);
-		glGenTextures(1, &_buildingWallTexture);
-		glBindTexture(GL_TEXTURE_2D, _buildingWallTexture);
-		printf("World::loadTextures: _buildingWallTexture = %d\n", _buildingWallTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, buildingWall_image.width(), buildingWall_image.height(), 0,
-				GL_RGBA, GL_UNSIGNED_BYTE, buildingWall_image.bits());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		//glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap ? GL_REPEAT : GL_CLAMP );
-		//glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-		//glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-
+	buildingWall_image = QGLWidget::convertToGLFormat(buildingWall_image);
+	glGenTextures(1, &_buildingWallTexture);
+	glBindTexture(GL_TEXTURE_2D, _buildingWallTexture);
+	printf("World::loadTextures: _buildingWallTexture = %d\n", _buildingWallTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, buildingWall_image.width(), buildingWall_image.height(), 0,
+			GL_RGBA, GL_UNSIGNED_BYTE, buildingWall_image.bits());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	//glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap ? GL_REPEAT : GL_CLAMP );
+	//glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+	//glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 }
 
 bool World::testFrustum() const

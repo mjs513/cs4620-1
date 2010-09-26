@@ -24,7 +24,7 @@
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), cameraPos(0.5*world.size() + Point() + Vector(0,0,10)), cameraForward(0,1,0), cameraUp(0,0,1),
+	: QGLWidget(parent), world(0), cameraPos(Vector(0,0,3)), cameraForward(0,1,0), cameraUp(0,0,1),
 	  cameraLeft(Vector::cross(cameraUp,cameraForward))
 {
 	frameExporter = 0;
@@ -39,6 +39,7 @@ GLWidget::GLWidget(QWidget *parent)
 
 GLWidget::~GLWidget()
 {
+	delete world;
 	delete animationTimer;
 }
 
@@ -57,7 +58,7 @@ void GLWidget::initializeGL()
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	glEnable(GL_TEXTURE_2D);
-	
+
 	// Depth buffer setup
 	glClearDepth(1.0f);
 	glDepthFunc(GL_LEQUAL);
@@ -66,15 +67,13 @@ void GLWidget::initializeGL()
 	glEnable(GL_CULL_FACE);
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	
-	// Set initial position for the camera
-	cameraFreeMove(Vector(2,2,0));
-	cameraRotateY(-20.0f);
+
+	world = new World();
 	
 	// Initialize fog
 	glEnable(GL_FOG);
 	
-	double minSizeCoord = world.size().x < world.size().y ? world.size().x : world.size().y;
+	double minSizeCoord = world->size().x < world->size().y ? world->size().x : world->size().y;
 	
 	OpenGL::fogColor(Color(0,0,0));
 	glFogi(GL_FOG_MODE,GL_LINEAR);
@@ -101,7 +100,6 @@ void GLWidget::initializeGL()
 // can tweak this parameter by changing ANIMATION_TIME_MS
 void GLWidget::animate()
 {
-	
 	updateGL();
 }
 
@@ -116,8 +114,7 @@ void GLWidget::paintGL()
 	glLoadIdentity();
 
 	// Position the camera
-	//OpenGL::lookAt(cameraPos,cameraForward,cameraUp);
-	frustum.applyCamera(cameraPos,cameraForward,cameraUp);
+	OpenGL::lookAt(cameraPos,cameraForward,cameraUp);
 	
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
@@ -127,14 +124,16 @@ void GLWidget::paintGL()
 			Vector(0,0),Vector(0,1),Vector(1,0),Vector(1,1),Vector(0,-1),Vector(-1,0),Vector(-1,-1),Vector(1,-1),Vector(-1,1)
 	};
 	
+	Frustum frustum;
+	
 	for(unsigned int i = 0; i < sizeof(tiles)/sizeof(tiles[0]); ++i) {
 		glPushMatrix();
 		
-		Vector offset(world.size().x*tiles[i].x,world.size().y*tiles[i].y);
+		Vector offset(world->size().x*tiles[i].x,world->size().y*tiles[i].y);
 		
 		OpenGL::translate(offset);
 		
-		world.display(frustum);
+		world->display(frustum);
 		
 		glPopMatrix();
 	}
@@ -222,11 +221,8 @@ void GLWidget::resizeGL(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	//gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1, 1000);
-
-	frustum.setProperties(45,double(width)/height,1,1000);
 	
-	frustum.setPerspective();
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1, 1000);
 	
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -315,19 +311,19 @@ void GLWidget::cameraFreeMove(Vector dir)
 		
 		// Wrap the camera position inside the middle world tile
 		while(cameraPos.x < 0) {
-			cameraPos.x += world.size().x;
+			cameraPos.x += world->size().x;
 		}
 		
 		while(cameraPos.y < 0) {
-			cameraPos.y += world.size().y;
+			cameraPos.y += world->size().y;
 		}
 		
-		while(cameraPos.x > world.size().x) {
-			cameraPos.x -= world.size().x;
+		while(cameraPos.x > world->size().x) {
+			cameraPos.x -= world->size().x;
 		}
 		
-		while(cameraPos.y > world.size().y) {
-			cameraPos.y -= world.size().y;
+		while(cameraPos.y > world->size().y) {
+			cameraPos.y -= world->size().y;
 		}
 	}
 }
