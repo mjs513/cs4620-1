@@ -24,7 +24,7 @@ public:
 	bool includes(const BoundingSphere &sphere) const;
 	
 private:
-	std::vector<Plane> _planes;
+	double _frustum[6][4];
 };
 
 

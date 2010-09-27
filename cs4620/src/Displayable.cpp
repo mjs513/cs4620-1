@@ -16,25 +16,11 @@ Displayable::~Displayable() { }
 
 void Displayable::display(const Frustum &frustum)
 {
-	Matrix m;
-	
-	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
-	
-	Vector radiusVector(_boundingSphere.radius(),_boundingSphere.radius(),_boundingSphere.radius());
-	
-	radiusVector = m*radiusVector;
-	
-	for(int i = 1; i < 3; ++i) {
-		if(radiusVector.v[i] > radiusVector.v[0]) {
-			radiusVector.v[0] = radiusVector.v[i];
-		}
-	}
-	
-	BoundingSphere transformedSphere(m*_boundingSphere.center(),radiusVector.v[0]);
 	bool doDraw = true;
 	
+	// Do frustum culling if enabled for this object
 	if(testFrustum()) {
-		doDraw = frustum.includes(transformedSphere);
+		doDraw = frustum.includes(_boundingSphere);
 	}
 	
 	if(doDraw) {
