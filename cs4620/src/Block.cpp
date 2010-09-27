@@ -30,7 +30,7 @@ Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, const Text
 	for(std::vector<Geo::Rectangle>::const_iterator i_bases = bases.begin(); i_bases != bases.end() ; ++i_bases) {
 		Geo::Rectangle base = i_bases->inset(3);
 		
-		_buildings.push_back(Building(base, texturePool.getRandomWall(), texturePool.getRandomWindow()));
+		_buildings.push_back(Building(base,texturePool));
 	}
 	
 	setBoundingSphere(BoundingSphere::createWithAABox(_base.origin(),_base.origin() + _base.size()));
@@ -71,11 +71,13 @@ void Block::draw(const Frustum &frustum)
 				}
 				glEnd();
 				
-				RandomDouble drand(0.15,0.85);
+				RandomDouble drand(0.7,1);
 				Color c;
 				
-				for(int j = 0; j < 3; ++j) {
-					c.v[j] = drand.rand();
+				c.v[0] = drand.rand();
+				
+				for(int j = 1; j < 3; ++j) {
+					c.v[j] = c.v[0];
 				}
 				
 				OpenGL::color(c);
