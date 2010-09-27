@@ -24,6 +24,10 @@ public:
 	GLuint getRandomWindow() const;
 	GLuint getRoad() const;
 
+	const std::vector<GLuint>& sidewalks() const;
+	const std::vector<GLuint>& walls() const;
+	const std::vector<GLuint>& windows() const;
+
 private:
 	GLuint _generateTexture( const std::string &name, bool wrap );
 	

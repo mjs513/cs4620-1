@@ -12,12 +12,13 @@
 #include "Rectangle.h"
 #include "OpenGL.h"
 #include "Displayable.h"
+#include "TexturePool.h"
 
 
 class Building : public Displayable
 {
 public:
-	Building(const Geo::Rectangle &base, GLuint textureWall, GLuint textureWindow);
+	Building(const Geo::Rectangle &base, const TexturePool &texPool);
 	
 	const Geo::Rectangle& base() const;
 	double height() const;
@@ -34,8 +35,7 @@ private:
 	double _height;
 	int _numberOfFloors,_numberOfColumnsX,_numberOfColumnsY;
 
-	GLuint _textureWall;
-	GLuint _textureWindow;
+	const TexturePool *_texPool;
 };
 
 #endif /* BUILDING_H_ */

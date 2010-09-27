@@ -80,6 +80,11 @@ void GLWidget::initializeGL()
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_DEPTH_TEST);
 	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	
+	glEnable(GL_ALPHA_TEST);
+	
 	glEnable(GL_CULL_FACE);
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);

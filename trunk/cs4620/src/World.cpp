@@ -73,6 +73,7 @@ const Vector World::size() const
 
 void World::draw(const Frustum &frustum)
 {
+	// Make all rand() deterministic after this point for drawing the same on all frames
 	std::srand(0);
 	
 	Geo::Rectangle base(Point(),this->size());
@@ -85,7 +86,7 @@ void World::draw(const Frustum &frustum)
 	// Make road lower than sidewalk
 	OpenGL::translate(Vector(0,0,-0.01));
 
-	OpenGL::color(Color(1, 0, 0));
+	OpenGL::color(Color(0.2,0.2,0.2));
 
 	glBegin(GL_QUADS); {
 		OpenGL::normal(Vector(0,0,1));
