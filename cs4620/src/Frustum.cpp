@@ -16,18 +16,11 @@
 // Culling code; reference: http://www.crownandcutlass.com/features/technicaldetails/frustum.html
 
 
-namespace {
-
-int frustumTotal = 0,frustumVisible = 0;
-
-} // namespace
-
-
 Frustum::Frustum()
 {
 	// Create frustum from projection matrix -- 
 	Matrix proj;
-
+	
 	glGetDoublev(GL_PROJECTION_MATRIX,proj.v);
 	
 	_frustum[0][0] = proj.v[3] - proj.v[0];
@@ -96,10 +89,6 @@ bool Frustum::includes(const Point &p) const
 
 bool Frustum::includes(const BoundingSphere &sphere) const
 {
-	if(frustumTotal%100 == 0) {
-		std::cout << "Total culling operations: " << frustumTotal << ", " << 100*float(frustumVisible)/frustumTotal << "% visible" << std::endl;
-	}
-	
 	// Transform bounding sphere using modelview
 	Matrix model;
 	
@@ -119,16 +108,12 @@ bool Frustum::includes(const BoundingSphere &sphere) const
 	BoundingSphere newSphere(model*sphere.center(),radiusVector.v[0]);
 	Point p = newSphere.center();
 	
-	++frustumTotal;
-
 	// Test all planes
 	for(int i = 0; i < 6; ++i) {
 		if(_frustum[i][0]*p.x + _frustum[i][1]*p.y + _frustum[i][2]*p.z + _frustum[i][3] < -newSphere.radius()) {
 			return false;
 		}
 	}
-	
-	++frustumVisible;
 	
 	return true;
 }

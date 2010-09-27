@@ -18,6 +18,8 @@ class Plane
 public:
 	Plane();
 	Plane(const Vector &normal, const Point &point);
+	Plane(double a, double b, double c, double d);
+	Plane(double *v4);
 
 	const Vector& normal() const;
 	Plane& setNormal(const Vector &normal);

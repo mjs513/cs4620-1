@@ -74,19 +74,29 @@ const Vector World::size() const
 void World::draw(const Frustum &frustum)
 {
 	std::srand(0);
-
-	OpenGL::color(Color(0.2,0.2,0.2));
 	
 	Geo::Rectangle base(Point(),this->size());
-
+	
 	glPushMatrix();
 	
+	// Make road lower than sidewalk
 	OpenGL::translate(Vector(0,0,-0.1));
+
+	OpenGL::color(Color(1,0,0));
 	
-	base.draw();
+	glBegin(GL_QUADS); {
+		OpenGL::normal(Vector(0,0,1));
+		
+		OpenGL::vertex(base.origin());
+		OpenGL::vertex(base.origin() + Vector(base.size().x,0));
+		OpenGL::vertex(base.origin() + base.size());
+		OpenGL::vertex(base.origin() + Vector(0,base.size().y));
+	}
+	glEnd();
 	
 	glPopMatrix();
 	
+	// Display all blocks
 	for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
 		for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
 			i_row->display(frustum);

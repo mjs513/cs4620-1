@@ -15,6 +15,26 @@ Plane::Plane() { }
 Plane::Plane(const Vector &normal, const Point &point)
 	: _normal(normal), _point(point) { }
 
+Plane::Plane(double a, double b, double c, double d)
+	: _normal(a,b,c)
+{
+	_normal.normalize();
+	
+	d *= _normal.x/a;
+	
+	_point = Point(0,0,-d/c);
+}
+
+Plane::Plane(double *v4)
+	: _normal(v4)
+{
+	_normal.normalize();
+	
+	double d = v4[3]*_normal.x/v4[0];
+	
+	_point = Point(0,0,-d/v4[2]);
+}
+
 const Vector& Plane::normal() const
 {
 	return _normal;
