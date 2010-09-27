@@ -17,7 +17,7 @@
 class Building : public Displayable
 {
 public:
-	Building(const Geo::Rectangle &base, GLuint texture);
+	Building(const Geo::Rectangle &base, GLuint textureWall, GLuint textureWindow);
 	
 	const Geo::Rectangle& base() const;
 	double height() const;
@@ -34,7 +34,8 @@ private:
 	double _height;
 	int _numberOfFloors,_numberOfColumnsX,_numberOfColumnsY;
 
-	GLuint _texture;
+	GLuint _textureWall;
+	GLuint _textureWindow;
 };
 
 #endif /* BUILDING_H_ */

@@ -14,6 +14,7 @@
 #include "Block.h"
 #include "Displayable.h"
 #include "OpenGL.h"
+#include "TexturePool.h"
 
 
 class World : public Displayable
@@ -22,7 +23,7 @@ private:
 	typedef std::vector<Block> WorldRow;
 	typedef std::vector<WorldRow> WorldMatrix;
 	
-	GLuint _buildingWallTexture;
+	TexturePool _texturePool;
 
 public:
 	World();

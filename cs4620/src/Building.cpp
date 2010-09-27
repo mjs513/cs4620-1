@@ -13,10 +13,11 @@
 #include <iostream>
 
 
-Building::Building(const Geo::Rectangle &base, GLuint texture)
+Building::Building(const Geo::Rectangle &base, GLuint textureWall, GLuint textureWindow)
 	: _base(base)
 {
-	_texture = texture;
+	_textureWall = textureWall;
+	_textureWindow = textureWindow;
 
 	RandomDouble drand;
 	double r = drand.rand();
@@ -57,7 +58,7 @@ void Building::draw(const Frustum &frustum)
 	OpenGL::translate(_base.origin() + 0.5*(_base.size() + Vector(0,0,_height)));
 	OpenGL::scale(0.5*(_base.size() + Vector(0,0,_height)));
 	
-	glBindTexture(GL_TEXTURE_2D,_texture);
+	glBindTexture(GL_TEXTURE_2D, _textureWall);
 	
 	glBegin(GL_QUADS); {
 		// Back Face
