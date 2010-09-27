@@ -10,16 +10,11 @@
 #include "Color.h"
 #include "OpenGL.h"
 
-#include <QtOpenGL/QtOpenGL>
-
 #include <cstdlib>
 
 
 World::World()
-	: _buildingWallTexture(0)
 {
-	_loadTextures();
-
 	int nrows = 6,ncols = 6;
 	
 	// Define blocks size.height
@@ -50,7 +45,7 @@ World::World()
 		for(int j = 0; j < ncols; ++j) {
 			Geo::Rectangle blockRect = Geo::Rectangle(Point(x,y),Vector(_colWidths[j],_rowHeights[i])).inset(6);
 			
-			row.push_back(Block(blockRect, splitter, _buildingWallTexture));
+			row.push_back(Block(blockRect, splitter, _texturePool));
 			
 			x += _colWidths[j];
 		}
@@ -97,30 +92,6 @@ void World::draw(const Frustum &frustum)
 			i_row->display(frustum);
 		}
 	}
-}
-
-
-void World::_loadTextures()
-{
-	QImage buildingWall_image;
-	bool wrap = true;
-
-	//if (!buildingWall_image.load("buildingWall64_texture.bmp")) {
-	if (!buildingWall_image.load("testa.bmp")) {
-		buildingWall_image = QImage(16, 16, QImage::Format_RGB32);
-		buildingWall_image.fill(Qt::red);
-	}
-
-	buildingWall_image = QGLWidget::convertToGLFormat(buildingWall_image);
-	glGenTextures(1, &_buildingWallTexture);
-	glBindTexture(GL_TEXTURE_2D, _buildingWallTexture);
-	printf("World::loadTextures: _buildingWallTexture = %d\n", _buildingWallTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, buildingWall_image.width(), buildingWall_image.height(), 0,
-			GL_RGBA, GL_UNSIGNED_BYTE, buildingWall_image.bits());
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap ? GL_REPEAT : GL_CLAMP );
-	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap ? GL_REPEAT : GL_CLAMP );
 }
 
 bool World::testFrustum() const

@@ -13,6 +13,7 @@
 #include "RectSplitter.h"
 #include "Building.h"
 #include "Displayable.h"
+#include "TexturePool.h"
 
 #include <vector>
 
@@ -20,7 +21,7 @@
 class Block : public Displayable
 {
 public:
-	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, GLuint texture);
+	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, const TexturePool &texturePool);
 	~Block();
 
 	void draw(const Frustum &frustum);
