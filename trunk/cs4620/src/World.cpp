@@ -15,7 +15,7 @@
 
 World::World()
 {
-	int nrows = 6,ncols = 6;
+	int nrows = 15,ncols = 15;
 	
 	// Define blocks size.height
 	for(int i = 0; i < nrows; ++i) {
@@ -81,7 +81,7 @@ void World::draw(const Frustum &frustum)
 
 	glPushMatrix();
 	
-	OpenGL::translate(Vector(0,0,-0.01));
+	OpenGL::translate(Vector(0,0,-0.1));
 	
 	base.draw();
 	
@@ -96,5 +96,5 @@ void World::draw(const Frustum &frustum)
 
 bool World::testFrustum() const
 {
-	return false;
+	return true;
 }

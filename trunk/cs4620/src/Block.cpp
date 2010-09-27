@@ -92,5 +92,5 @@ void Block::draw(const Frustum &frustum)
 
 bool Block::testFrustum() const
 {
-	return false;
+	return true;
 }

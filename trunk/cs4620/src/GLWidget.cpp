@@ -173,7 +173,7 @@ void GLWidget::paintGL()
 	int elapsed = time.msecsTo(now);
 	
 	if(elapsed > 1000) {
-		std::cout << "FPS: " << fps << std::endl;
+		//std::cout << "FPS: " << fps << std::endl;
 		
 		time = now;
 		fps = 0;

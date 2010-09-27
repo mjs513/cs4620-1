@@ -16,72 +16,77 @@
 // Culling code; reference: http://www.crownandcutlass.com/features/technicaldetails/frustum.html
 
 
+namespace {
+
+int frustumTotal = 0,frustumVisible = 0;
+
+} // namespace
+
+
 Frustum::Frustum()
 {
-	Matrix model,proj;
+	// Create frustum from projection matrix -- 
+	Matrix proj;
 
-	glGetDoublev(GL_MODELVIEW_MATRIX,model.v);
 	glGetDoublev(GL_PROJECTION_MATRIX,proj.v);
 	
-	Matrix clip = proj*model;
-	double frustum[6][4];
-
-	frustum[0][0] = clip.v[3] - clip.v[0];
-	frustum[0][1] = clip.v[7] - clip.v[4];
-	frustum[0][2] = clip.v[11] - clip.v[8];
-	frustum[0][3] = clip.v[15] - clip.v[12];
+	_frustum[0][0] = proj.v[3] - proj.v[0];
+	_frustum[0][1] = proj.v[7] - proj.v[4];
+	_frustum[0][2] = proj.v[11] - proj.v[8];
+	_frustum[0][3] = proj.v[15] - proj.v[12];
 	
-	frustum[1][0] = clip.v[3] + clip.v[0];
-	frustum[1][1] = clip.v[7] + clip.v[4];
-	frustum[1][2] = clip.v[11] + clip.v[8];
-	frustum[1][3] = clip.v[15] + clip.v[12];
+	_frustum[1][0] = proj.v[3] + proj.v[0];
+	_frustum[1][1] = proj.v[7] + proj.v[4];
+	_frustum[1][2] = proj.v[11] + proj.v[8];
+	_frustum[1][3] = proj.v[15] + proj.v[12];
 	
-	frustum[2][0] = clip.v[3] + clip.v[1];
-	frustum[2][1] = clip.v[7] + clip.v[5];
-	frustum[2][2] = clip.v[11] + clip.v[9];
-	frustum[2][3] = clip.v[15] + clip.v[13];
+	_frustum[2][0] = proj.v[3] + proj.v[1];
+	_frustum[2][1] = proj.v[7] + proj.v[5];
+	_frustum[2][2] = proj.v[11] + proj.v[9];
+	_frustum[2][3] = proj.v[15] + proj.v[13];
 	
-	frustum[3][0] = clip.v[3] - clip.v[1];
-	frustum[3][1] = clip.v[7] - clip.v[5];
-	frustum[3][2] = clip.v[11] - clip.v[9];
-	frustum[3][3] = clip.v[15] - clip.v[13];
+	_frustum[3][0] = proj.v[3] - proj.v[1];
+	_frustum[3][1] = proj.v[7] - proj.v[5];
+	_frustum[3][2] = proj.v[11] - proj.v[9];
+	_frustum[3][3] = proj.v[15] - proj.v[13];
 	
-	frustum[4][0] = clip.v[3] - clip.v[2];
-	frustum[4][1] = clip.v[7] - clip.v[6];
-	frustum[4][2] = clip.v[11] - clip.v[10];
-	frustum[4][3] = clip.v[15] - clip.v[14];
+	_frustum[4][0] = proj.v[3] - proj.v[2];
+	_frustum[4][1] = proj.v[7] - proj.v[6];
+	_frustum[4][2] = proj.v[11] - proj.v[10];
+	_frustum[4][3] = proj.v[15] - proj.v[14];
 	
-	frustum[5][0] = clip.v[3] + clip.v[2];
-	frustum[5][1] = clip.v[7] + clip.v[6];
-	frustum[5][2] = clip.v[11] + clip.v[10];
-	frustum[5][3] = clip.v[15] + clip.v[14];
+	_frustum[5][0] = proj.v[3] + proj.v[2];
+	_frustum[5][1] = proj.v[7] + proj.v[6];
+	_frustum[5][2] = proj.v[11] + proj.v[10];
+	_frustum[5][3] = proj.v[15] + proj.v[14];
 
 	for(int i = 0; i < 6; ++i) {
 		double x = 0;
 		
 		for(int j = 0; j < 3; ++j) {
-			x += frustum[i][j]*frustum[i][j];
+			x += _frustum[i][j]*_frustum[i][j];
 		}
 		
 		x = std::sqrt(x);
 		
 		for(int j = 0; j < 4; ++j) {
-			frustum[i][j] /= x;
+			_frustum[i][j] /= x;
 		}
-	}
-	
-	for(int i = 0; i < 6; ++i) {
-		Vector normal(frustum[i]);
-		Point point(0,0,-frustum[i][4]/frustum[i][3]);
-		
-		_planes.push_back(Plane(normal,point));
 	}
 }
 
 bool Frustum::includes(const Point &p) const
 {
-	for(std::vector<Plane>::const_iterator i = _planes.begin(); i != _planes.end(); ++i) {
-		if(i->evaluate(p) < 0) {
+	// Transform point using modelview
+	Matrix model;
+	
+	glGetDoublev(GL_MODELVIEW_MATRIX,model.v);
+	
+	Point p2 = model*p;
+
+	// Test all planes
+	for(int i = 0; i < 6; ++i) {
+		if(_frustum[i][0]*p2.x + _frustum[i][1]*p2.y + _frustum[i][2]*p2.z + _frustum[i][3] < 0) {
 			return false;
 		}
 	}
@@ -91,18 +96,39 @@ bool Frustum::includes(const Point &p) const
 
 bool Frustum::includes(const BoundingSphere &sphere) const
 {
-	Point p = sphere.center();
-	Matrix m;
+	if(frustumTotal%100 == 0) {
+		std::cout << "Total culling operations: " << frustumTotal << ", " << 100*float(frustumVisible)/frustumTotal << "% visible" << std::endl;
+	}
 	
-	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
+	// Transform bounding sphere using modelview
+	Matrix model;
 	
-	p = m*p;
+	glGetDoublev(GL_MODELVIEW_MATRIX,model.v);
+	
+	Vector radiusVector(sphere.radius(),sphere.radius(),sphere.radius());
+	
+	radiusVector = model*radiusVector;
+	
+	for(int i = 1; i < 3; ++i) {
+		if(radiusVector.v[i] > radiusVector.v[0]) {
+			radiusVector.v[0] = radiusVector.v[i];
+		}
+	}
+	
+	// From transformed sphere (now possibly ellpsis), get a conservative bounding sphere around it
+	BoundingSphere newSphere(model*sphere.center(),radiusVector.v[0]);
+	Point p = newSphere.center();
+	
+	++frustumTotal;
 
-	for(std::vector<Plane>::const_iterator i = _planes.begin(); i != _planes.end(); ++i) {
-		if(i->evaluate(p) > sphere.radius()) {
+	// Test all planes
+	for(int i = 0; i < 6; ++i) {
+		if(_frustum[i][0]*p.x + _frustum[i][1]*p.y + _frustum[i][2]*p.z + _frustum[i][3] < -newSphere.radius()) {
 			return false;
 		}
 	}
+	
+	++frustumVisible;
 	
 	return true;
 }

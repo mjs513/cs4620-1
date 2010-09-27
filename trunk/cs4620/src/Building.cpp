@@ -22,20 +22,19 @@ Building::Building(const Geo::Rectangle &base, GLuint textureWall, GLuint textur
 	RandomDouble drand;
 	double r = drand.rand();
 
+	// 30% of small buildings
 	if(r < 0.3) {
-		RandomNormal nrand(20,10);
-
-		_height = nrand.rand();
+		_height = RandomNormal(20,10).rand();
 	}
+	
+	// 68% of medium buildings
 	else if(r < 0.98) {
-		RandomNormal nrand(50,30);
-
-		_height = nrand.rand();
+		_height = RandomNormal(50,30).rand();
 	}
+	
+	// 2% of very high buildings
 	else {
-		RandomNormal nrand(90,40);
-		
-		_height = nrand.rand();
+		_height = RandomNormal(90,40).rand();
 	}
 	
 	setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));
