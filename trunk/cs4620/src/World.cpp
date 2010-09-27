@@ -78,12 +78,15 @@ void World::draw(const Frustum &frustum)
 	Geo::Rectangle base(Point(),this->size());
 	
 	glPushMatrix();
+	glPushAttrib(GL_ENABLE_BIT);
+
+	glDisable(GL_TEXTURE_2D);
 	
 	// Make road lower than sidewalk
-	OpenGL::translate(Vector(0,0,-0.1));
+	OpenGL::translate(Vector(0,0,-0.01));
 
-	OpenGL::color(Color(1,0,0));
-	
+	OpenGL::color(Color(1, 0, 0));
+
 	glBegin(GL_QUADS); {
 		OpenGL::normal(Vector(0,0,1));
 		
@@ -93,7 +96,8 @@ void World::draw(const Frustum &frustum)
 		OpenGL::vertex(base.origin() + Vector(0,base.size().y));
 	}
 	glEnd();
-	
+
+	glPopAttrib();
 	glPopMatrix();
 	
 	// Display all blocks
