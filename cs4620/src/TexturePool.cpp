@@ -64,7 +64,12 @@ TexturePool::TexturePool()
 		ss << "window" << i << ".png";
 
 		_windows.push_back( _generateTexture( ss.str(), true ) );
+		//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
+		//glTexEnvf(GL_TEXTURE_2D,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+		//glTexEnvf(GL_TEXTURE_2D,GL_TEXTURE_ENV_MODE,GL_DECAL);
 	}
+	//_windows.push_back( _generateTexture( "window.png", true ) );
+	//glTexEnvf(GL_TEXTURE_2D,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 
 	_sidewalks.push_back( _generateTexture( "sidewalk.bmp", true ) );
 
