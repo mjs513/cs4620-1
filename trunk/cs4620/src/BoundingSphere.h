@@ -21,8 +21,6 @@ public:
 	const Point& center() const;
 	double radius() const;
 	
-	bool interceptsPlane(const Plane &plane);
-	
 	static const BoundingSphere createWithAABox(const Point &min, const Point &max);
 	
 private:

@@ -7,6 +7,8 @@
 
 #include "BoundingSphere.h"
 
+#include <iostream>
+
 
 BoundingSphere::BoundingSphere()
 	: _radius(0) { }
@@ -24,14 +26,11 @@ double BoundingSphere::radius() const
 	return _radius;
 }
 
-bool BoundingSphere::interceptsPlane(const Plane &plane)
-{
-	return plane.distance(_center) <= _radius;
-}
-
 const BoundingSphere BoundingSphere::createWithAABox(const Point &min, const Point &max)
 {
 	Vector radius = 0.5*(max - min);
+	
+	std::cout << "BS: min " << min << ", max " << max << " -> center " << min + radius << ", radius " << radius.length() << std::endl;
 	
 	return BoundingSphere(min + radius,radius.length());
 }
