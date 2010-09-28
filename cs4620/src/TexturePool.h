@@ -22,7 +22,7 @@ public:
 	GLuint getRandomSidewalk() const;
 	GLuint getRandomWall() const;
 	GLuint getRandomWindow() const;
-	GLuint getRoad() const;
+	GLuint getAsphalt() const;
 
 	const std::vector<GLuint>& sidewalks() const;
 	const std::vector<GLuint>& walls() const;
@@ -35,7 +35,7 @@ private:
 	std::vector<GLuint> _sidewalks;
 	std::vector<GLuint> _walls;
 	std::vector<GLuint> _windows;
-	GLuint _road;
+	GLuint _asphalt;
 };
 
 

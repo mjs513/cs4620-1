@@ -11,6 +11,7 @@
 #include "OpenGL.h"
 
 #include <cstdlib>
+#include <cmath>
 
 
 World::World()
@@ -79,26 +80,32 @@ void World::draw(const Frustum &frustum)
 	Geo::Rectangle base(Point(),this->size());
 	
 	glPushMatrix();
-	glPushAttrib(GL_ENABLE_BIT);
-
-	glDisable(GL_TEXTURE_2D);
 	
-	// Make road lower than sidewalk
-	OpenGL::translate(Vector(0,0,-0.01));
+	// Draw road lower than sidewalk
+	OpenGL::translate(Vector(0,0,-0.1));
 
-	OpenGL::color(Color(0.2,0.2,0.2));
+	OpenGL::color(Color::gray());
+	glBindTexture(GL_TEXTURE_2D,_texturePool.getAsphalt());
+	
+	double texMult = 0.01;
 
 	glBegin(GL_QUADS); {
 		OpenGL::normal(Vector(0,0,1));
 		
+		OpenGL::texture2(Point());
 		OpenGL::vertex(base.origin());
+		
+		OpenGL::texture2(Point() + texMult*Vector(std::floor(base.size().x),0));
 		OpenGL::vertex(base.origin() + Vector(base.size().x,0));
+
+		OpenGL::texture2(Point() + texMult*Vector(std::floor(base.size().x),std::floor(base.size().y)));
 		OpenGL::vertex(base.origin() + base.size());
+
+		OpenGL::texture2(Point() + texMult*Vector(0,std::floor(base.size().y)));
 		OpenGL::vertex(base.origin() + Vector(0,base.size().y));
 	}
 	glEnd();
-
-	glPopAttrib();
+	
 	glPopMatrix();
 	
 	// Display all blocks
@@ -111,5 +118,5 @@ void World::draw(const Frustum &frustum)
 
 bool World::testFrustum() const
 {
-	return true;
+	return false;
 }

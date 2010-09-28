@@ -39,11 +39,10 @@ Building::Building(const Geo::Rectangle &base, const TexturePool &texPool)
 	double columnY = RandomDouble(1.7,2.5).rand();
 	
 	_numberOfFloors = int(_height/floorHeight);
-	/// TODO
-	_numberOfColumnsX = _base.size().x / 2;
-	_numberOfColumnsY = _base.size().y / 2;
+	_numberOfColumnsX = int(_base.size().x/columnX);
+	_numberOfColumnsY = int(_base.size().y/columnY);
 
-	setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));
+	//setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));
 }
 
 const Geo::Rectangle& Building::base() const
@@ -124,6 +123,15 @@ void Building::draw(const Frustum &frustum)
 	OpenGL::scale(0.5*(_base.size() + Vector(0,0,_height)));
 	
 	glBindTexture(GL_TEXTURE_2D,_texPool->getRandomWall());
+	
+	RandomDouble drand(0.9,1);
+	Color c;
+	
+	for(int j = 0; j < 3; ++j) {
+		c.v[j] = drand.rand();
+	}
+	
+	OpenGL::color(c);
 
 	glBegin(GL_QUADS); {
 		// Top Face

@@ -26,14 +26,20 @@ Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, const Text
 	
 	_buildings.reserve(bases.size());
 	
+	double maxHeight = -1;
+	
 	// Generate buildings for this block, attributing a random wall and window texture for each building
 	for(std::vector<Geo::Rectangle>::const_iterator i_bases = bases.begin(); i_bases != bases.end() ; ++i_bases) {
 		Geo::Rectangle base = i_bases->inset(3);
 		
 		_buildings.push_back(Building(base,texturePool));
+		
+		if(_buildings.back().height() > maxHeight) {
+			maxHeight = _buildings.back().height();
+		}
 	}
 	
-	setBoundingSphere(BoundingSphere::createWithAABox(_base.origin(),_base.origin() + _base.size()));
+	setBoundingSphere(BoundingSphere::createWithAABox(_base.origin(),_base.origin() + _base.size() + Vector(0,0,maxHeight)));
 }
 
 Block::~Block()
@@ -70,17 +76,6 @@ void Block::draw(const Frustum &frustum)
 					OpenGL::vertex(_base.origin() + Vector(0,_base.size().y));
 				}
 				glEnd();
-				
-				RandomDouble drand(0.7,1);
-				Color c;
-				
-				c.v[0] = drand.rand();
-				
-				for(int j = 1; j < 3; ++j) {
-					c.v[j] = c.v[0];
-				}
-				
-				OpenGL::color(c);
 				
 				i->draw(frustum);
 			}

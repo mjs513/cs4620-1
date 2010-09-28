@@ -19,8 +19,7 @@ class Frustum
 {
 public:
 	Frustum();
-
-	bool includes(const Point &point) const;
+	
 	bool includes(const BoundingSphere &sphere) const;
 	
 private:

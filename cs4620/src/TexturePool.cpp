@@ -34,7 +34,7 @@ TexturePool::TexturePool()
 		_walls.push_back( _generateTexture( ss.str(), true ) );
 	}
 	*/
-	for(int i = 1; i <= 6; ++i) {
+	for(int i = 1; i <= 4; ++i) {
 		std::stringstream ss;
 
 		ss << "window" << i << ".png";
@@ -43,6 +43,8 @@ TexturePool::TexturePool()
 	}
 	
 	_sidewalks.push_back( _generateTexture( "sidewalk.bmp", true ) );
+	
+	_asphalt = _generateTexture("asphalt.png",true);
 }
 
 GLuint TexturePool::_generateTexture( const std::string &name, bool wrap )
@@ -86,6 +88,11 @@ GLuint TexturePool::getRandomWall() const
 GLuint TexturePool::getRandomWindow() const
 {
 	return _windows[rand()%_windows.size()];
+}
+
+GLuint TexturePool::getAsphalt() const
+{
+	return _asphalt;
 }
 
 const std::vector<GLuint>& TexturePool::sidewalks() const
