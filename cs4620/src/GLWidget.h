@@ -47,9 +47,6 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event);
 	void keyPressEvent(QKeyEvent* event);
 
-protected slots:
-	void animate();
-
 private:
 	void cameraRotateX(double angle);
 	void cameraRotateY(double angle);
@@ -58,17 +55,16 @@ private:
 	void cameraGameMove(double dx, double dy, double dz);
 
 	void setRecording(bool state);
+	
+	void setFogRange();
 
 private:
 	World *world;
+	int width,height;
 	
 	// Camera position up/left/right vectors
 	Point cameraPos;
 	Vector cameraForward, cameraUp, cameraLeft;
-	
-	QTimer* animationTimer; // Used to call our animation routine
-	QTime* fpsTime; // Measure time interval between 2 fully drawn frames
-						  // we will use this to create frame-independent animation
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool enableUserControl;

@@ -17,6 +17,7 @@
 
 
 Frustum::Frustum()
+	: _totalTests(0), _passedTests(0)
 {
 	// Create frustum from projection matrix -- 
 	Matrix proj;
@@ -74,6 +75,11 @@ Frustum::Frustum()
 	}
 }
 
+float Frustum::pctVisible() const
+{
+	return float(_passedTests)/_totalTests;
+}
+
 bool Frustum::includes(const BoundingSphere &sphere) const
 {
 	Matrix model;
@@ -84,12 +90,16 @@ bool Frustum::includes(const BoundingSphere &sphere) const
 	BoundingSphere newSphere(model*sphere.center(),(model*Vector(sphere.radius(),0,0)).length());
 	const Point &p = newSphere.center();
 	
+	++_totalTests;
+	
 	// Test all planes
 	for(int i = 0; i < 6; ++i) {
 		if(_frustum[i][0]*p.x + _frustum[i][1]*p.y + _frustum[i][2]*p.z + _frustum[i][3] < -newSphere.radius()) {
 			return false;
 		}
 	}
+	
+	++_passedTests;
 	
 	return true;
 }

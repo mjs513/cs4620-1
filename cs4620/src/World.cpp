@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <iostream>
 
 
 World::World()
@@ -72,11 +73,23 @@ const Vector World::size() const
 	return size;
 }
 
+void World::cycleWindowMode()
+{
+	// Propagate message to blocks
+	for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
+		for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
+			i_row->cycleWindowMode();
+		}
+	}
+}
+
+Building::WindowMode::Which World::windowMode() const
+{
+	return _blockMatrix.front().front().windowMode();
+}
+
 void World::draw(const Frustum &frustum)
 {
-	// Make all rand() deterministic after this point for drawing the same on all frames
-	std::srand(0);
-	
 	Geo::Rectangle base(Point(),this->size());
 	
 	glPushMatrix();
@@ -87,28 +100,29 @@ void World::draw(const Frustum &frustum)
 	OpenGL::color(Color::gray());
 	glBindTexture(GL_TEXTURE_2D,_texturePool.getAsphalt());
 	
-	double texMult = 0.01;
+	double texMult = 1;
 
+	// Draw road
 	glBegin(GL_QUADS); {
 		OpenGL::normal(Vector(0,0,1));
 		
 		OpenGL::texture2(Point());
 		OpenGL::vertex(base.origin());
 		
-		OpenGL::texture2(Point() + texMult*Vector(std::floor(base.size().x),0));
+		OpenGL::texture2(Point() + Vector(std::floor(texMult*base.size().x),0));
 		OpenGL::vertex(base.origin() + Vector(base.size().x,0));
 
-		OpenGL::texture2(Point() + texMult*Vector(std::floor(base.size().x),std::floor(base.size().y)));
+		OpenGL::texture2(Point() + Vector(std::floor(texMult*base.size().x),std::floor(texMult*base.size().y)));
 		OpenGL::vertex(base.origin() + base.size());
 
-		OpenGL::texture2(Point() + texMult*Vector(0,std::floor(base.size().y)));
+		OpenGL::texture2(Point() +Vector(0,std::floor(texMult*base.size().y)));
 		OpenGL::vertex(base.origin() + Vector(0,base.size().y));
 	}
 	glEnd();
 	
 	glPopMatrix();
 	
-	// Display all blocks
+	// Draw blocks
 	for(WorldMatrix::iterator i_matrix = _blockMatrix.begin(); i_matrix != _blockMatrix.end(); ++i_matrix) {
 		for(WorldRow::iterator i_row = i_matrix->begin(); i_row != i_matrix->end(); ++i_row) {
 			i_row->display(frustum);

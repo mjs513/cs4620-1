@@ -21,7 +21,7 @@ TexturePool::TexturePool()
 	for(int i = 0; i <= 4; ++i) {
 		std::stringstream ss;
 
-		ss << "wallTexture" << i << ".bmp";
+		ss << "wall" << i << ".png";
 
 		_walls.push_back( _generateTexture( ss.str(), true ) );
 	}
@@ -42,7 +42,7 @@ TexturePool::TexturePool()
 		_windows.push_back( _generateTexture( ss.str(), true ) );
 	}
 	
-	_sidewalks.push_back( _generateTexture( "sidewalk.bmp", true ) );
+	_sidewalks.push_back( _generateTexture( "sidewalk.png", true ) );
 	
 	_asphalt = _generateTexture("asphalt.png",true);
 }

@@ -17,11 +17,8 @@
 
 
 Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, const TexturePool &texturePool)
-	: _base(base), _displayList(0), _sidewalkTexture(0)
+	: _base(base), _displayList(0), _texPool(&texturePool), _randSeed(std::rand())
 {
-	// Pick a sidewalk texture for this block
-	_sidewalkTexture = texturePool.getRandomSidewalk();
-
 	std::vector<Geo::Rectangle> bases = splitter.split(_base);
 	
 	_buildings.reserve(bases.size());
@@ -44,6 +41,25 @@ Block::Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, const Text
 
 Block::~Block()
 {
+	clearDisplayList();
+}
+
+void Block::cycleWindowMode()
+{
+	clearDisplayList();
+	
+	for(std::vector<Building>::iterator i = _buildings.begin(); i != _buildings.end(); ++i) {
+		i->cycleWindowMode();
+	}
+}
+
+Building::WindowMode::Which Block::windowMode() const
+{
+	return _buildings.front().windowMode();
+}
+
+void Block::clearDisplayList()
+{
 	if(_displayList >= 0) {
 		glDeleteLists(_displayList,1);
 	}
@@ -51,36 +67,41 @@ Block::~Block()
 
 void Block::draw(const Frustum &frustum)
 {
+	// Make all rand() deterministic after this point for drawing the same on all frames
+	std::srand(_randSeed);
+	
 	if(!_displayList) {
-		_displayList = glGenLists(1);
+		//_displayList = glGenLists(1);
+		
+		//glNewList(_displayList,GL_COMPILE_AND_EXECUTE); {
+			OpenGL::color(Color(0.8,0.8,0.8));
 
-		glNewList(_displayList,GL_COMPILE_AND_EXECUTE); {
+			glBindTexture(GL_TEXTURE_2D,_texPool->getRandomSidewalk());
+			
+			// Draw sidewalk
+			glBegin(GL_QUADS); {
+				OpenGL::normal(Vector(0,0,1));
+
+				OpenGL::texture2(Point());
+				OpenGL::vertex(_base.origin());
+
+				OpenGL::texture2(Point(floor(0.33*_base.size().x),0));
+				OpenGL::vertex(_base.origin() + Vector(_base.size().x,0));
+
+				OpenGL::texture2(Point(floor(0.33*_base.size().x),floor(0.33*_base.size().y)));
+				OpenGL::vertex(_base.origin() + _base.size());
+
+				OpenGL::texture2(Point(0,floor(0.33*_base.size().y)));
+				OpenGL::vertex(_base.origin() + Vector(0,_base.size().y));
+			}
+			glEnd();
+			
+			// Draw buildings
 			for(std::vector<Building>::iterator i = _buildings.begin(); i != _buildings.end(); ++i) {
-				OpenGL::color(Color(0.8,0.8,0.8));
-
-				glBindTexture(GL_TEXTURE_2D, _sidewalkTexture);
-				
-				glBegin(GL_QUADS); {
-					OpenGL::normal(Vector(0,0,1));
-
-					OpenGL::texture2(Point());
-					OpenGL::vertex(_base.origin());
-
-					OpenGL::texture2(Point(floor(0.33*_base.size().x),0));
-					OpenGL::vertex(_base.origin() + Vector(_base.size().x,0));
-
-					OpenGL::texture2(Point(floor(0.33*_base.size().x),floor(0.33*_base.size().y)));
-					OpenGL::vertex(_base.origin() + _base.size());
-
-					OpenGL::texture2(Point(0,floor(0.33*_base.size().y)));
-					OpenGL::vertex(_base.origin() + Vector(0,_base.size().y));
-				}
-				glEnd();
-				
 				i->draw(frustum);
 			}
-		}
-		glEndList();
+		//}
+		//glEndList();
 	}
 	else {
 		glCallList(_displayList);
