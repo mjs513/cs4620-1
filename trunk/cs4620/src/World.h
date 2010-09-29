@@ -17,6 +17,11 @@
 #include "TexturePool.h"
 
 
+/*
+ * All coordinates in this world are given in meters.
+ */
+
+
 class World : public Displayable
 {
 private:
