@@ -14,10 +14,9 @@
 
 
 Building::Building(const Geo::Rectangle &base, const TexturePool &texPool)
-	: _base(base), _texPool(&texPool)
+	: _base(base), _texPool(&texPool), _randSeed(std::rand()), _windowMode(WindowMode::SameWindows)
 {
-	RandomDouble drand;
-	double r = drand.rand();
+	double r = RandomDouble().rand();
 
 	// 30% of small buildings
 	if(r < 0.3) {
@@ -41,8 +40,8 @@ Building::Building(const Geo::Rectangle &base, const TexturePool &texPool)
 	_numberOfFloors = int(_height/floorHeight);
 	_numberOfColumnsX = int(_base.size().x/columnX);
 	_numberOfColumnsY = int(_base.size().y/columnY);
-
-	//setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));
+	
+	setBoundingSphere(BoundingSphere::createWithAABox(base.origin(),base.origin() + base.size() + Vector(0,0,_height)));
 }
 
 const Geo::Rectangle& Building::base() const
@@ -53,6 +52,16 @@ const Geo::Rectangle& Building::base() const
 double Building::height() const
 {
 	return _height;
+}
+
+void Building::cycleWindowMode()
+{
+	_windowMode = WindowMode::Which(int((_windowMode + 1)%3));
+}
+
+Building::WindowMode::Which Building::windowMode() const
+{
+	return _windowMode;
 }
 
 
@@ -117,6 +126,9 @@ void decodeWindowTile(unsigned int encoded, int &face, int &floor, int &column)
 
 void Building::draw(const Frustum &frustum)
 {
+	// Make all rand() deterministic after this point for drawing the same on all frames
+	std::srand(_randSeed);
+	
 	glPushMatrix();
 	
 	OpenGL::translate(_base.origin() + 0.5*(_base.size() + Vector(0,0,_height)));
@@ -171,185 +183,176 @@ void Building::draw(const Frustum &frustum)
 	}
 	glEnd();
 	
-	std::vector< std::vector<unsigned int> > windowTypes(_texPool->windows().size());
-	
-	// Assign and group windows by texture
-	for(int face = 0; face < Face::COUNT; ++face) {
-		for(int floor = 0; floor < _numberOfFloors; ++floor) {
-			int nColumns = 0;
+	if(_windowMode != WindowMode::NoWindows) {
+		const float e = 0.001;  // Negligible value for discerning window texture from wall texture
+		const float b = 0.01;  // Border around window quad to ensure it will always blend with building, not background
+
+		OpenGL::color(Color::white());
+		
+		if(_windowMode == WindowMode::SameWindows) {
+			glBindTexture(GL_TEXTURE_2D,_texPool->getRandomWindow());
 			
-			if((face == Face::RIGHT) || (face == Face::LEFT)) {
-				nColumns = _numberOfColumnsY;
-			}
-			else {
-				nColumns = _numberOfColumnsX;
-			}
-			
-			for(int column = 0; column < nColumns; ++column) {
-				unsigned int encoded = encodeWindowTile(face,floor,column);
-				
-				windowTypes[std::rand()%windowTypes.size()].push_back(encoded);
-			}
-		}
-	}
-
-	const float e = 0.001;  // Negligible value for discerning window texture from wall texture
-	const float b = 0.01;  // Border around window quad to ensure it will always blend with building, not background
-	
-	// Window dimensions
-	double floorStep = 2.0/_numberOfFloors;
-	double xStep = 2.0/_numberOfColumnsX;
-	double yStep = 2.0/_numberOfColumnsY;
-	
-	for(unsigned int i = 0; i < windowTypes.size(); ++i) {
-		GLuint texture = _texPool->windows()[i];
-		const std::vector<unsigned int> &tiles = windowTypes[i];
-		
-		glBindTexture(GL_TEXTURE_2D,texture);
-		
-		glBegin(GL_QUADS); {
-			for(std::vector<unsigned int>::const_iterator i_tiles = tiles.begin(); i_tiles != tiles.end(); ++i_tiles) {
-				int face,floor,column;
-				
-				decodeWindowTile(*i_tiles,face,floor,column);
-				
-				double minH = -1 + floor*floorStep,maxH = minH + floorStep;
-				
-				switch(face) {
-				case Face::FRONT: {
-					double minX = -1 + column*xStep,maxX = minX + xStep;
-					
-					glNormal3d(0,1,0);
-					
-					glTexCoord2d(0,0);
-					glVertex3d(minX + b,1 + e,minH + b);
-
-					glTexCoord2d(0,1);
-					glVertex3d(minX + b,1 + e,maxH - b);
-
-					glTexCoord2d(1,1);
-					glVertex3d(maxX - b,1 + e,maxH - b);
-
-					glTexCoord2d(1,0);
-					glVertex3d(maxX - b,1 + e,minH + b);
-					
-					break;
-				}
-
-				case Face::BACK: {
-					double minX = -1 + column*xStep,maxX = minX + xStep;
-					
-					glNormal3d(0,-1,0);
-
-					glTexCoord2d(0,0);
-					glVertex3d(minX + b,-1 - e,minH + b);
-
-					glTexCoord2d(1,0);
-					glVertex3d(maxX - b,-1 - e,minH + b);
-
-					glTexCoord2d(1,1);
-					glVertex3d(maxX - b,-1 - e,maxH - b);
-					
-					glTexCoord2d(0,1);
-					glVertex3d(minX + b,-1 - e,maxH - b);
-					
-					break;
-				}
-
-				case Face::RIGHT: {
-					double minY = -1 + column*yStep,maxY = minY + yStep;
-					
-					glNormal3d(1,0,0);
-					
-					glTexCoord2d(0,0);
-					glVertex3d(1 + e,minY + b,minH + b);
-
-					glTexCoord2d(1,0);
-					glVertex3d(1 + e,maxY - b,minH + b);
-
-					glTexCoord2d(1,1);
-					glVertex3d(1 + e,maxY - b,maxH - b);
-
-					glTexCoord2d(0,1);
-					glVertex3d(1 + e,minY + b,maxH - b);
-					
-					break;
-				}
-
-				case Face::LEFT: {
-					double minY = -1 + column*yStep,maxY = minY + yStep;
-					
-					glNormal3d(-1,0,0);
-					
-					glTexCoord2d(0,0);
-					glVertex3d(-1 - e,minY + b,minH + b);
-
-					glTexCoord2d(0,1);
-					glVertex3d(-1 - e,minY + b,maxH - b);
-
-					glTexCoord2d(1,1);
-					glVertex3d(-1 - e,maxY - b,maxH - b);
-
-					glTexCoord2d(1,0);
-					glVertex3d(-1 - e,maxY - b,minH + b);
-					
-					break;
-				}
-				}
-			}
-		}
-		glEnd();
-	}
-	/*
-	// Front and back windows
-	// Condition (minH < 1 - step/2) to be careful with floating point errors causing an extra floor to show up
-	for(double minH = -1; minH < 1 - floorStep*0.5; minH += floorStep) {
-		OpenGL::normal(Vector(0,1,0));
-		
-		for(double minX = -1; minX < 1 - xStep*0.5; minX += xStep) {
-			double maxH = minH + floorStep;
-			double maxX = minX + xStep;
-
 			glBegin(GL_QUADS); {
-				glTexCoord2d(0,0);
-				glVertex3d(minX,1 + e,minH);
+				// Right face
+				OpenGL::normal(Vector(-1,0,0));
+				glTexCoord2f(0,0); glVertex3f(1 + e,-1 + b,-1 + b);
+				glTexCoord2f(_numberOfColumnsY,0); glVertex3f(1 + e,1 - b,-1 + b);
+				glTexCoord2f(_numberOfColumnsY,_numberOfFloors); glVertex3f(1 + e,1 - b,1 - b);
+				glTexCoord2f(0,_numberOfFloors); glVertex3f(1 + e,-1 + b,1 - b);
 
-				glTexCoord2d(0,1);
-				glVertex3d(minX,1 + e,maxH);
+				// Left Face
+				OpenGL::normal(Vector(-1,0,0));
+				glTexCoord2f(0,0); glVertex3f(-1 - e,-1 + b,-1 + b);
+				glTexCoord2f(0,_numberOfFloors); glVertex3f(-1 - e,-1 + b,1 - b);
+				glTexCoord2f(_numberOfColumnsY,_numberOfFloors); glVertex3f(-1 - e,1 - b,1 - b);
+				glTexCoord2f(_numberOfColumnsY,0); glVertex3f(-1 - e,1 - b,-1 + b);
 
-				glTexCoord2d(1,1);
-				glVertex3d(maxX,1 + e,maxH);
+				// Front Face
+				OpenGL::normal(Vector(0,1,0));
+				glTexCoord2f(0,0); glVertex3f(-1 + b,1 + e,-1 + b);
+				glTexCoord2f(0,_numberOfFloors); glVertex3f(-1 + b,1 + e,1 - b);
+				glTexCoord2f(_numberOfColumnsX,_numberOfFloors); glVertex3f( 1.0f,1 + e,1 - b);
+				glTexCoord2f(_numberOfColumnsX,0); glVertex3f( 1.0f,1 + e,-1 + b);
 
-				glTexCoord2d(1,0);
-				glVertex3d(maxX,1 + e,minH);
+				// Back Face
+				OpenGL::normal(Vector(0,-1,0));
+				glTexCoord2f(0,0); glVertex3f(-1 + b,-1 - e,-1 + b);
+				glTexCoord2f(_numberOfColumnsX,0); glVertex3f(1 - b,-1 - e,-1 + b);
+				glTexCoord2f(_numberOfColumnsX,_numberOfFloors); glVertex3f(1 - b,-1 - e,1 - b);
+				glTexCoord2f(0,_numberOfFloors); glVertex3f(-1 + b,-1 - e,1 - b);
 			}
 			glEnd();
 		}
-
-		OpenGL::normal(Vector(0,-1,0));
-		
-		for(double minX = -1; minX < 1 - xStep*0.5; minX += xStep) {
-			double maxH = minH + floorStep;
-			double maxX = minX + xStep;
+		else {
+			// Window dimensions
+			double floorStep = 2.0/_numberOfFloors;
+			double xStep = 2.0/_numberOfColumnsX;
+			double yStep = 2.0/_numberOfColumnsY;
 			
-			_texPool->getRandomWindow();
+			std::vector< std::vector<unsigned int> > windowTypes(_texPool->windows().size());
 			
-			glBegin(GL_QUADS); {
-				glTexCoord2d(0,0);
-				glVertex3d(minX,-1 - e,minH);
-
-				glTexCoord2d(1,0);
-				glVertex3d(maxX,-1 - e,minH);
-
-				glTexCoord2d(1,1);
-				glVertex3d(maxX,-1 - e,maxH);
-				
-				glTexCoord2d(0,1);
-				glVertex3d(minX,-1 - e,maxH);
+			// Assign and group windows by texture
+			for(int face = 0; face < Face::COUNT; ++face) {
+				for(int floor = 0; floor < _numberOfFloors; ++floor) {
+					int nColumns = 0;
+					
+					if((face == Face::RIGHT) || (face == Face::LEFT)) {
+						nColumns = _numberOfColumnsY;
+					}
+					else {
+						nColumns = _numberOfColumnsX;
+					}
+					
+					for(int column = 0; column < nColumns; ++column) {
+						unsigned int encoded = encodeWindowTile(face,floor,column);
+						
+						windowTypes[std::rand()%windowTypes.size()].push_back(encoded);
+					}
+				}
 			}
-			glEnd();
+			
+			
+			for(unsigned int i = 0; i < windowTypes.size(); ++i) {
+				GLuint texture = _texPool->windows()[i];
+				const std::vector<unsigned int> &tiles = windowTypes[i];
+				
+				glBindTexture(GL_TEXTURE_2D,texture);
+				
+				glBegin(GL_QUADS); {
+					for(std::vector<unsigned int>::const_iterator i_tiles = tiles.begin(); i_tiles != tiles.end(); ++i_tiles) {
+						int face,floor,column;
+						
+						decodeWindowTile(*i_tiles,face,floor,column);
+						
+						double minH = -1 + floor*floorStep,maxH = minH + floorStep;
+						
+						switch(face) {
+						case Face::FRONT: {
+							double minX = -1 + column*xStep,maxX = minX + xStep;
+							
+							glNormal3d(0,1,0);
+							
+							glTexCoord2d(0,0);
+							glVertex3d(minX + b,1 + e,minH + b);
+		
+							glTexCoord2d(0,1);
+							glVertex3d(minX + b,1 + e,maxH - b);
+		
+							glTexCoord2d(1,1);
+							glVertex3d(maxX - b,1 + e,maxH - b);
+		
+							glTexCoord2d(1,0);
+							glVertex3d(maxX - b,1 + e,minH + b);
+							
+							break;
+						}
+		
+						case Face::BACK: {
+							double minX = -1 + column*xStep,maxX = minX + xStep;
+							
+							glNormal3d(0,-1,0);
+		
+							glTexCoord2d(0,0);
+							glVertex3d(minX + b,-1 - e,minH + b);
+		
+							glTexCoord2d(1,0);
+							glVertex3d(maxX - b,-1 - e,minH + b);
+		
+							glTexCoord2d(1,1);
+							glVertex3d(maxX - b,-1 - e,maxH - b);
+							
+							glTexCoord2d(0,1);
+							glVertex3d(minX + b,-1 - e,maxH - b);
+							
+							break;
+						}
+		
+						case Face::RIGHT: {
+							double minY = -1 + column*yStep,maxY = minY + yStep;
+							
+							glNormal3d(1,0,0);
+							
+							glTexCoord2d(0,0);
+							glVertex3d(1 + e,minY + b,minH + b);
+		
+							glTexCoord2d(1,0);
+							glVertex3d(1 + e,maxY - b,minH + b);
+		
+							glTexCoord2d(1,1);
+							glVertex3d(1 + e,maxY - b,maxH - b);
+		
+							glTexCoord2d(0,1);
+							glVertex3d(1 + e,minY + b,maxH - b);
+							
+							break;
+						}
+		
+						case Face::LEFT: {
+							double minY = -1 + column*yStep,maxY = minY + yStep;
+							
+							glNormal3d(-1,0,0);
+							
+							glTexCoord2d(0,0);
+							glVertex3d(-1 - e,minY + b,minH + b);
+		
+							glTexCoord2d(0,1);
+							glVertex3d(-1 - e,minY + b,maxH - b);
+		
+							glTexCoord2d(1,1);
+							glVertex3d(-1 - e,maxY - b,maxH - b);
+		
+							glTexCoord2d(1,0);
+							glVertex3d(-1 - e,maxY - b,minH + b);
+							
+							break;
+						}
+						}
+					}
+				}
+				glEnd();
+			}
 		}
-	}*/
+	}
 	
 	glPopMatrix();
 }

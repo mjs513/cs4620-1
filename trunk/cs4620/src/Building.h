@@ -18,10 +18,24 @@
 class Building : public Displayable
 {
 public:
+	struct WindowMode
+	{
+		enum Which
+		{
+			NoWindows,
+			RandomWindows,
+			SameWindows
+		};
+	};
+	
+public:
 	Building(const Geo::Rectangle &base, const TexturePool &texPool);
 	
 	const Geo::Rectangle& base() const;
 	double height() const;
+
+	void cycleWindowMode();
+	Building::WindowMode::Which windowMode() const;
 	
 	void draw(const Frustum &frustum);
 	
@@ -34,8 +48,9 @@ private:
 	Geo::Rectangle _base;
 	double _height;
 	int _numberOfFloors,_numberOfColumnsX,_numberOfColumnsY;
-
 	const TexturePool *_texPool;
+	int _randSeed;
+	WindowMode::Which _windowMode;
 };
 
 #endif /* BUILDING_H_ */

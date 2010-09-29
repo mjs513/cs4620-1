@@ -25,13 +25,16 @@
 
 namespace {
 
+
 const double CAMERA_MOVING_STEP = 1;
 const double MOUSE_SENSITIVITY_FACTOR = 0.25;
 
 const char *BASE_CAP_FRAMES_DIR = "frames";
 const char *BASE_CAP_FRAMES_NAME = "exporter";
 
-const double MAX_VISIBILITY_RANGE = 500;
+const double HIGH_VISIBILITY = 1000;
+const double LOW_VISIBILITY = 400;
+
 
 }  // namespace
 
@@ -43,18 +46,11 @@ GLWidget::GLWidget(QWidget *parent)
 	frameExporter = 0;
 	enableUserControl = true;
 	isRecording = false;
-
-	/*
-	// Create animation timer
-	animationTimer = new QTimer(this);
-	connect(animationTimer, SIGNAL(timeout()), this, SLOT(animate()));
-	animationTimer->start(ANIMATION_TIME_MS);*/
 }
 
 GLWidget::~GLWidget()
 {
 	delete world;
-	delete animationTimer;
 }
 
 QSize GLWidget::minimumSizeHint() const
@@ -94,18 +90,12 @@ void GLWidget::initializeGL()
 	// Initialize fog
 	glEnable(GL_FOG);
 	
-	double minSizeCoord = world->size().x < world->size().y ? world->size().x : world->size().y;
-	
-	if(minSizeCoord > MAX_VISIBILITY_RANGE) {
-		minSizeCoord = MAX_VISIBILITY_RANGE;
-	}
-	
 	OpenGL::fogColor(clearColor);
 	glFogi(GL_FOG_MODE,GL_LINEAR);
 	glFogf(GL_FOG_DENSITY,1.0);
-	glFogf(GL_FOG_START,minSizeCoord*0.5);
-	glFogf(GL_FOG_END,minSizeCoord);
 	glHint(GL_FOG,GL_NICEST);
+	
+	setFogRange();
 	
 	// Initialize lighting
     glEnable(GL_LIGHTING);
@@ -121,20 +111,21 @@ void GLWidget::initializeGL()
 	setRecording(false);
 }
 
-// This routine will be called 25 times per second, you
-// can tweak this parameter by changing ANIMATION_TIME_MS
-void GLWidget::animate()
-{
-	updateGL();
-}
-
 void GLWidget::paintGL()
 {
-	static int fps = 0;
-	static QTime time = QTime::currentTime();
-	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	
+	int visibilityRange = HIGH_VISIBILITY;
+	
+	if(world->windowMode() == Building::WindowMode::RandomWindows) {
+		visibilityRange = LOW_VISIBILITY;
+	}
+	
+	gluPerspective(45,double(width)/height,1,visibilityRange);
+	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -162,8 +153,71 @@ void GLWidget::paintGL()
 		
 		glPopMatrix();
 	}
+
+	static int frameCount = 0,fps = 0;
+	static QTime time = QTime::currentTime();
+	static float pctVisible = 0;
 	
-	// Commands below removed because of Windows flickering issues
+	QTime now = QTime::currentTime();
+	int elapsed = time.msecsTo(now);
+	
+	pctVisible = (pctVisible*frameCount + frustum.pctVisible())/(frameCount + 1);
+	
+	++frameCount;
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	
+	glOrtho(0,width,0,height,10,-10);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	OpenGL::color(Color::white());
+	
+	char buffer[512];
+	
+	sprintf(buffer,"Culling tests: %.2f%% visible",100*pctVisible);
+	renderText(20,20,buffer);
+	
+	sprintf(buffer,"FPS: %d (not counting idle frames)",fps);
+	renderText(20,40,buffer);
+	
+	std::string windowMode = "?";
+	Building::WindowMode::Which mode = world->windowMode();
+	
+	switch(mode) {
+		case Building::WindowMode::NoWindows: {
+			windowMode = "No windows";
+			
+			break;
+		}
+	
+		case Building::WindowMode::SameWindows: {
+			windowMode = "Same";
+			
+			break;
+		}
+	
+		case Building::WindowMode::RandomWindows: {
+			windowMode = "Random";
+			
+			break;
+		}
+	}
+	
+	sprintf(buffer,"Window mode: %s (press T to cycle)",windowMode.c_str());
+	renderText(20,60,buffer);
+	
+	if(elapsed > 1000) {
+		fps = frameCount;
+		
+		time = now;
+		frameCount = 0;
+		pctVisible = 0;
+	}
+	
+	//----- Commands below removed because of Windows flickering issues -----//
 	
 	//glFlush(); // Send the commands to the OpenGL state machine
 	//this->swapBuffers(); // Display the off-screen rendered buffer
@@ -171,83 +225,38 @@ void GLWidget::paintGL()
 	if(isRecording) { // Save frame to disk, if recording is enabled
 		frameExporter->writeFrame(grabFrameBuffer());
 	}
-	
-	++fps;
-	
-	QTime now = QTime::currentTime();
-	int elapsed = time.msecsTo(now);
-	
-	if(elapsed > 1000) {
-		//std::cout << "FPS: " << fps << std::endl;
-		
-		time = now;
-		fps = 0;
-	}
 }
-/*
-void GLWidget::buildBox() {
-	box = glGenLists(1);
 
-	glNewList(box,GL_COMPILE);
-
-	glPushMatrix();
-	glBegin(GL_QUADS); // Start drawing QUADS
-
-	glColor3f(1.0f, 1.0f, 1.0f);
-
-	// Bottom face
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-
-	// Front Face
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-
-	// Back Face
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-
-	// Right face
-	glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-
-	// Left Face
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-
-	// Top Face
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-
-	glEnd();
-	glPopMatrix();
-	glEndList();
-}*/
-
-void GLWidget::resizeGL(int width, int height)
+void GLWidget::setFogRange()
 {
-	 if (height == 0) {
+	double minSizeCoord = world->size().x < world->size().y ? world->size().x : world->size().y;
+	int visibilityRange = HIGH_VISIBILITY;
+	
+	if(world->windowMode() == Building::WindowMode::RandomWindows) {
+		visibilityRange = LOW_VISIBILITY;
+	}
+	
+	if(minSizeCoord > visibilityRange) {
+		minSizeCoord = visibilityRange;
+	}
+	
+	glFogf(GL_FOG_START,minSizeCoord*0.5);
+	glFogf(GL_FOG_END,minSizeCoord);
+}
+
+void GLWidget::resizeGL(int w, int h)
+{
+	width = w;
+	height = h;
+	
+	 if(height == 0) {
 		 height = 1;
 	 }
 
-	glViewport(0, 0, width, height);
+	glViewport(0,0,width,height);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	
-	gluPerspective(45,double(width)/height,1,MAX_VISIBILITY_RANGE);
 	
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -287,6 +296,16 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		case Qt::Key_Z: cameraFreeMove(Vector(0,-1,0)); break;
 		
 		case Qt::Key_R: setRecording(!isRecording); break;
+		
+		case Qt::Key_T: {
+			world->cycleWindowMode();
+			
+			setFogRange();
+			updateGL();
+			
+			break;
+		}
+		
 		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
 	}
 	

@@ -18,7 +18,7 @@ void Displayable::display(const Frustum &frustum)
 {
 	bool doDraw = true;
 	
-	// Do frustum culling if enabled for this object
+	// Test frustum culling if enabled for this object
 	if(testFrustum()) {
 		doDraw = frustum.includes(_boundingSphere);
 	}

@@ -29,6 +29,9 @@ public:
 	World();
 	
 	const Vector size() const;
+
+	void cycleWindowMode();
+	Building::WindowMode::Which windowMode() const;
 	
 	void draw(const Frustum &frustum);
 	

@@ -30,7 +30,5 @@ const BoundingSphere BoundingSphere::createWithAABox(const Point &min, const Poi
 {
 	Vector radius = 0.5*(max - min);
 	
-	std::cout << "BS: min " << min << ", max " << max << " -> center " << min + radius << ", radius " << radius.length() << std::endl;
-	
 	return BoundingSphere(min + radius,radius.length());
 }

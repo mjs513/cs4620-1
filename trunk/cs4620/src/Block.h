@@ -24,6 +24,11 @@ public:
 	Block(const Geo::Rectangle &base, Geo::RectSplitter &splitter, const TexturePool &texturePool);
 	~Block();
 
+	void cycleWindowMode();
+	Building::WindowMode::Which windowMode() const;
+	
+	void clearDisplayList();
+
 	void draw(const Frustum &frustum);
 
 	bool testFrustum() const;
@@ -32,7 +37,8 @@ private:
 	Geo::Rectangle _base;
 	std::vector<Building> _buildings;
 	GLuint _displayList;
-	GLuint _sidewalkTexture;
+	const TexturePool *_texPool;
+	int _randSeed;
 };
 
 
