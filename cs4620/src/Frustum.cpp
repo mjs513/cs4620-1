@@ -19,7 +19,7 @@
 Frustum::Frustum()
 	: _totalTests(0), _passedTests(0)
 {
-	// Create frustum from projection matrix -- 
+	// Create frustum from projection matrix
 	Matrix proj;
 	
 	glGetDoublev(GL_PROJECTION_MATRIX,proj.v);
