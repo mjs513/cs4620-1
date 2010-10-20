@@ -73,7 +73,7 @@ void GLWidget::initializeGL()
 	
 	glEnable(GL_ALPHA_TEST);
 	
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	
@@ -89,6 +89,8 @@ void GLWidget::initializeGL()
     OpenGL::lightColor(GL_LIGHT0,GL_SPECULAR,Color(1,1,1));
     
 	setRecording(false);
+	
+	_camera.setRadius(5);
 }
 
 void GLWidget::paintGL()
@@ -109,10 +111,46 @@ void GLWidget::paintGL()
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
     
+    
+    OpenGL::color(Color::green());
+    
+    glBegin(GL_QUADS); {
+		// Top Face
+		OpenGL::normal(Vector(0,0,1));
+		glTexCoord2f(0,0); glVertex3f(-1.0f, -1.0f,  1.0f);
+		glTexCoord2f(1,0); glVertex3f( 1.0f, -1.0f,  1.0f);
+		glTexCoord2f(1,1); glVertex3f( 1.0f,  1.0f,  1.0f);
+		glTexCoord2f(0,1); glVertex3f(-1.0f,  1.0f,  1.0f);
 
-    //
-    // draw scene
-    //
+		// Right face
+		OpenGL::normal(Vector(-1,0,0));
+		glTexCoord2f(0,0); glVertex3f( 1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1,0); glVertex3f( 1.0f,  1.0f, -1.0f);
+		glTexCoord2f(1,1); glVertex3f( 1.0f,  1.0f,  1.0f);
+		glTexCoord2f(0,1); glVertex3f( 1.0f, -1.0f,  1.0f);
+
+		// Left Face
+		OpenGL::normal(Vector(-1,0,0));
+		glTexCoord2f(0,0); glVertex3f(-1.0f, -1.0f, -1.0f);
+		glTexCoord2f(0,1); glVertex3f(-1.0f, -1.0f,  1.0f);
+		glTexCoord2f(1,1); glVertex3f(-1.0f,  1.0f,  1.0f);
+		glTexCoord2f(1,0); glVertex3f(-1.0f,  1.0f, -1.0f);
+
+		// Front Face
+		OpenGL::normal(Vector(0,1,0));
+		glTexCoord2f(0,0); glVertex3f(-1.0f,  1.0f, -1.0f);
+		glTexCoord2f(0,1); glVertex3f(-1.0f,  1.0f,  1.0f);
+		glTexCoord2f(1,1); glVertex3f( 1.0f,  1.0f,  1.0f);
+		glTexCoord2f(1,0); glVertex3f( 1.0f,  1.0f, -1.0f);
+
+		// Back Face
+		OpenGL::normal(Vector(0,-1,0));
+		glTexCoord2f(0,0); glVertex3f(-1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1,0); glVertex3f( 1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1,1); glVertex3f( 1.0f, -1.0f,  1.0f);
+		glTexCoord2f(0,1); glVertex3f(-1.0f, -1.0f,  1.0f);
+	}
+	glEnd();
     
     
 	static int frameCount = 0,fps = 0;
