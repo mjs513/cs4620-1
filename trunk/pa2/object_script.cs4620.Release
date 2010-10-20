@@ -1,0 +1,16 @@
+INPUT(
+./release\SphereCamera.o
+./release\Color.o
+./release\GLWidget.o
+./release\MainWindow.o
+./release\Matrix.o
+./release\OpenGL.o
+./release\Plane.o
+./release\Point.o
+./release\Random.o
+./release\Rectangle.o
+./release\Vector.o
+./release\main.o
+./release\moc_GLWidget.o
+./release\moc_MainWindow.o
+);
