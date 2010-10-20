@@ -15,7 +15,7 @@
 namespace {
 
 
-const Vector INITIAL_BACK(0,1,0),INITIAL_UP(0,0,1),INITIAL_RIGHT(1,0,0);
+const Vector INITIAL_BACK(1,0,0),INITIAL_UP(0,0,1),INITIAL_RIGHT(0,1,0);
 const double DEFAULT_SENSITIVITY = 1;
 
 
@@ -109,14 +109,14 @@ void SphereCamera::markSceneWasRedrawn()
 
 void SphereCamera::moveUp()
 {
-	_angleZ += _sensitivity;
+	_angleZ -= _sensitivity;
 	
 	_positionChanged = true;
 }
 
 void SphereCamera::moveDown()
 {
-	_angleZ -= _sensitivity;
+	_angleZ += _sensitivity;
 	
 	_positionChanged = true;
 }
@@ -140,10 +140,10 @@ void SphereCamera::applyTransformation() const
 	Vector back = INITIAL_BACK,up = INITIAL_UP;
 	Matrix m = Matrix::rotationTransform(_angleZ,INITIAL_RIGHT);
 	
-	m *= Matrix::rotationTransform(_angleXY,Vector(0,0,1));
+	m = Matrix::rotationTransform(_angleXY,Vector(0,0,1))*m;
 	
 	back = m*back;
 	up = m*up;
 	
-	OpenGL::lookAt(_center + back,_center,up);
+	OpenGL::lookAt(_center + _radius*back,_center,up);
 }
