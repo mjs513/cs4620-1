@@ -135,6 +135,24 @@ void SphereCamera::moveLeft()
 	_positionChanged = true;
 }
 
+void SphereCamera::moveFront()
+{
+	_radius -= 0.5*_sensitivity;
+	
+	if(_radius < 0) {
+		_radius = 0;
+	}
+	
+	_positionChanged = true;
+}
+
+void SphereCamera::moveBack()
+{
+	_radius += 0.5*_sensitivity;
+	
+	_positionChanged = true;
+}
+
 void SphereCamera::applyTransformation() const
 {
 	Vector back = INITIAL_BACK,up = INITIAL_UP;

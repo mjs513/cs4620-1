@@ -38,10 +38,16 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(), _enableUserControl(true), _isRecording(false), _frameExporter(0) { }
+	: QGLWidget(parent), _camera(), _enableUserControl(true), _isRecording(false), _frameExporter(0)
+{
+	_animationTimer = new QTimer(this);
+	connect(_animationTimer , SIGNAL(timeout()), this, SLOT(animate()));
+	_animationTimer->start(1000/35);
+}
 
 GLWidget::~GLWidget()
 {
+	delete _animationTimer;
 	delete _frameExporter;
 }
 
@@ -90,7 +96,21 @@ void GLWidget::initializeGL()
     
 	setRecording(false);
 	
-	_camera.setRadius(5);
+	_camera.setRadius(20);
+	
+	glLineWidth(3);
+	
+	_rootJoint = new Joint(0,0);
+	
+	Joint *j1 = new Joint(1,45);
+	Joint *j2 = new Joint(1,30);
+	Joint *j3 = new Joint(1,-30);
+	Joint *j4 = new Joint(1,-90);
+	
+	_rootJoint->addChild(j1);
+	j1->addChild(j2);
+	j2->addChild(j3);
+	j3->addChild(j4);
 }
 
 void GLWidget::paintGL()
@@ -111,47 +131,7 @@ void GLWidget::paintGL()
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
     
-    
-    OpenGL::color(Color::green());
-    
-    glBegin(GL_QUADS); {
-		// Top Face
-		OpenGL::normal(Vector(0,0,1));
-		glTexCoord2f(0,0); glVertex3f(-1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1,0); glVertex3f( 1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1,1); glVertex3f( 1.0f,  1.0f,  1.0f);
-		glTexCoord2f(0,1); glVertex3f(-1.0f,  1.0f,  1.0f);
-
-		// Right face
-		OpenGL::normal(Vector(-1,0,0));
-		glTexCoord2f(0,0); glVertex3f( 1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1,0); glVertex3f( 1.0f,  1.0f, -1.0f);
-		glTexCoord2f(1,1); glVertex3f( 1.0f,  1.0f,  1.0f);
-		glTexCoord2f(0,1); glVertex3f( 1.0f, -1.0f,  1.0f);
-
-		// Left Face
-		OpenGL::normal(Vector(-1,0,0));
-		glTexCoord2f(0,0); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(0,1); glVertex3f(-1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1,1); glVertex3f(-1.0f,  1.0f,  1.0f);
-		glTexCoord2f(1,0); glVertex3f(-1.0f,  1.0f, -1.0f);
-
-		// Front Face
-		OpenGL::normal(Vector(0,1,0));
-		glTexCoord2f(0,0); glVertex3f(-1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0,1); glVertex3f(-1.0f,  1.0f,  1.0f);
-		glTexCoord2f(1,1); glVertex3f( 1.0f,  1.0f,  1.0f);
-		glTexCoord2f(1,0); glVertex3f( 1.0f,  1.0f, -1.0f);
-
-		// Back Face
-		OpenGL::normal(Vector(0,-1,0));
-		glTexCoord2f(0,0); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1,0); glVertex3f( 1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1,1); glVertex3f( 1.0f, -1.0f,  1.0f);
-		glTexCoord2f(0,1); glVertex3f(-1.0f, -1.0f,  1.0f);
-	}
-	glEnd();
-    
+    _rootJoint->display();
     
 	static int frameCount = 0,fps = 0;
 	static QTime time = QTime::currentTime();
@@ -226,6 +206,8 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		case Qt::Key_S: _camera.moveDown(); break;
 		case Qt::Key_A: _camera.moveLeft(); break;
 		case Qt::Key_D: _camera.moveRight(); break;
+		case Qt::Key_Q: _camera.moveFront(); break;
+		case Qt::Key_Z: _camera.moveBack(); break;
 		
 		case Qt::Key_R: setRecording(!_isRecording); break;
 		
@@ -235,7 +217,8 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 	update(); // update the screen
 }
 
-void GLWidget::setRecording(bool state) {
+void GLWidget::setRecording(bool state)
+{
 	_isRecording = state;
 
 	if (_isRecording) {
@@ -254,6 +237,27 @@ void GLWidget::setRecording(bool state) {
 		((MainWindow*)parent())->statusBar()->clearMessage();
 		((MainWindow*)parent())->setFixedSize(false);
 	}
+}
+
+void GLWidget::animate()
+{
+    Joint *i = _rootJoint;
+    double mult = 1;
+    
+    while(true) {
+    	i->setAngle(i->angle() + mult);
+    	
+    	if(i->children().size()) {
+    		i = i->children().front();
+    	}
+    	else {
+    		break;
+    	}
+    	
+    	mult *= -2;
+    }
+	
+	updateGL();
 }
 
 int GLWidget::FrameExporter::exporterId = -1;

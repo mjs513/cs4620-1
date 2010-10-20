@@ -13,6 +13,7 @@
 #include "Vector.h"
 #include "Point.h"
 #include "SphereCamera.h"
+#include "Joint.h"
 
 
 class GLWidget : public QGLWidget
@@ -51,17 +52,23 @@ protected:
 
 private:
 	void setRecording(bool state);
+	
+private slots:
+	void animate();
 
 private:
 	int _width,_height;
 	
 	SphereCamera _camera;
+	
+	Joint *_rootJoint;
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool _enableUserControl;
 
 	bool _isRecording;
 	FrameExporter *_frameExporter;
+	QTimer *_animationTimer;
 };
 
 #endif /* GLWIDGET_H_ */
