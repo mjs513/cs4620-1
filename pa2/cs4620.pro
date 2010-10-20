@@ -3,7 +3,8 @@ TARGET = cs4620
 QT += core \
     opengl \
     gui
-HEADERS += src/SphereCamera.h \
+HEADERS += src/Joint.h \
+    src/SphereCamera.h \
     src/Color.h \
     src/GLWidget.h \
     src/MainWindow.h \
@@ -11,11 +12,11 @@ HEADERS += src/SphereCamera.h \
     src/OpenGL.h \
     src/Plane.h \
     src/Point.h \
-    src/Pointer.h \
     src/Random.h \
     src/Rectangle.h \
     src/Vector.h
-SOURCES += src/SphereCamera.cpp \
+SOURCES += src/Joint.cpp \
+    src/SphereCamera.cpp \
     src/Color.cpp \
     src/GLWidget.cpp \
     src/MainWindow.cpp \

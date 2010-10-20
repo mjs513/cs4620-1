@@ -41,6 +41,8 @@ public:
 	void moveDown();
 	void moveRight();
 	void moveLeft();
+	void moveFront();
+	void moveBack();
 	
 	void applyTransformation() const;
 	

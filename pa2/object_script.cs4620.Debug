@@ -1,4 +1,5 @@
 INPUT(
+./debug\Joint.o
 ./debug\SphereCamera.o
 ./debug\Color.o
 ./debug\GLWidget.o
