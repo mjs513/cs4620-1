@@ -1,0 +1,16 @@
+INPUT(
+./debug\SphereCamera.o
+./debug\Color.o
+./debug\GLWidget.o
+./debug\MainWindow.o
+./debug\Matrix.o
+./debug\OpenGL.o
+./debug\Plane.o
+./debug\Point.o
+./debug\Random.o
+./debug\Rectangle.o
+./debug\Vector.o
+./debug\main.o
+./debug\moc_GLWidget.o
+./debug\moc_MainWindow.o
+);

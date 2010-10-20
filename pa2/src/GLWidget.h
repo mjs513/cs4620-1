@@ -9,9 +9,10 @@
 #define GLWIDGET_H_
 
 #include <QtOpenGL/QGLWidget>
+
 #include "Vector.h"
 #include "Point.h"
-#include "World.h"
+#include "SphereCamera.h"
 
 
 class GLWidget : public QGLWidget
@@ -26,7 +27,8 @@ public:
 	QSize sizeHint() const;
 
 private:
-	class FrameExporter {
+	class FrameExporter
+	{
 		public:
 			FrameExporter() : nFrames(0) { exporterId++; }
 
@@ -48,29 +50,18 @@ protected:
 	void keyPressEvent(QKeyEvent* event);
 
 private:
-	void cameraRotateX(double angle);
-	void cameraRotateY(double angle);
-
-	void cameraFreeMove(Vector dir);
-	void cameraGameMove(double dx, double dy, double dz);
-
 	void setRecording(bool state);
-	
-	void setFogRange();
 
 private:
-	World *world;
-	int width,height;
+	int _width,_height;
 	
-	// Camera position up/left/right vectors
-	Point cameraPos;
-	Vector cameraForward, cameraUp, cameraLeft;
+	SphereCamera _camera;
 
 	// Whether we can use mouse/keyboard to move the camera
-	bool enableUserControl;
+	bool _enableUserControl;
 
-	bool isRecording;
-	FrameExporter* frameExporter;
+	bool _isRecording;
+	FrameExporter *_frameExporter;
 };
 
 #endif /* GLWIDGET_H_ */
