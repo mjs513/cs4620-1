@@ -53,12 +53,12 @@ GLWidget::~GLWidget()
 
 QSize GLWidget::minimumSizeHint() const
 {
-	return QSize(50,50);
+	return QSize(50, 50);
 }
 
 QSize GLWidget::sizeHint() const
 {
-	return QSize(640,480);
+	return QSize(640, 480);
 }
 
 void GLWidget::initializeGL()
@@ -69,7 +69,7 @@ void GLWidget::initializeGL()
 	
 	glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
-	
+
 	// Depth buffer setup
 	glClearDepth(1.0f);
 	glDepthFunc(GL_LEQUAL);
@@ -98,20 +98,65 @@ void GLWidget::initializeGL()
 	
 	_camera.setRadius(20);
 	
+	glPointSize(10);
 	glLineWidth(3);
-	glPointSize(5);
 	
 	_rootJoint = new Joint(0,0);
 	
+	// Create planar chain
+	_planarJoint = new Joint(0, 0);
 	Joint *j1 = new Joint(1,45);
 	Joint *j2 = new Joint(1,30);
 	Joint *j3 = new Joint(1,-30);
 	Joint *j4 = new Joint(1,-90);
-	
-	_rootJoint->addChild(j1);
+
+	_planarJoint->addChild(j1);
 	j1->addChild(j2);
 	j2->addChild(j3);
 	j3->addChild(j4);
+
+
+	// Create humanoid
+
+	// Body
+	_humanJoint = new Joint(0, 0);
+	Joint *hJ1 = new Joint(1, 0);
+	Joint *hJ11 = new Joint(1, 180);
+	Joint *hJ12 = new Joint(0.5, 0);
+	hJ1->addChild(hJ11);
+	hJ11->addChild(hJ12);
+
+	// Left leg
+	Joint *hJ2 = new Joint(1, 45);
+	Joint *hJ21 = new Joint(1, -45);
+	hJ2->addChild(hJ21);
+
+	// Right leg
+	Joint *hJ3 = new Joint(1, -45);
+	Joint *hJ31 = new Joint(1, 45);
+	hJ3->addChild(hJ31);
+
+	// Left arm
+	Joint *hJ4 = new Joint(1, 270);
+	Joint *hJ41 = new Joint(1, 225);
+	Joint *hJ42 = new Joint(1, 180);
+	hJ4->addChild(hJ41);
+	hJ41->addChild(hJ42);
+
+	// Right arm
+	Joint *hJ5 = new Joint(1, 90);
+	Joint *hJ51 = new Joint(1, 135);
+	Joint *hJ52 = new Joint(1, 180);
+	hJ5->addChild(hJ51);
+	hJ51->addChild(hJ52);
+
+	_humanJoint->addChild(hJ1);
+	hJ1->addChild(hJ2);
+	hJ1->addChild(hJ3);
+	hJ11->addChild(hJ4);
+	hJ11->addChild(hJ5);
+
+	_rootJoint = _humanJoint;
 }
 
 void GLWidget::paintGL()
@@ -137,18 +182,18 @@ void GLWidget::paintGL()
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
 
 	OpenGL::color(Color::white());
-	
+
     _rootJoint->display();
 
 	if(_selectedJoint) {
 		OpenGL::color(Color::red());
-		
+
 		glBegin(GL_POINTS); {
 			OpenGL::vertex(_selectedPoint);
 		}
 		glEnd();
 	}
-	
+
 	static int frameCount = 0,fps = 0;
 	static QTime time = QTime::currentTime();
 	
@@ -164,11 +209,11 @@ void GLWidget::paintGL()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
+	
 	OpenGL::color(Color::white());
 	
 	char buffer[512];
-
+	
 	sprintf(buffer,"FPS: %d (not counting idle frames)",fps);
 	renderText(20,20,buffer);
 	
@@ -213,38 +258,38 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 	std::vector<Matrix> matrixStack;
 	double minDist = 1e300/1e-300;
 	Matrix m;
-	
+
 	jointStack.push_back(_rootJoint);
 	matrixStack.push_back(_rootJoint->transformation());
 
 	std::cout << std::endl << std::endl << "mouse coords = " << Point(event->x(),event->y()) << std::endl;
 	std::cout << "mouse coords = " << Point(event->x(),event->y()) << std::endl;
 	std::cout << "ray = " << pickingRay.p << ", " << pickingRay.dir << std::endl;
-	
+
 	while(!jointStack.empty()) {
 		Joint *j = jointStack.back();
 		Matrix m = matrixStack.back();
-		
+
 		jointStack.pop_back();
 		matrixStack.pop_back();
-		
+
 		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
 			jointStack.push_back(*i);
 			matrixStack.push_back((*i)->transformation()*m);
 		}
-		
+
 		double d = pickingRay.distance(m*Point());
-		
+
 		std::cout << "point = " << m*Point() << std::endl;
 		std::cout << "  dist = " << d << std::endl;
-		
+
 		if(d < minDist) {
 			minDist = d;
 			_selectedJoint = j;
 			_selectedPoint = m*Point();
 		}
 	}
-	
+
 	if(minDist > 10) {
 		_selectedJoint = 0;
 	}
@@ -260,6 +305,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 void GLWidget::keyPressEvent(QKeyEvent * event)
 {
 	switch (event->key()) {
+		// Camera controls
 		case Qt::Key_W: _camera.moveUp(); break;
 		case Qt::Key_S: _camera.moveDown(); break;
 		case Qt::Key_A: _camera.moveLeft(); break;
@@ -267,9 +313,16 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		case Qt::Key_Q: _camera.moveFront(); break;
 		case Qt::Key_Z: _camera.moveBack(); break;
 		
+		// Record
 		case Qt::Key_R: setRecording(!_isRecording); break;
 		
 		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
+
+		// Change character views
+		case Qt::Key_1: _rootJoint = _planarJoint; break;
+		case Qt::Key_2: _rootJoint = _humanJoint; break;
+		case Qt::Key_3: break;
+		case Qt::Key_4: break;
 	}
 	
 	update(); // update the screen
@@ -299,38 +352,38 @@ void GLWidget::setRecording(bool state)
 
 void GLWidget::animate()
 {
-    Joint *i = _rootJoint;
-    double mult = 0;
-    
-    while(true) {
-    	i->setAngle(i->angle() + mult);
-    	
-    	if(i->children().size()) {
-    		i = i->children().front();
-    	}
-    	else {
-    		break;
-    	}
-    	
-    	mult *= -2;
-    }
-	
-	updateGL();
+//    Joint *i = _rootJoint;
+//    double mult = 1;
+//
+//    while(true) {
+//    	i->setAngle(i->angle() + mult);
+//
+//    	if(i->children().size()) {
+//    		i = i->children().front();
+//    	}
+//    	else {
+//    		break;
+//    	}
+//
+//    	mult *= -2;
+//    }
+//
+//	updateGL();
 }
 
 Ray GLWidget::_rayFromMouse(const Point &mouseCoords)
 {
 	GLint viewport[4];
 	//Matrix model,proj;
-	
+
 	glGetIntegerv(GL_VIEWPORT,viewport);
 	//glGetDoublev(GL_MODELVIEW_MATRIX,model.v);
 	//glGetDoublev(GL_PROJECTION_MATRIX,proj.v);
-	
+
 	Point p;
-	
+
 	gluUnProject(mouseCoords.x,mouseCoords.y,0,modelviewMatrix.v,projectionMatrix.v,viewport,&p.x,&p.y,&p.z);
-	
+
 	return Ray(p,_camera.center());
 }
 

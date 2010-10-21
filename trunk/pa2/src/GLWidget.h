@@ -41,16 +41,16 @@ private:
 			static int exporterId;
 			int nFrames;
 	};
-	
+
 protected:
 	void initializeGL();
 	void paintGL();
 	void resizeGL(int width, int height);
-	
+
 	void mousePressEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void keyPressEvent(QKeyEvent* event);
-	
+
 private:
 	void setRecording(bool state);
 	
@@ -65,6 +65,8 @@ private:
 	SphereCamera _camera;
 	
 	Joint *_rootJoint;
+	Joint *_planarJoint;
+	Joint *_humanJoint;
 	Joint *_selectedJoint;
 	Point _selectedPoint;
 	Matrix projectionMatrix,modelviewMatrix;
