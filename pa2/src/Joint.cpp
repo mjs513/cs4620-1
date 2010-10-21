@@ -109,7 +109,16 @@ void Joint::display()
 	
 	Matrix m = transformation();
 	
+	// Draw joints
+	glBegin(GL_POINTS); {
+		OpenGL::color(Color(1.0, 0, 0));
+		OpenGL::vertex(Point());
+	}
+	glEnd();
+
+	// Draw bones
 	glBegin(GL_LINES); {
+		OpenGL::color(Color(1.0, 1.0, 1.0));
 		OpenGL::vertex(Point());
 		OpenGL::vertex(m*Point());
 	}
