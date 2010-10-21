@@ -38,7 +38,7 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(), _enableUserControl(true), _isRecording(false), _frameExporter(0)
+	: QGLWidget(parent), _camera(), _rootJoint(0), _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
 	_animationTimer = new QTimer(this);
 	connect(_animationTimer , SIGNAL(timeout()), this, SLOT(animate()));
@@ -53,22 +53,23 @@ GLWidget::~GLWidget()
 
 QSize GLWidget::minimumSizeHint() const
 {
-	return QSize(50, 50);
+	return QSize(50,50);
 }
 
 QSize GLWidget::sizeHint() const
 {
-	return QSize(640, 480);
+	return QSize(640,480);
 }
 
 void GLWidget::initializeGL()
 {
-	Color clearColor(0.1,0.1,0.11);
+	Color clearColor(0,0,0,0);
 	
 	OpenGL::clearColor(clearColor);
 	
 	glEnable(GL_TEXTURE_2D);
-
+    glEnable(GL_COLOR_MATERIAL);
+	
 	// Depth buffer setup
 	glClearDepth(1.0f);
 	glDepthFunc(GL_LEQUAL);
@@ -85,7 +86,6 @@ void GLWidget::initializeGL()
 	
 	// Initialize lighting
     glEnable(GL_LIGHTING);
-    glEnable(GL_COLOR_MATERIAL);
 	glShadeModel(GL_SMOOTH);
     
     glEnable(GL_LIGHT0);
@@ -99,6 +99,7 @@ void GLWidget::initializeGL()
 	_camera.setRadius(20);
 	
 	glLineWidth(3);
+	glPointSize(5);
 	
 	_rootJoint = new Joint(0,0);
 	
@@ -127,12 +128,27 @@ void GLWidget::paintGL()
 	
 	// Position the camera
 	_camera.applyTransformation();
+
+	// Save the matrices for ray picking
+	glGetDoublev(GL_MODELVIEW_MATRIX,modelviewMatrix.v);
+	glGetDoublev(GL_PROJECTION_MATRIX,projectionMatrix.v);
 	
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
-    
+
+	OpenGL::color(Color::white());
+	
     _rootJoint->display();
-    
+
+	if(_selectedJoint) {
+		OpenGL::color(Color::red());
+		
+		glBegin(GL_POINTS); {
+			OpenGL::vertex(_selectedPoint);
+		}
+		glEnd();
+	}
+	
 	static int frameCount = 0,fps = 0;
 	static QTime time = QTime::currentTime();
 	
@@ -148,11 +164,11 @@ void GLWidget::paintGL()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	
+
 	OpenGL::color(Color::white());
 	
 	char buffer[512];
-	
+
 	sprintf(buffer,"FPS: %d (not counting idle frames)",fps);
 	renderText(20,20,buffer);
 	
@@ -190,7 +206,49 @@ void GLWidget::resizeGL(int w, int h)
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void GLWidget::mousePressEvent(QMouseEvent*) { }
+void GLWidget::mousePressEvent(QMouseEvent *event)
+{
+	Ray pickingRay = _rayFromMouse(Point(event->x(),event->y()));
+	std::vector<Joint*> jointStack;
+	std::vector<Matrix> matrixStack;
+	double minDist = 1e300/1e-300;
+	Matrix m;
+	
+	jointStack.push_back(_rootJoint);
+	matrixStack.push_back(_rootJoint->transformation());
+
+	std::cout << std::endl << std::endl << "mouse coords = " << Point(event->x(),event->y()) << std::endl;
+	std::cout << "mouse coords = " << Point(event->x(),event->y()) << std::endl;
+	std::cout << "ray = " << pickingRay.p << ", " << pickingRay.dir << std::endl;
+	
+	while(!jointStack.empty()) {
+		Joint *j = jointStack.back();
+		Matrix m = matrixStack.back();
+		
+		jointStack.pop_back();
+		matrixStack.pop_back();
+		
+		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
+			jointStack.push_back(*i);
+			matrixStack.push_back((*i)->transformation()*m);
+		}
+		
+		double d = pickingRay.distance(m*Point());
+		
+		std::cout << "point = " << m*Point() << std::endl;
+		std::cout << "  dist = " << d << std::endl;
+		
+		if(d < minDist) {
+			minDist = d;
+			_selectedJoint = j;
+			_selectedPoint = m*Point();
+		}
+	}
+	
+	if(minDist > 10) {
+		_selectedJoint = 0;
+	}
+}
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
@@ -242,7 +300,7 @@ void GLWidget::setRecording(bool state)
 void GLWidget::animate()
 {
     Joint *i = _rootJoint;
-    double mult = 1;
+    double mult = 0;
     
     while(true) {
     	i->setAngle(i->angle() + mult);
@@ -260,8 +318,25 @@ void GLWidget::animate()
 	updateGL();
 }
 
+Ray GLWidget::_rayFromMouse(const Point &mouseCoords)
+{
+	GLint viewport[4];
+	//Matrix model,proj;
+	
+	glGetIntegerv(GL_VIEWPORT,viewport);
+	//glGetDoublev(GL_MODELVIEW_MATRIX,model.v);
+	//glGetDoublev(GL_PROJECTION_MATRIX,proj.v);
+	
+	Point p;
+	
+	gluUnProject(mouseCoords.x,mouseCoords.y,0,modelviewMatrix.v,projectionMatrix.v,viewport,&p.x,&p.y,&p.z);
+	
+	return Ray(p,_camera.center());
+}
+
 int GLWidget::FrameExporter::exporterId = -1;
-bool GLWidget::FrameExporter::init() {
+bool GLWidget::FrameExporter::init()
+{
 	// create directory for captured frames
 	QDir dir = QDir::currentPath();
 

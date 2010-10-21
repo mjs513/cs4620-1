@@ -10,6 +10,7 @@
 
 #include "Point.h"
 #include "Vector.h"
+#include "Matrix.h"
 
 #include <vector>
 
@@ -32,6 +33,8 @@ public:
 
 	double angle() const;
 	Joint& setAngle(double angle);
+
+	const Matrix transformation() const;
 
 	void display();
 	

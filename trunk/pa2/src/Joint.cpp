@@ -98,12 +98,16 @@ Joint& Joint::setAngle(double angle)
 	return *this;
 }
 
+const Matrix Joint::transformation() const
+{
+	return Matrix::rotationTransform(_angle,Vector(0,0,1))*Matrix::translationTransform(Point(_distance,0,0));
+}
+
 void Joint::display()
 {
 	glPushMatrix();
 	
-	Matrix m = Matrix::translationTransform(Point(_distance,0,0));
-	m = Matrix::rotationTransform(_angle,Vector(0,0,1))*m;
+	Matrix m = transformation();
 	
 	glBegin(GL_LINES); {
 		OpenGL::vertex(Point());
