@@ -57,8 +57,6 @@ private:
 private slots:
 	void animate();
 	
-	Ray _rayFromMouse(const Point &mouseCoords);
-	
 private:
 	int _width,_height;
 	
