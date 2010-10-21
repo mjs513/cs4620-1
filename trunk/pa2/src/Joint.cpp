@@ -38,10 +38,7 @@ std::pair<double,double> polarFromPoint(const Point &p)
 
 
 Joint::Joint(double distance, double angle, double weight, double thickness)
-	: _distance(distance), _distanceConstraint(distance), _angle(angle), _weight(weight), _thickness(thickness)
-{
-	_parent = 0;
-}
+	: _distance(distance), _distanceConstraint(distance), _angle(angle), _weight(weight), _thickness(thickness), _parent(0) { }
 
 Joint::~Joint()
 {
@@ -108,23 +105,35 @@ void Joint::display()
 	glPushMatrix();
 	
 	Matrix m = transformation();
-	
-	// Draw joints
-	glBegin(GL_POINTS); {
-		OpenGL::color(Color(1.0, 0, 0));
-		OpenGL::vertex(Point());
-	}
-	glEnd();
 
+	OpenGL::color(Color::white());
+	
 	// Draw bones
 	glBegin(GL_LINES); {
-		OpenGL::color(Color(1.0, 1.0, 1.0));
 		OpenGL::vertex(Point());
 		OpenGL::vertex(m*Point());
 	}
 	glEnd();
 	
+	// Transform to this joint's frame
 	glMultMatrixd(m.v);
+	
+	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
+	
+	std::cout << "display point = " << m*Point() << std::endl;
+	
+	if(_parent) {
+		OpenGL::color(Color::red());
+	}
+	else {
+		OpenGL::color(Color::green());
+	}
+
+	// Draw joints
+	glBegin(GL_POINTS); {
+		OpenGL::vertex(Point());
+	}
+	glEnd();
 	
 	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
 	

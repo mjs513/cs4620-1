@@ -17,8 +17,8 @@ class Vector;
 struct Matrix
 {
     union {
-        double m[4][4];  ///< Matrix values for bidimensional array access with [i][j].
-        double v[16];    ///< Matrix values for unidimensional array access with [4*i + j].
+        double m[4][4];  ///< Matrix values for bidimensional array access.
+        double v[16];    ///< Matrix values for unidimensional array access.
     };
     
     

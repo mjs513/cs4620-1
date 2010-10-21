@@ -101,7 +101,7 @@ void GLWidget::initializeGL()
 	glPointSize(10);
 	glLineWidth(3);
 	
-	_rootJoint = new Joint(0,0);
+	//_rootJoint = new Joint(0,0);
 	
 	// Create planar chain
 	_planarJoint = new Joint(0, 0);
@@ -120,6 +120,37 @@ void GLWidget::initializeGL()
 
 	// Body
 	_humanJoint = new Joint(0, 0);
+	Joint *head = new Joint(0.5,90);
+	Joint *leftShoulder = new Joint(1,180);
+	Joint *leftHand = new Joint(1,90);
+	Joint *rightShoulder = new Joint(1,0);
+	Joint *rightHand = new Joint(1,-90);
+	Joint *hip = new Joint(1,-90);
+	Joint *rightLeg = new Joint(1,45);
+	Joint *rightFoot = new Joint(1,-45);
+	Joint *leftLeg = new Joint(1,-45);
+	Joint *leftFoot = new Joint(1,45);
+
+	_humanJoint->addChild(leftShoulder);
+	_humanJoint->addChild(rightShoulder);
+	_humanJoint->addChild(head);
+	_humanJoint->addChild(hip);
+
+	leftShoulder->addChild(leftHand);
+
+	rightShoulder->addChild(rightHand);
+
+	hip->addChild(rightLeg);
+	hip->addChild(leftLeg);
+
+	rightLeg->addChild(rightFoot);
+	
+	leftLeg->addChild(leftFoot);
+	
+	
+	
+	
+	/*
 	Joint *hJ1 = new Joint(1, 0);
 	Joint *hJ11 = new Joint(1, 180);
 	Joint *hJ12 = new Joint(0.5, 0);
@@ -154,7 +185,7 @@ void GLWidget::initializeGL()
 	hJ1->addChild(hJ2);
 	hJ1->addChild(hJ3);
 	hJ11->addChild(hJ4);
-	hJ11->addChild(hJ5);
+	hJ11->addChild(hJ5);*/
 
 	_rootJoint = _humanJoint;
 }
@@ -166,14 +197,14 @@ void GLWidget::paintGL()
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	
-	gluPerspective(45,double(_width)/_height,1,1000);
+	gluPerspective(45,double(_width)/_height,1,100);
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
 	// Position the camera
 	_camera.applyTransformation();
-
+	
 	// Save the matrices for ray picking
 	glGetDoublev(GL_MODELVIEW_MATRIX,modelviewMatrix.v);
 	glGetDoublev(GL_PROJECTION_MATRIX,projectionMatrix.v);
@@ -181,12 +212,10 @@ void GLWidget::paintGL()
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
 
-	OpenGL::color(Color::white());
-
     _rootJoint->display();
 
 	if(_selectedJoint) {
-		OpenGL::color(Color::red());
+		OpenGL::color(Color::blue());
 
 		glBegin(GL_POINTS); {
 			OpenGL::vertex(_selectedPoint);
@@ -253,43 +282,52 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	Ray pickingRay = _rayFromMouse(Point(event->x(),event->y()));
+	Point mouse(event->x(),event->y());
 	std::vector<Joint*> jointStack;
 	std::vector<Matrix> matrixStack;
 	double minDist = 1e300/1e-300;
 	Matrix m;
-
+	
 	jointStack.push_back(_rootJoint);
 	matrixStack.push_back(_rootJoint->transformation());
-
-	std::cout << std::endl << std::endl << "mouse coords = " << Point(event->x(),event->y()) << std::endl;
-	std::cout << "mouse coords = " << Point(event->x(),event->y()) << std::endl;
-	std::cout << "ray = " << pickingRay.p << ", " << pickingRay.dir << std::endl;
-
+	
+	GLint viewport[4];
+	
+	glGetIntegerv(GL_VIEWPORT,viewport);
+	
 	while(!jointStack.empty()) {
 		Joint *j = jointStack.back();
 		Matrix m = matrixStack.back();
-
+		
 		jointStack.pop_back();
 		matrixStack.pop_back();
-
+		
 		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
 			jointStack.push_back(*i);
 			matrixStack.push_back((*i)->transformation()*m);
 		}
-
-		double d = pickingRay.distance(m*Point());
-
-		std::cout << "point = " << m*Point() << std::endl;
+		
+		Point p = m*Point();
+		Point window;
+		
+		gluProject(p.x,p.y,p.z,modelviewMatrix.v,projectionMatrix.v,viewport,&window.x,&window.y,&window.z);
+		
+		window.z = 0;
+		
+		double d = (mouse - window).length();
+		
+		std::cout << "pick point = " << m*Point() << std::endl;
+		std::cout << "window coords = " << window << std::endl;
+		std::cout << "mouse coords = " << mouse << std::endl;
 		std::cout << "  dist = " << d << std::endl;
-
+		
 		if(d < minDist) {
 			minDist = d;
 			_selectedJoint = j;
 			_selectedPoint = m*Point();
 		}
 	}
-
+	
 	if(minDist > 10) {
 		_selectedJoint = 0;
 	}
@@ -352,42 +390,30 @@ void GLWidget::setRecording(bool state)
 
 void GLWidget::animate()
 {
-//    Joint *i = _rootJoint;
-//    double mult = 1;
-//
-//    while(true) {
-//    	i->setAngle(i->angle() + mult);
-//
-//    	if(i->children().size()) {
-//    		i = i->children().front();
-//    	}
-//    	else {
-//    		break;
-//    	}
-//
-//    	mult *= -2;
-//    }
-//
-//	updateGL();
-}
+	updateGL();
+	return;
+    
+	Joint *i = _rootJoint;
+    double mult = 1;
 
-Ray GLWidget::_rayFromMouse(const Point &mouseCoords)
-{
-	GLint viewport[4];
-	//Matrix model,proj;
+    while(true) {
+    	i->setAngle(i->angle() + mult);
 
-	glGetIntegerv(GL_VIEWPORT,viewport);
-	//glGetDoublev(GL_MODELVIEW_MATRIX,model.v);
-	//glGetDoublev(GL_PROJECTION_MATRIX,proj.v);
+    	if(i->children().size()) {
+    		i = i->children().front();
+    	}
+    	else {
+    		break;
+    	}
 
-	Point p;
+    	mult *= -2;
+    }
 
-	gluUnProject(mouseCoords.x,mouseCoords.y,0,modelviewMatrix.v,projectionMatrix.v,viewport,&p.x,&p.y,&p.z);
-
-	return Ray(p,_camera.center());
+	updateGL();
 }
 
 int GLWidget::FrameExporter::exporterId = -1;
+
 bool GLWidget::FrameExporter::init()
 {
 	// create directory for captured frames
