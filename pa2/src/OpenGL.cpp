@@ -89,11 +89,6 @@ void normal(const Vector &v)
     glNormal3dv(v.v);
 }
 
-void loadMatrix(const Matrix &m)
-{
-    glLoadMatrixd(m.v);
-}
-
 void translate(const Vector &v)
 {
     glTranslated(v.x,v.y,v.z);

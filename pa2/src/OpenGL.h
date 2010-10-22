@@ -8,7 +8,7 @@
 #ifndef OPENGL_H_
 #define OPENGL_H_
 
-#include "Matrix.h"
+#include "GLMatrix.h"
 #include "Point.h"
 #include "Vector.h"
 #include "Color.h"
@@ -40,8 +40,6 @@ void texture2(const Point &p);
 void texture3(const Point &p);
 
 void normal(const Vector &v);
-
-void loadMatrix(const Matrix &m);
 
 void translate(const Vector &v);
 void translate(const Point &p);

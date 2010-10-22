@@ -8,7 +8,7 @@
 #include "SphereCamera.h"
 
 #include "OpenGL.h"
-#include "Matrix.h"
+#include "GLMatrix.h"
 #include <cmath>
 
 
@@ -156,7 +156,7 @@ void SphereCamera::moveBack()
 void SphereCamera::applyTransformation() const
 {
 	Vector back = INITIAL_BACK,up = INITIAL_UP;
-	Matrix m = Matrix::rotationTransform(_angleXY,Vector(0,0,1))*Matrix::rotationTransform(_angleZ,INITIAL_RIGHT);
+	GLMatrix m = GLMatrix::rotationTransform(_angleXY,Vector(0,0,1))*GLMatrix::rotationTransform(_angleZ,INITIAL_RIGHT);
 	
 	back = m*back;
 	up = m*up;

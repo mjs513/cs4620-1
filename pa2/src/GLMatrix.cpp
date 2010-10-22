@@ -2,7 +2,7 @@
     Copyright (C) 2008 Roberto Ramalho Fischer
 */
 
-#include "Matrix.h"
+#include "GLMatrix.h"
 #include "Point.h"
 #include "Vector.h"
 
@@ -10,7 +10,7 @@
 #include <GL/gl.h>
 
 
-Matrix::Matrix()
+GLMatrix::GLMatrix()
 {
     for(int i = 0; i < 16; ++i) {
         v[i] = 0;
@@ -19,7 +19,7 @@ Matrix::Matrix()
     v[0] = v[5] = v[10] = v[15] = 1;
 }
 
-Matrix::Matrix(double **val)
+GLMatrix::GLMatrix(double **val)
 {
     for(int i = 0; i < 4; ++i) {
         for(int j = 0; j < 4; ++j) {
@@ -28,14 +28,14 @@ Matrix::Matrix(double **val)
     }
 }
 
-Matrix::Matrix(double *val)
+GLMatrix::GLMatrix(double *val)
 {
     for(int i = 0; i < 16; ++i) {
         v[i] = val[i];
     }
 }
 
-Matrix::Matrix(float **val)
+GLMatrix::GLMatrix(float **val)
 {
     for(int i = 0; i < 4; ++i) {
         for(int j = 0; j < 4; ++j) {
@@ -44,14 +44,14 @@ Matrix::Matrix(float **val)
     }
 }
 
-Matrix::Matrix(float *val)
+GLMatrix::GLMatrix(float *val)
 {
     for(int i = 0; i < 16; ++i) {
         v[i] = val[i];
     }
 }
 
-const Matrix Matrix::operator*=(const Matrix &m)
+const GLMatrix GLMatrix::operator*=(const GLMatrix &m)
 {
     GLint matrixMode;
     
@@ -72,7 +72,7 @@ const Matrix Matrix::operator*=(const Matrix &m)
     return *this;
 }
 
-bool Matrix::operator==(const Matrix &m) const
+bool GLMatrix::operator==(const GLMatrix &m) const
 {
     for(int i = 0; i < 16; ++i) {
         if(this->v[i] != m.v[i]) {
@@ -83,13 +83,13 @@ bool Matrix::operator==(const Matrix &m) const
     return true;
 }
 
-bool Matrix::operator!=(const Matrix &m) const
+bool GLMatrix::operator!=(const GLMatrix &m) const
 {
     return !(*this == m);
 }
 
 
-const Matrix Matrix::scaleTransform(const Vector &v)
+const GLMatrix GLMatrix::scaleTransform(const Vector &v)
 {
     GLint matrixMode;
     
@@ -101,7 +101,7 @@ const Matrix Matrix::scaleTransform(const Vector &v)
     glLoadIdentity();
     glScaled(v.x,v.y,v.z);
     
-    Matrix m;
+    GLMatrix m;
     
     glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
     
@@ -112,7 +112,7 @@ const Matrix Matrix::scaleTransform(const Vector &v)
     return m;
 }
 
-const Matrix Matrix::rotationTransform(double degrees, const Vector &axis)
+const GLMatrix GLMatrix::rotationTransform(double degrees, const Vector &axis)
 {
     GLint matrixMode;
     
@@ -124,7 +124,7 @@ const Matrix Matrix::rotationTransform(double degrees, const Vector &axis)
     glLoadIdentity();
     glRotated(degrees,axis.x,axis.y,axis.z);
     
-    Matrix m;
+    GLMatrix m;
     
     glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
     
@@ -139,7 +139,7 @@ const Matrix Matrix::rotationTransform(double degrees, const Vector &axis)
 namespace {
 
 
-const Matrix translationMatrix(double x, double y, double z)
+const GLMatrix translationMatrix(double x, double y, double z)
 {
     GLint matrixMode;
     
@@ -151,7 +151,7 @@ const Matrix translationMatrix(double x, double y, double z)
     glLoadIdentity();
     glTranslated(x,y,z);
     
-    Matrix m;
+    GLMatrix m;
     
     glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
     
@@ -166,12 +166,12 @@ const Matrix translationMatrix(double x, double y, double z)
 }  // namespace
 
 
-const Matrix Matrix::translationTransform(const Vector &v)
+const GLMatrix GLMatrix::translationTransform(const Vector &v)
 {
     return translationMatrix(v.x,v.y,v.z);
 }
 
-const Matrix Matrix::translationTransform(const Point &p)
+const GLMatrix GLMatrix::translationTransform(const Point &p)
 {
     return translationMatrix(p.x,p.y,p.z);
 }
@@ -180,7 +180,7 @@ const Matrix Matrix::translationTransform(const Point &p)
 namespace {
 
 
-void multiply(const Matrix &m, const double *in, double *out)
+void multiply(const GLMatrix &m, const double *in, double *out)
 {
     for(int i = 0; i < 4; ++i) {
         out[i] = 0;
@@ -195,7 +195,7 @@ void multiply(const Matrix &m, const double *in, double *out)
 }  // namespace
 
 
-const Vector operator*(const Matrix &m, const Vector &v)
+const Vector operator*(const GLMatrix &m, const Vector &v)
 {
     Vector r;
     
@@ -204,7 +204,7 @@ const Vector operator*(const Matrix &m, const Vector &v)
     return r;
 }
 
-const Point operator*(const Matrix &m, const Point &p)
+const Point operator*(const GLMatrix &m, const Point &p)
 {
     Point r;
     
@@ -213,12 +213,12 @@ const Point operator*(const Matrix &m, const Point &p)
     return r;
 }
 
-const Matrix operator*(const Matrix &m1, const Matrix &m2)
+const GLMatrix operator*(const GLMatrix &m1, const GLMatrix &m2)
 {
-    return Matrix(m1) *= m2;
+    return GLMatrix(m1) *= m2;
 }
 
-std::ostream& operator<<(std::ostream &out, const Matrix &m)
+std::ostream& operator<<(std::ostream &out, const GLMatrix &m)
 {
     out << "[ ";
     

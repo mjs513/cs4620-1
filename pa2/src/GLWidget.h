@@ -67,7 +67,7 @@ private:
 	Joint *_humanJoint;
 	Joint *_selectedJoint;
 	Point _selectedPoint;
-	Matrix projectionMatrix,modelviewMatrix;
+	GLMatrix projectionMatrix,modelviewMatrix;
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool _enableUserControl;

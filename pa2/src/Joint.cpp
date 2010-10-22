@@ -13,32 +13,8 @@
 #include <iostream>
 
 
-namespace {
-
-
-Point pointFromPolar(double dist, double angle)
-{
-	return Point() + dist*Vector(std::cos(angle),std::sin(angle));
-}
-
-std::pair<double,double> polarFromPoint(const Point &p)
-{
-	double length = Vector(p).length();
-	double angle = std::acos(p.x/length);
-	
-	if(p.y < 0) {
-		angle = 2*M_PI - angle;
-	}
-	
-	return std::pair<double,double>(length,angle*180/M_PI);
-}
-
-
-}  // namespace
-
-
 Joint::Joint(const Point &pos, const Vector &rotAxis)
-	: _pos(pos), _rotAxis(rotAxis), _parent(0) { }
+	: _id(-1), _pos(pos), _rotAxis(rotAxis), _angle(0), _parent(0) { }
 
 Joint::~Joint()
 {
@@ -59,16 +35,66 @@ const std::vector<Joint*>& Joint::children() const
 	return _children;
 }
 
-const Matrix Joint::transformation() const
+const Joint* Joint::parent() const
 {
-	//return Matrix::translationTransform(Point(_distance,0,0))*Matrix::rotationTransform(_angle,Vector(0,0,1));
+	return _parent;
+}
+
+int Joint::id() const
+{
+	return _id;
+}
+
+void Joint::setId(int id)
+{
+	_id = id;
+}
+
+double Joint::angle() const
+{
+	return _angle;
+}
+
+void Joint::setAngle(double angle)
+{
+	_angle = angle;
+}
+
+Point Joint::pos() const
+{
+	return _pos;
+}
+
+void Joint::setPos(const Point &pos)
+{
+	_pos = pos;
+}
+
+Vector Joint::rotAxis() const
+{
+	return _rotAxis;
+}
+
+void Joint::setRotAxis(const Vector &rotAxis)
+{
+	_rotAxis = rotAxis;
+}
+
+bool Joint::isEndEffector() const
+{
+	return _children.empty();
+}
+
+const GLMatrix Joint::transformation() const
+{
+	return GLMatrix::rotationTransform(_angle,_rotAxis)*GLMatrix::translationTransform(_pos);
 }
 
 void Joint::display()
 {
 	glPushMatrix();
 	
-	Matrix m = transformation();
+	GLMatrix m = transformation();
 
 	OpenGL::color(Color::white());
 	
@@ -83,8 +109,6 @@ void Joint::display()
 	glMultMatrixd(m.v);
 	
 	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
-	
-	std::cout << "display point = " << m*Point() << std::endl;
 	
 	if(_parent) {
 		OpenGL::color(Color::red());
