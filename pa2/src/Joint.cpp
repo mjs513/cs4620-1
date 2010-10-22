@@ -60,6 +60,20 @@ void Joint::setAngle(double angle)
 	_angle = angle;
 }
 
+void Joint::updateAngle(double deltaTheta) {
+	double newAngle = angle() + deltaTheta;
+	double deltaThetaMin = _minAngle - newAngle;
+	double deltaThetaMax = _maxAngle - newAngle;
+
+	// Adjust theta's convergence speed
+	if( deltaTheta > _maxDeltaAngle ) {
+		deltaTheta = _maxDeltaAngle;
+	}
+
+	deltaTheta = std::max(deltaThetaMin, std::min(deltaThetaMax, deltaTheta));
+	setAngle( _angle + deltaTheta );
+}
+
 Point Joint::pos() const
 {
 	return _pos;
