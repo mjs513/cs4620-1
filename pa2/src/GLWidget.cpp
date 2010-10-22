@@ -102,19 +102,19 @@ void GLWidget::initializeGL()
 	glLineWidth(3);
 	
 	//_rootJoint = new Joint(0,0);
-	
+	/*
 	// Create planar chain
 	_planarJoint = new Joint(0, 0);
 	Joint *j1 = new Joint(1,45);
 	Joint *j2 = new Joint(1,30);
 	Joint *j3 = new Joint(1,-30);
 	Joint *j4 = new Joint(1,-90);
-
+	
 	_planarJoint->addChild(j1);
 	j1->addChild(j2);
 	j2->addChild(j3);
 	j3->addChild(j4);
-
+	*/
 
 	// Create humanoid
 
@@ -146,48 +146,17 @@ void GLWidget::initializeGL()
 	rightLeg->addChild(rightFoot);
 	
 	leftLeg->addChild(leftFoot);
-	
-	
-	
-	
-	/*
-	Joint *hJ1 = new Joint(1, 0);
-	Joint *hJ11 = new Joint(1, 180);
-	Joint *hJ12 = new Joint(0.5, 0);
-	hJ1->addChild(hJ11);
-	hJ11->addChild(hJ12);
-
-	// Left leg
-	Joint *hJ2 = new Joint(1, 45);
-	Joint *hJ21 = new Joint(1, -45);
-	hJ2->addChild(hJ21);
-
-	// Right leg
-	Joint *hJ3 = new Joint(1, -45);
-	Joint *hJ31 = new Joint(1, 45);
-	hJ3->addChild(hJ31);
-
-	// Left arm
-	Joint *hJ4 = new Joint(1, 270);
-	Joint *hJ41 = new Joint(1, 225);
-	Joint *hJ42 = new Joint(1, 180);
-	hJ4->addChild(hJ41);
-	hJ41->addChild(hJ42);
-
-	// Right arm
-	Joint *hJ5 = new Joint(1, 90);
-	Joint *hJ51 = new Joint(1, 135);
-	Joint *hJ52 = new Joint(1, 180);
-	hJ5->addChild(hJ51);
-	hJ51->addChild(hJ52);
-
-	_humanJoint->addChild(hJ1);
-	hJ1->addChild(hJ2);
-	hJ1->addChild(hJ3);
-	hJ11->addChild(hJ4);
-	hJ11->addChild(hJ5);*/
 
 	_rootJoint = _humanJoint;
+	/*
+	_rootJoint = new Joint(0,0);
+	Joint *j1 = new Joint(1,0);
+	Joint *j2 = new Joint(1,90);
+	Joint *j3 = new Joint(1,90);
+
+	_rootJoint->addChild(j1);
+	_rootJoint->addChild(j2);
+	j1->addChild(j3);*/
 }
 
 void GLWidget::paintGL()
@@ -280,9 +249,14 @@ void GLWidget::resizeGL(int w, int h)
 	glMatrixMode(GL_MODELVIEW);
 }
 
+
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	Point mouse(event->x(),event->y());
+	GLint viewport[4];
+	
+	glGetIntegerv(GL_VIEWPORT,viewport);
+	
+	Point mouse(event->x(),viewport[3] - event->y());
 	std::vector<Joint*> jointStack;
 	std::vector<Matrix> matrixStack;
 	double minDist = 1e300/1e-300;
@@ -291,35 +265,36 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 	jointStack.push_back(_rootJoint);
 	matrixStack.push_back(_rootJoint->transformation());
 	
-	GLint viewport[4];
 	
-	glGetIntegerv(GL_VIEWPORT,viewport);
 	
 	while(!jointStack.empty()) {
 		Joint *j = jointStack.back();
 		Matrix m = matrixStack.back();
+
+		std::cout << "pop joint(" << j->distance() << "," << j->angle() << ")\n";
+		std::cout << "pop m: " << m << "\n";
 		
 		jointStack.pop_back();
 		matrixStack.pop_back();
 		
 		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
+			std::cout << "push joint(" << (*i)->distance() << "," << (*i)->angle() << ")\n";
+			std::cout << "push transformation of joint*m:" << (*i)->transformation()*m << " \n";
+			
 			jointStack.push_back(*i);
 			matrixStack.push_back((*i)->transformation()*m);
 		}
 		
 		Point p = m*Point();
 		Point window;
+
+		std::cout << "point = " << m*Point() << std::endl;
 		
 		gluProject(p.x,p.y,p.z,modelviewMatrix.v,projectionMatrix.v,viewport,&window.x,&window.y,&window.z);
 		
 		window.z = 0;
 		
 		double d = (mouse - window).length();
-		
-		std::cout << "pick point = " << m*Point() << std::endl;
-		std::cout << "window coords = " << window << std::endl;
-		std::cout << "mouse coords = " << mouse << std::endl;
-		std::cout << "  dist = " << d << std::endl;
 		
 		if(d < minDist) {
 			minDist = d;
@@ -390,9 +365,6 @@ void GLWidget::setRecording(bool state)
 
 void GLWidget::animate()
 {
-	updateGL();
-	return;
-    
 	Joint *i = _rootJoint;
     double mult = 1;
 

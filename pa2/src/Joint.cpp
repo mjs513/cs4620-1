@@ -97,7 +97,7 @@ Joint& Joint::setAngle(double angle)
 
 const Matrix Joint::transformation() const
 {
-	return Matrix::rotationTransform(_angle,Vector(0,0,1))*Matrix::translationTransform(Point(_distance,0,0));
+	return Matrix::translationTransform(Point(_distance,0,0))*Matrix::rotationTransform(_angle,Vector(0,0,1));
 }
 
 void Joint::display()

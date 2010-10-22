@@ -60,8 +60,8 @@ const Matrix Matrix::operator*=(const Matrix &m)
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     
-    glLoadMatrixd(this->v);
-    glMultMatrixd(m.v);
+    glLoadMatrixd(m.v);
+    glMultMatrixd(this->v);
 
     glGetDoublev(GL_MODELVIEW_MATRIX,this->v);
     
