@@ -259,9 +259,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 	
 	Point mouse(event->x(),viewport[3] - event->y());
 	std::vector<Joint*> jointStack;
-	std::vector<Matrix> matrixStack;
+	std::vector<GLMatrix> matrixStack;
 	double minDist = 1e300/1e-300;
-	Matrix m;
 	
 	jointStack.push_back(_rootJoint);
 	matrixStack.push_back(_rootJoint->transformation());
@@ -270,7 +269,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 	
 	while(!jointStack.empty()) {
 		Joint *j = jointStack.back();
-		Matrix m = matrixStack.back();
+		GLMatrix m = matrixStack.back();
 
 		//std::cout << "pop joint(" << j->distance() << "," << j->angle() << ")\n";
 		std::cout << "pop m: " << m << "\n";

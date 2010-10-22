@@ -14,7 +14,7 @@ class Vector;
 
 
 /// Tridimensional Matrix for bidimensional transform purposes.
-struct Matrix
+struct GLMatrix
 {
     union {
         double m[4][4];  ///< Matrix values for bidimensional array access.
@@ -23,65 +23,65 @@ struct Matrix
     
     
     /// Creates the identity matrix.
-    Matrix();
+    GLMatrix();
     
     /// Creates the matrix using \a val[0..3][0..3]
-    Matrix(double **val);
+    GLMatrix(double **val);
     
     /// Creates the matrix using \a val[0..16].
-    Matrix(double *val);
+    GLMatrix(double *val);
     
     /// Creates the matrix using \a val[0..3][0..3]
-    Matrix(float **val);
+    GLMatrix(float **val);
     
     /// Creates the matrix using \a val[0..16].
-    Matrix(float *val);
+    GLMatrix(float *val);
     
     /// Multiplies and assigns with another matrix \a m.
-    const Matrix operator*=(const Matrix &m);
+    const GLMatrix operator*=(const GLMatrix &m);
     
-    bool operator==(const Matrix &m) const;
+    bool operator==(const GLMatrix &m) const;
     
-    bool operator!=(const Matrix &m) const;
+    bool operator!=(const GLMatrix &m) const;
     
     /** \brief  Returns the scale transform matrix.
         \param  v Scaling parameter.
         \return The transform matrix.
     */
-    static const Matrix scaleTransform(const Vector &scale);
+    static const GLMatrix scaleTransform(const Vector &scale);
     
     /** \brief  Returns the rotation transform matrix.
         \param  angle The rotation angle in degrees.
         \param  axis The rotation axis.
         \return The transform matrix.
     */
-    static const Matrix rotationTransform(double degrees, const Vector &axis);
+    static const GLMatrix rotationTransform(double degrees, const Vector &axis);
     
     /** \brief  Returns the translation transform matrix.
         \param  v The translation vector.
         \return The transform matrix.
     */
-    static const Matrix translationTransform(const Vector &v);
+    static const GLMatrix translationTransform(const Vector &v);
     
     /** \brief  Returns the translation transform matrix.
         \param  p The origin for the new coordinate system, translating from current origin to \a p.
         \return The transform matrix.
     */
-    static const Matrix translationTransform(const Point &p);
+    static const GLMatrix translationTransform(const Point &p);
 };
 
 
 /// Returns the column vector resulting from the multiplication. Uses w = 0.
-const Vector operator*(const Matrix &m, const Vector &v);
+const Vector operator*(const GLMatrix &m, const Vector &v);
 
 /// Returns the column vector resulting from the multiplication. Uses w = 1.
-const Point operator*(const Matrix &m, const Point &p);
+const Point operator*(const GLMatrix &m, const Point &p);
 
 /// Returns the resulting matrix of m1*m2.
-const Matrix operator*(const Matrix &m1, const Matrix &m2);
+const GLMatrix operator*(const GLMatrix &m1, const GLMatrix &m2);
 
 
-std::ostream& operator<<(std::ostream &out, const Matrix &m);
+std::ostream& operator<<(std::ostream &out, const GLMatrix &m);
 
 
 #endif

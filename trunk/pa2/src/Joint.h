@@ -10,7 +10,7 @@
 
 #include "Point.h"
 #include "Vector.h"
-#include "Matrix.h"
+#include "GLMatrix.h"
 
 #include <vector>
 
@@ -24,15 +24,24 @@ public:
 	void addChild(Joint *joint);
 	
 	const std::vector<Joint*>& children() const;
+
+	const Joint* parent() const;
 	
 	int id() const;
-
+	void setId(int id);
+	
 	double angle() const;
-	Joint& setAngle(double angle);
+	void setAngle(double angle);
+	
+	Point pos() const;
+	void setPos(const Point &pos);
+	
+	Vector rotAxis() const;
+	void setRotAxis(const Vector &rotAxis);
 
 	bool isEndEffector() const;
 
-	const Matrix transformation() const;
+	const GLMatrix transformation() const;
 
 	void display();
 
@@ -42,16 +51,12 @@ private:
 	// Joint properties
 	int _id;
 	Point _pos;
-	double _angle;
 	Vector _rotAxis;
-	bool _isEndEffector;
+	double _angle;
 	
 	// Structures to access connected joints
 	std::vector<Joint*> _children;
 	Joint *_parent;
-
-	// Transformations of the joint in absolute space
-	Matrix _absMatrix;
 };
 
 
