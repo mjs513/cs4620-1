@@ -15,7 +15,7 @@
 class IKSolver
 {
 public:
-	IKSolver(const JointTree &tree, double param = 1);
+	IKSolver(const JointTree &tree, double param = 1e-3);
 	
 	void solve() const;
 	

@@ -115,5 +115,14 @@ void IKSolver::solve() const
 		}
 	}
 	
+	NEWMAT::Matrix JT = J.t();
+	NEWMAT::Matrix kI = NEWMAT::IdentityMatrix()*_param;
 	
+	// Calculate the damped least squares solution
+	NEWMAT::Matrix dTheta = JT*(J*JT + kI).i()*dp;
+	
+	// Update joint angles
+	for(int i = 0; i < dTheta.Ncols(); ++i) {
+		joints[i]->setAngle(joints[i]->angle() + dTheta(i,0));
+	}
 }
