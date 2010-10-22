@@ -109,12 +109,13 @@ void GLWidget::initializeGL()
 	Joint *j2 = new Joint(1,30);
 	Joint *j3 = new Joint(1,-30);
 	Joint *j4 = new Joint(1,-90);
-	
+
 	_planarJoint->addChild(j1);
 	j1->addChild(j2);
 	j2->addChild(j3);
 	j3->addChild(j4);
 	*/
+
 
 	// Create humanoid
 
@@ -249,7 +250,6 @@ void GLWidget::resizeGL(int w, int h)
 	glMatrixMode(GL_MODELVIEW);
 }
 
-
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
 	GLint viewport[4];
@@ -365,6 +365,9 @@ void GLWidget::setRecording(bool state)
 
 void GLWidget::animate()
 {
+	updateGL();
+	return;
+    
 	Joint *i = _rootJoint;
     double mult = 1;
 

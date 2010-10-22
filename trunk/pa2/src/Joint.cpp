@@ -37,8 +37,8 @@ std::pair<double,double> polarFromPoint(const Point &p)
 }  // namespace
 
 
-Joint::Joint(double distance, double angle, double weight, double thickness)
-	: _distance(distance), _distanceConstraint(distance), _angle(angle), _weight(weight), _thickness(thickness), _parent(0) { }
+Joint::Joint(double distance, double angle, double weight, double thickness, bool isEndEffector)
+	: _distance(distance), _distanceConstraint(distance), _angle(angle), _weight(weight), _thickness(thickness), _isEndEffector(isEndEffector), _parent(0) { }
 
 Joint::~Joint()
 {
