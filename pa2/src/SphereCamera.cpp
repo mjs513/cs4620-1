@@ -156,9 +156,7 @@ void SphereCamera::moveBack()
 void SphereCamera::applyTransformation() const
 {
 	Vector back = INITIAL_BACK,up = INITIAL_UP;
-	Matrix m = Matrix::rotationTransform(_angleZ,INITIAL_RIGHT);
-	
-	m = Matrix::rotationTransform(_angleXY,Vector(0,0,1))*m;
+	Matrix m = Matrix::rotationTransform(_angleXY,Vector(0,0,1))*Matrix::rotationTransform(_angleZ,INITIAL_RIGHT);
 	
 	back = m*back;
 	up = m*up;
