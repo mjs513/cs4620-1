@@ -37,8 +37,8 @@ std::pair<double,double> polarFromPoint(const Point &p)
 }  // namespace
 
 
-Joint::Joint(double distance, double angle, double weight, double thickness, bool isEndEffector)
-	: _distance(distance), _distanceConstraint(distance), _angle(angle), _weight(weight), _thickness(thickness), _isEndEffector(isEndEffector), _parent(0) { }
+Joint::Joint(const Point &pos, const Vector &rotAxis)
+	: _pos(pos), _rotAxis(rotAxis), _parent(0) { }
 
 Joint::~Joint()
 {
@@ -59,45 +59,9 @@ const std::vector<Joint*>& Joint::children() const
 	return _children;
 }
 
-double Joint::weight() const
-{
-	return _weight;
-}
-
-Joint& Joint::setWeight(double weight)
-{
-	_weight = weight;
-	
-	return *this;
-}
-
-double Joint::distance() const
-{
-	return _distance;
-}
-
-Joint& Joint::setDistance(double distance)
-{
-	_distance = distance;
-	
-	return *this;
-}
-
-double Joint::angle() const
-{
-	return _angle;
-}
-
-Joint& Joint::setAngle(double angle)
-{
-	_angle = angle;
-	
-	return *this;
-}
-
 const Matrix Joint::transformation() const
 {
-	return Matrix::translationTransform(Point(_distance,0,0))*Matrix::rotationTransform(_angle,Vector(0,0,1));
+	//return Matrix::translationTransform(Point(_distance,0,0))*Matrix::rotationTransform(_angle,Vector(0,0,1));
 }
 
 void Joint::display()
@@ -142,48 +106,4 @@ void Joint::display()
 	}
 	
 	glPopMatrix();
-}
-
-void Joint::satisfyConstraints()
-{
-	this->_satisfyDistance();
-	
-	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
-		(*i)->_satisfyDistance();
-		
-		(*i)->satisfyConstraints();
-	}
-}
-
-void Joint::_satisfyDistance()
-{
-	const double MIN_DISTANCE = 0.001;
-	
-	if(this->_parent) {
-		double diff = std::fabs(this->_distance - this->_distanceConstraint);
-		
-		if(std::fabs(diff) > MIN_DISTANCE) {
-			Point parentPos = pointFromPolar(_parent->_distance,_parent->_angle);
-			Point thisPos = pointFromPolar(this->_distance,this->_angle);
-			Vector vdiff = thisPos - parentPos;
-			
-			vdiff.normalize();
-			vdiff *= diff;
-			
-			parentPos += vdiff*0.5;
-			thisPos -= vdiff*0.5;
-			
-			std::pair<double,double> thisPolar = polarFromPoint(thisPos),parentPolar = polarFromPoint(parentPos);
-			
-			this->_distance = thisPolar.first;
-			this->_angle = thisPolar.second;
-			
-			_parent->_distance = parentPolar.first;
-			_parent->_angle = parentPolar.second;
-		}
-	}
-	
-	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
-		
-	}
 }

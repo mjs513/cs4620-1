@@ -120,6 +120,7 @@ void GLWidget::initializeGL()
 	// Create humanoid
 
 	// Body
+	/*
 	_humanJoint = new Joint(0, 0);
 	Joint *head = new Joint(0.5,90);
 	Joint *leftShoulder = new Joint(1,180);
@@ -149,7 +150,7 @@ void GLWidget::initializeGL()
 	leftLeg->addChild(leftFoot);
 
 	_rootJoint = _humanJoint;
-	/*
+
 	_rootJoint = new Joint(0,0);
 	Joint *j1 = new Joint(1,0);
 	Joint *j2 = new Joint(1,90);
@@ -271,14 +272,14 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 		Joint *j = jointStack.back();
 		Matrix m = matrixStack.back();
 
-		std::cout << "pop joint(" << j->distance() << "," << j->angle() << ")\n";
+		//std::cout << "pop joint(" << j->distance() << "," << j->angle() << ")\n";
 		std::cout << "pop m: " << m << "\n";
 		
 		jointStack.pop_back();
 		matrixStack.pop_back();
 		
 		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
-			std::cout << "push joint(" << (*i)->distance() << "," << (*i)->angle() << ")\n";
+			//std::cout << "push joint(" << (*i)->distance() << "," << (*i)->angle() << ")\n";
 			std::cout << "push transformation of joint*m:" << (*i)->transformation()*m << " \n";
 			
 			jointStack.push_back(*i);
