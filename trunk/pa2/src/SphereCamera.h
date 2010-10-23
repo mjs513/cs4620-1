@@ -33,6 +33,8 @@ public:
 	
 	double sensitivity() const;
 	SphereCamera& setSensitivity(double s);
+
+	Point eye() const;
 	
 	bool positionChanged() const;
 	void markSceneWasRedrawn();

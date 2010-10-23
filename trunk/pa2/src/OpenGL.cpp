@@ -121,5 +121,19 @@ void lookAt(const Point &eye, const Vector &direction, const Vector &up)
     lookAt(eye,center,up);
 }
 
+Point unproject(const Point &point, const GLMatrix &modelview, const GLMatrix &projection)
+{
+	GLint viewport[4];
+	
+	glGetIntegerv(GL_VIEWPORT,viewport);
+	
+	Point unproj;
+	
+	// Invert y when unprojecting
+	gluUnProject(point.x,viewport[3] - point.y,point.z,modelview.v,projection.v,viewport,&unproj.x,&unproj.y,&unproj.z);
+	
+	return unproj;
+}
+
 
 }  // namespace OpenGL
