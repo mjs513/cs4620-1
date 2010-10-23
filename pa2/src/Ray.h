@@ -24,6 +24,8 @@ struct Ray
 	Ray(const Point &p1, const Point &p2);
 	
 	double distance(const Point &p) const;
+
+	Point pointAt(double t) const;
 };
 
 

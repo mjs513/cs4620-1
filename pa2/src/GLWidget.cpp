@@ -11,6 +11,7 @@
 #include <math.h>
 #include <unistd.h>
 
+#include "Ray.h"
 #include "GLWidget.h"
 #include "MainWindow.h"
 #include "OpenGL.h"
@@ -101,6 +102,21 @@ void GLWidget::initializeGL()
 	glPointSize(10);
 	glLineWidth(3);
 	
+	Vector z = Vector(0,0,1);
+	
+	_rootJoint = new Joint(Point(),z);
+	
+	Joint *j1 = new Joint(Point(1,0),z);
+	Joint *j2 = new Joint(Point(1,0),z);
+	Joint *j3 = new Joint(Point(1,0),z);
+	
+	_rootJoint->addChild(j1);
+	j1->addChild(j2);
+	j2->addChild(j3);
+	
+	
+	
+	
 	//_rootJoint = new Joint(0,0);
 	/*
 	// Create planar chain
@@ -186,7 +202,7 @@ void GLWidget::paintGL()
     _rootJoint->display();
 
 	if(_selectedJoint) {
-		OpenGL::color(Color::blue());
+		OpenGL::color(Color::cyan());
 
 		glBegin(GL_POINTS); {
 			OpenGL::vertex(_selectedPoint);
@@ -253,11 +269,12 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	GLint viewport[4];
+	const double PICKING_RANGE = 0.001;
 	
-	glGetIntegerv(GL_VIEWPORT,viewport);
+	Point mouse(event->x(),event->y());
+	Point unprojected = OpenGL::unproject(mouse,modelviewMatrix,projectionMatrix);
+	Ray pickingRay(_camera.eye(),unprojected);
 	
-	Point mouse(event->x(),viewport[3] - event->y());
 	std::vector<Joint*> jointStack;
 	std::vector<GLMatrix> matrixStack;
 	double minDist = 1e300/1e-300;
@@ -265,54 +282,63 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 	jointStack.push_back(_rootJoint);
 	matrixStack.push_back(_rootJoint->transformation());
 	
+	Point cameraEye = _camera.eye();
 	
+	// Deselect current selection
+	_selectedJoint = 0;
 	
+	// Recursive stack
 	while(!jointStack.empty()) {
 		Joint *j = jointStack.back();
 		GLMatrix m = matrixStack.back();
 
-		//std::cout << "pop joint(" << j->distance() << "," << j->angle() << ")\n";
-		std::cout << "pop m: " << m << "\n";
-		
 		jointStack.pop_back();
 		matrixStack.pop_back();
 		
 		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
-			//std::cout << "push joint(" << (*i)->distance() << "," << (*i)->angle() << ")\n";
-			std::cout << "push transformation of joint*m:" << (*i)->transformation()*m << " \n";
-			
 			jointStack.push_back(*i);
 			matrixStack.push_back((*i)->transformation()*m);
 		}
 		
-		Point p = m*Point();
-		Point window;
-
-		std::cout << "point = " << m*Point() << std::endl;
-		
-		gluProject(p.x,p.y,p.z,modelviewMatrix.v,projectionMatrix.v,viewport,&window.x,&window.y,&window.z);
-		
-		window.z = 0;
-		
-		double d = (mouse - window).length();
-		
-		if(d < minDist) {
-			minDist = d;
-			_selectedJoint = j;
-			_selectedPoint = m*Point();
+		// Only allow picking end effects
+		if(j->isEndEffector()) {
+			Point p = m*Point();
+			double sqCamDist = (p - cameraEye).squaredLength();
+			double d = pickingRay.distance(p);
+			
+			if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
+				minDist = d;
+				_selectedJoint = j;
+				_selectedPoint = p;
+			}
 		}
-	}
-	
-	if(minDist > 10) {
-		_selectedJoint = 0;
 	}
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	//
-	// Implement picking
-	//
+	if(event->buttons() & Qt::LeftButton) {
+		GLint viewport[4];
+		
+		glGetIntegerv(GL_VIEWPORT,viewport);
+		
+		Point eye = _camera.eye();
+		
+		// Ray from camera to new mouse position
+		Ray ray(eye,OpenGL::unproject(Point(event->x(),event->y()),modelviewMatrix,projectionMatrix));
+		
+		// Plane normal to camera view that contains selected point
+		Vector normal = eye - OpenGL::unproject(Point(0.5*viewport[2],0.5*viewport[2]),modelviewMatrix,projectionMatrix);
+		double planeD = -Vector::dot(normal,Vector(_selectedPoint));
+		
+		// Intersect ray with plane
+		double t = -(planeD + Vector::dot(normal,Vector(ray.p)))/Vector::dot(normal,ray.dir);
+		Point newPos = ray.pointAt(t);
+		
+		
+		
+		_selectedPoint = newPos;
+	}
 }
 
 void GLWidget::keyPressEvent(QKeyEvent * event)
@@ -364,10 +390,7 @@ void GLWidget::setRecording(bool state)
 }
 
 void GLWidget::animate()
-{
-	updateGL();
-	return;
-    
+{updateGL(); return;
 	Joint *i = _rootJoint;
     double mult = 1;
 

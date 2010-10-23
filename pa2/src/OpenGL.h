@@ -51,6 +51,8 @@ void scale(const Vector &v);
 void lookAt(const Point &eye, const Point &center, const Vector &up);
 void lookAt(const Point &eye, const Vector &direction, const Vector &up);
 
+Point unproject(const Point &point, const GLMatrix &modelview, const GLMatrix &projection);
+
 
 }  // namespace OpenGL
 

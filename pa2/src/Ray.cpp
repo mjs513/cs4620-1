@@ -22,3 +22,8 @@ double Ray::distance(const Point &point) const
 	
 	return (projPoint - point).length();
 }
+
+Point Ray::pointAt(double t) const
+{
+	return p + t*dir;
+}

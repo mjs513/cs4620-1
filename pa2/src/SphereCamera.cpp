@@ -97,6 +97,16 @@ SphereCamera& SphereCamera::setSensitivity(double s)
 	return *this;
 }
 
+Point SphereCamera::eye() const
+{
+	Vector back = INITIAL_BACK;
+	GLMatrix m = GLMatrix::rotationTransform(_angleXY,Vector(0,0,1))*GLMatrix::rotationTransform(_angleZ,INITIAL_RIGHT);
+	
+	back = m*back;
+	
+	return _center + _radius*back;
+}
+
 bool SphereCamera::positionChanged() const
 {
 	return _positionChanged;

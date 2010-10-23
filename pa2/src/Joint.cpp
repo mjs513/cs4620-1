@@ -108,23 +108,22 @@ void Joint::display()
 {
 	glPushMatrix();
 	
-	GLMatrix m = transformation();
-
 	OpenGL::color(Color::white());
 	
 	// Draw bones
 	glBegin(GL_LINES); {
 		OpenGL::vertex(Point());
-		OpenGL::vertex(m*Point());
+		OpenGL::vertex(_pos);
 	}
 	glEnd();
 	
 	// Transform to this joint's frame
-	glMultMatrixd(m.v);
+	glMultMatrixd(transformation().v);
 	
-	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
-	
-	if(_parent) {
+	if(isEndEffector()) {
+		OpenGL::color(Color::blue());
+	}
+	else if(_parent) {
 		OpenGL::color(Color::red());
 	}
 	else {
@@ -136,8 +135,6 @@ void Joint::display()
 		OpenGL::vertex(Point());
 	}
 	glEnd();
-	
-	glGetDoublev(GL_MODELVIEW_MATRIX,m.v);
 	
 	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
 		(*i)->display();
