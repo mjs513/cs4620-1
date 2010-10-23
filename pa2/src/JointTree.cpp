@@ -44,7 +44,7 @@ void JointTree::_iterate(Joint *joint)
 		id = _joints.size();
 	}
 	
-	//joint->setId(id);
+	joint->setId(id);
 	
 	for(std::vector<Joint*>::const_iterator i = joint->children().begin(); i != joint->children().end(); ++i) {
 		_iterate(*i);
