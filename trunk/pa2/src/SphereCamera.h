@@ -33,10 +33,7 @@ public:
 	void applyTransformation() const;
 	
 private:
-	Point _center,_eye;
-	Vector _up;
 	double _sensitivity;
-
 	double theta, fi;
 	double p, zpos, r, xpos, ypos;
 };
