@@ -35,6 +35,9 @@ public:
 	void setAngle(double angle);
 	void updateAngle(double deltaTheta);
 
+	double thickness() const;
+	void setThickness(double thickness);
+
 	double weight() const;
 	void setWeight(double weight);
 

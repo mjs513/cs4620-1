@@ -98,6 +98,16 @@ void Joint::updateAngle(double deltaTheta)
 	setAngle( _angle + deltaTheta );
 }
 
+double Joint::thickness() const
+{
+	return _thickness;
+}
+
+void Joint::setThickness(double thickness)
+{
+	_thickness = thickness;
+}
+
 double Joint::weight() const
 {
 	return _weight;
@@ -188,7 +198,7 @@ void Joint::display()
 	}
 	
 	// Draw joint
-	gluSphere(q,_thickness*1.2,20,20);
+	gluSphere(q,_thickness*1.15,20,20);
 
 	OpenGL::color(Color::white());
 
@@ -202,30 +212,37 @@ void Joint::display()
 	glPushMatrix();
 	
 	Vector v = Vector(_pos).normalized();
-	double angX = std::acos(v.x),angY = std::acos(v.y);
+	double angX = std::acos(v.x), angY = std::acos(v.y);
 
 	if(v.x < 0) {
-		angX = 2*M_PI - angX;
+		angX = angX;
 	}
 	
 	if(v.y < 0) {
-		angY = 2*M_PI - angY;
+		angY = M_PI - angY;
 	}
-	
+
 	OpenGL::rotate(90 - 180/M_PI*angX,Vector(0,1,0));
 	OpenGL::rotate(90 - 180/M_PI*angY,Vector(1,0,0));
-	
-	gluCylinder(q,_thickness,_thickness,(_pos - Point()).length(),20,20);
-	
-	glPopMatrix();
-	
-	OpenGL::translate(_pos);
 
-	// Draw end effector
-	if(hasEndEffector()) {
-		OpenGL::color(Color::blue());
+	// Cylinders should be drawn according to children
+	// If it has an end effector, then we make it the same base and height values
+	if( !hasEndEffector() ) {
+		for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
+			gluCylinder(q, _thickness, (*i)->thickness(),(_pos - Point()).length(),20,20);
+		}
 	}
+	else {
+		OpenGL::color(Color::blue());
+		gluCylinder(q, _thickness, _thickness,(_pos - Point()).length(),20,20);
+	}
+
+	glPopMatrix();
+
+	// Transform to link's extreme
+	OpenGL::translate(_pos);
 	
+	// Draw its children
 	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
 		(*i)->display();
 	}
