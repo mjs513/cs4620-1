@@ -18,7 +18,7 @@
 class Joint
 {
 public:
-	Joint(const Point &pos, const Vector &rotAxis, double weight = 1);
+	Joint(const Point &pos, const Vector &rotAxis, double thickness = 0.1, double weight = 1);
 	~Joint();
 	
 	void addChild(Joint *joint);
