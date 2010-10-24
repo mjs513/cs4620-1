@@ -123,32 +123,73 @@ void GLWidget::initializeGL()
 		}
 	}
 	
-	// Create hand
+	// Create right hand
 	{
-		Joint *wrist = new Joint(Point(0,0,0.5),Vector(1,0,0),10);
+		// Create wrist with 2 degrees of freedom
+		Joint *wrist = new Joint(Point(0,0,0.5), Vector(1,0,0), 0.1, 10);
+		wrist->setAngleInterval(0, 45);
 		
-		wrist->setAngleInterval(0,45);
-		
+		Joint *wrist2 = new Joint(Point(0,0,0), Vector(0,1,0), 0.1, 10);
+		wrist2->setAngleInterval(-45, 15);
+
+		wrist->addChild(wrist2);
+
 		int nfingers = 5;
-		
-		for(int i = 0; i < nfingers; ++i) {
-			Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5,0,1),Vector(1,0,0));
+
+		// Create 4 fingers (except toe)
+		for(int i = 0; i < nfingers - 1; ++i) {
+
+			// Create fingerBase with 2 degrees of freedom
+			Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5, 0, 1), Vector(1, 0, 0));
+			fingerBase->setAngleInterval(0, 0);
+
+			Joint *fingerBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0));
+			fingerBase2->setAngleInterval(-15, 15);
 			
-			fingerBase->setAngleInterval(0,0);
+			// First segment of finger
+			Joint *finger1 = new Joint(Point(0, 0, 1), Vector(1, 0, 0));
+			finger1->setAngleInterval(-15, 90);
 			
-			Joint *finger1 = new Joint(Point(0,0,1),Vector(1,0,0));
+			// Second segment of finger
+			Joint *finger2 = new Joint(Point(0, 0, 0.66), Vector(1, 0, 0));
+			finger2->setAngleInterval(0, 110);
 			
-			finger1->setAngleInterval(-15,90);
+			// Finger tip
+			Joint *fingerTip = new Joint(Point(0, 0, 0.33), Vector(1, 0, 0));
+			fingerTip->setAngleInterval(0, 35);
 			
-			Joint *finger2 = new Joint(Point(0,0,1),Vector(1,0,0));
-			
-			finger2->setAngleInterval(0,110);
-			
-			wrist->addChild(fingerBase);
-			fingerBase->addChild(finger1);
+			wrist2->addChild(fingerBase);
+			fingerBase->addChild(fingerBase2);
+			fingerBase2->addChild(finger1);
 			finger1->addChild(finger2);
+			finger2->addChild(fingerTip);
 		}
 		
+		// Create toe
+		// Create fingerBase with 2 degrees of freedom
+		Joint *toeBase = new Joint(Point(5 - (nfingers - 1)*0.9, -0.5, 0.5), Vector(1, 0, 0));
+		toeBase->setAngleInterval(0, 0);
+
+		Joint *toeBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0));
+		toeBase2->setAngleInterval(-15, 60);
+
+		// First segment of finger (2 degrees of freedom)
+		Joint *toeSegment1 = new Joint(Point(0, 0, 1), Vector(0, -1, 0));
+		toeSegment1->setAngleInterval(-15, 15);
+
+		Joint *toeSegment12 = new Joint(Point(0, 0, 0), Vector(1, 0, 0));
+		toeSegment12->setAngleInterval(-15, 60);
+
+		// Second segment of finger
+		Joint *toeSegment2 = new Joint(Point(0, 0, 0.66), Vector(0, -1, 0));
+		toeSegment2->setAngleInterval(0, 90);
+
+		wrist2->addChild(toeBase);
+		toeBase->addChild(toeBase2);
+		toeBase2->addChild(toeSegment1);
+		toeSegment1->addChild(toeSegment12);
+		toeSegment12->addChild(toeSegment2);
+
 		_handRootJoint = wrist;
 	}
 	

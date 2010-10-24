@@ -22,9 +22,9 @@ const double MAX_DELTA_ANGLE = 1;
 }  // namespace
 
 
-Joint::Joint(const Point &pos, const Vector &rotAxis, double weight)
+Joint::Joint(const Point &pos, const Vector &rotAxis, double thickness, double weight)
 	: _id(-1), _pos(pos), _rotAxis(rotAxis), _angle(0), _weight(weight), _minAngle(-1e300/1e-300), _maxAngle(1e300/1e-300),
-	  _parent(0), _thickness(0.1) { }
+	  _parent(0), _thickness(thickness) { }
 
 Joint::~Joint()
 {
