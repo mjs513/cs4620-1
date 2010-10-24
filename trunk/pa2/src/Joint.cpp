@@ -190,6 +190,7 @@ void Joint::display()
 
 	GLUquadric *q = gluNewQuadric();
 	
+	// Draw joint
 	if(_parent) {
 		OpenGL::color(Color::red());
 	}
@@ -197,50 +198,31 @@ void Joint::display()
 		OpenGL::color(Color::green());
 	}
 	
-	// Draw joint
-	gluSphere(q,_thickness*1.15,20,20);
-
-	OpenGL::color(Color::white());
+	gluSphere(q,0.1,20,20);
 
 	// Draw link
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_LIGHTING);
+	
+	OpenGL::color(Color::white());
+	
 	glBegin(GL_LINES); {
 		OpenGL::vertex(Point());
 		OpenGL::vertex(_pos);
 	}
 	glEnd();
 	
-	glPushMatrix();
+	glPopAttrib();
 	
-	Vector v = Vector(_pos).normalized();
-	double angX = std::acos(v.x), angY = std::acos(v.y);
-
-	if(v.x < 0) {
-		angX = angX;
-	}
-	
-	if(v.y < 0) {
-		angY = M_PI - angY;
-	}
-
-	OpenGL::rotate(90 - 180/M_PI*angX,Vector(0,1,0));
-	OpenGL::rotate(90 - 180/M_PI*angY,Vector(1,0,0));
-
-	// Cylinders should be drawn according to children
-	// If it has an end effector, then we make it the same base and height values
-	if( !hasEndEffector() ) {
-		for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
-			gluCylinder(q, _thickness, (*i)->thickness(),(_pos - Point()).length(),20,20);
-		}
-	}
-	else {
-		OpenGL::color(Color::blue());
-		gluCylinder(q, _thickness, _thickness,(_pos - Point()).length(),20,20);
-	}
-
-	glPopMatrix();
-
 	// Transform to link's extreme
 	OpenGL::translate(_pos);
+	
+	// Draw end effector
+	OpenGL::color(Color::blue());
+
+	if(hasEndEffector()) {
+		gluSphere(q,0.1,20,20);
+	}
 	
 	// Draw its children
 	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {

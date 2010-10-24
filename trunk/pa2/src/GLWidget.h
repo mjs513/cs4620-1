@@ -49,6 +49,7 @@ protected:
 	void resizeGL(int width, int height);
 
 	void mousePressEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void keyPressEvent(QKeyEvent* event);
 
@@ -62,7 +63,9 @@ private:
 	int _width,_height;
 	
 	SphereCamera _camera;
-	GLMatrix projectionMatrix,modelviewMatrix;
+	GLMatrix _projectionMatrix,_modelviewMatrix;
+	GLMatrix _cameraRotationMatrix,_cameraSelectedRotationMatrix;
+	Point _mouseClick;
 	
 	Joint *_rootJoint;
 	Joint *_planarChainRootJoint;

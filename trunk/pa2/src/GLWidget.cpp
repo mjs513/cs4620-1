@@ -42,7 +42,7 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(), _rootJoint(0), _planarChainRootJoint(0), _handRootJoint(0), _selectedJoint(0),
+	: QGLWidget(parent), _camera(20), _rootJoint(0), _planarChainRootJoint(0), _handRootJoint(0), _selectedJoint(0),
 	  _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
 	_animationTimer = new QTimer(this);
@@ -100,8 +100,6 @@ void GLWidget::initializeGL()
     OpenGL::lightColor(GL_LIGHT0,GL_SPECULAR,Color(1,1,1));
     
 	setRecording(false);
-	
-	_camera.setRadius(20);
 	
 	glPointSize(10);
 	glLineWidth(3);
@@ -193,7 +191,14 @@ void GLWidget::initializeGL()
 		_handRootJoint = wrist;
 	}
 	
-	_rootJoint = _planarChainRootJoint;
+	//_rootJoint = _planarChainRootJoint;
+	
+	_rootJoint = new Joint(Point(0,0,1), Vector(1,0,0));
+	Joint *j1 = new Joint(Point(1,1,1), Vector(0,1,0));
+	Joint *j2 = new Joint(Point(-1,-1,-1), Vector(0,0,1));
+	
+	_rootJoint->addChild(j1);
+	_rootJoint->addChild(j2);
 }
 
 void GLWidget::paintGL()
@@ -210,14 +215,17 @@ void GLWidget::paintGL()
 	
 	// Position the camera
 	_camera.applyTransformation();
-	
+
+	//glMultMatrixd((_cameraSelectedRotationMatrix*_cameraRotationMatrix).v);
+
 	// Save the matrices for ray picking
-	glGetDoublev(GL_MODELVIEW_MATRIX,modelviewMatrix.v);
-	glGetDoublev(GL_PROJECTION_MATRIX,projectionMatrix.v);
+	glGetDoublev(GL_MODELVIEW_MATRIX,_modelviewMatrix.v);
+	glGetDoublev(GL_PROJECTION_MATRIX,_projectionMatrix.v);
 	
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
 
+    // Draw 3 axis
     glBegin(GL_LINES); {
     	OpenGL::color(Color::red());
     	OpenGL::vertex(Point(0,0,0));
@@ -246,7 +254,7 @@ void GLWidget::paintGL()
 
 		glPushMatrix();	{
 			OpenGL::translate(m*Point());
-			gluSphere(q, _selectedJoint->thickness()*1.15, 20, 20);
+			gluSphere(q, 0.15, 20, 20);
 		}
 		glPopMatrix();
 	}
@@ -259,10 +267,23 @@ void GLWidget::paintGL()
 		// Spheres are created on origin, so we need to transform to target's point and create sphere
 		glPushMatrix(); {
 			OpenGL::translate(i->second);
-			gluSphere(q, 0.1, 20, 20);
+			gluSphere(q, 0.2, 20, 20);
 		}
 		glPopMatrix();
 	}
+	
+	// Draw floor plane
+	OpenGL::color(Color(0.6,0.6,0.6,0.8));
+	
+	glBegin(GL_QUADS); {
+		OpenGL::normal(Vector(0,0,1));
+
+		OpenGL::vertex(Point(-100,-100));
+		OpenGL::vertex(Point(100,-100));
+		OpenGL::vertex(Point(100,100));
+		OpenGL::vertex(Point(-100,100));
+	}
+	glEnd();
 
 	static int frameCount = 0,fps = 0;
 	static QTime time = QTime::currentTime();
@@ -324,9 +345,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 {
 	if(event->buttons() & Qt::LeftButton) {
 		const double PICKING_RANGE = 0.001;
+
+		_mouseClick = Point(event->x(),event->y());
 		
-		Point mouse(event->x(),event->y());
-		Point unprojected = OpenGL::unproject(mouse,modelviewMatrix,projectionMatrix);
+		Point unprojected = OpenGL::unproject(_mouseClick,_modelviewMatrix,_projectionMatrix);
 		Ray pickingRay(_camera.eye(),unprojected);
 		
 		std::vector<Joint*> jointStack;
@@ -367,35 +389,49 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 			}
 		}
 	}
-	else if(!event->buttons()){
-		_endEffectorsMotion.clear();
-	}
+}
+
+void GLWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+	_cameraRotationMatrix = _cameraSelectedRotationMatrix*_cameraRotationMatrix;
+	_cameraSelectedRotationMatrix = GLMatrix();
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	// Move selected joint
-	if(_selectedJoint && (event->buttons() & Qt::LeftButton)) {
-		GLint viewport[4];
+	if(event->buttons() & Qt::LeftButton) {
+		// Move selected joint
+		if(_selectedJoint) {
+			GLint viewport[4];
+			
+			glGetIntegerv(GL_VIEWPORT,viewport);
+			
+			Point eye = _camera.eye();
+			GLMatrix selectedTransformation = _selectedJoint->calculateGlobalTransformation();
+			Point selected = selectedTransformation*Point();
+			
+			// Ray from camera to new mouse position
+			Ray ray(eye,OpenGL::unproject(Point(event->x(),event->y()),_modelviewMatrix,_projectionMatrix));
+			
+			// Plane normal to camera view that contains selected point
+			Vector normal = eye - OpenGL::unproject(Point(0.5*viewport[2],0.5*viewport[2]),_modelviewMatrix,_projectionMatrix);
+			double planeD = -Vector::dot(normal,Vector(selected));
+			
+			// Intersect ray with plane
+			double t = -(planeD + Vector::dot(normal,Vector(ray.p)))/Vector::dot(normal,ray.dir);
+			Point newPos = ray.pointAt(t);
+			
+			_endEffectorsMotion[_selectedJoint] = newPos;
+		}
 		
-		glGetIntegerv(GL_VIEWPORT,viewport);
-		
-		Point eye = _camera.eye();
-		GLMatrix selectedTransformation = _selectedJoint->calculateGlobalTransformation();
-		Point selected = selectedTransformation*Point();
-		
-		// Ray from camera to new mouse position
-		Ray ray(eye,OpenGL::unproject(Point(event->x(),event->y()),modelviewMatrix,projectionMatrix));
-		
-		// Plane normal to camera view that contains selected point
-		Vector normal = eye - OpenGL::unproject(Point(0.5*viewport[2],0.5*viewport[2]),modelviewMatrix,projectionMatrix);
-		double planeD = -Vector::dot(normal,Vector(selected));
-		
-		// Intersect ray with plane
-		double t = -(planeD + Vector::dot(normal,Vector(ray.p)))/Vector::dot(normal,ray.dir);
-		Point newPos = ray.pointAt(t);
-		
-		_endEffectorsMotion[_selectedJoint] = newPos;
+		// Modify camera rotation
+		else {
+			Point mouse(event->x(),event->y());
+			Vector motion = (mouse - _mouseClick)*0.2;
+
+			_cameraSelectedRotationMatrix = GLMatrix::rotationTransform(-motion.y,Vector(0,1,0));
+			_cameraSelectedRotationMatrix *= GLMatrix::rotationTransform(motion.x,Vector(0,0,1));
+		}
 	}
 }
 
