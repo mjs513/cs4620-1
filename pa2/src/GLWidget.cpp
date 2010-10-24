@@ -42,7 +42,8 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(), _rootJoint(0), _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
+	: QGLWidget(parent), _camera(), _rootJoint(0), _planarChainRootJoint(0), _handRootJoint(0), _selectedJoint(0),
+	  _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
 	_animationTimer = new QTimer(this);
 	connect(_animationTimer , SIGNAL(timeout()), this, SLOT(animate()));
@@ -105,78 +106,53 @@ void GLWidget::initializeGL()
 	glPointSize(10);
 	glLineWidth(3);
 	
-	Vector z = Vector(0,0,1);
-	
-	_rootJoint = new Joint(Point(1,0),z);
-	Joint *j1 = new Joint(Point(1,0),z);
-	Joint *j2 = new Joint(Point(1,0),z);
-	Joint *j3 = new Joint(Point(1,0),z);
-	Joint *j4 = new Joint(Point(1,1),z);
-	
-	_rootJoint->addChild(j1);
-	j1->addChild(j2);
-	j2->addChild(j3);
-	j1->addChild(j4);
-	
-	
-	//_rootJoint = new Joint(0,0);
-	/*
 	// Create planar chain
-	_planarJoint = new Joint(0, 0);
-	Joint *j1 = new Joint(1,45);
-	Joint *j2 = new Joint(1,30);
-	Joint *j3 = new Joint(1,-30);
-	Joint *j4 = new Joint(1,-90);
-
-	_planarJoint->addChild(j1);
-	j1->addChild(j2);
-	j2->addChild(j3);
-	j3->addChild(j4);
-	*/
-
-
-	// Create humanoid
-
-	// Body
-	/*
-	_humanJoint = new Joint(0, 0);
-	Joint *head = new Joint(0.5,90);
-	Joint *leftShoulder = new Joint(1,180);
-	Joint *leftHand = new Joint(1,90);
-	Joint *rightShoulder = new Joint(1,0);
-	Joint *rightHand = new Joint(1,-90);
-	Joint *hip = new Joint(1,-90);
-	Joint *rightLeg = new Joint(1,45);
-	Joint *rightFoot = new Joint(1,-45);
-	Joint *leftLeg = new Joint(1,-45);
-	Joint *leftFoot = new Joint(1,45);
-
-	_humanJoint->addChild(leftShoulder);
-	_humanJoint->addChild(rightShoulder);
-	_humanJoint->addChild(head);
-	_humanJoint->addChild(hip);
-
-	leftShoulder->addChild(leftHand);
-
-	rightShoulder->addChild(rightHand);
-
-	hip->addChild(rightLeg);
-	hip->addChild(leftLeg);
-
-	rightLeg->addChild(rightFoot);
+	{
+		Vector z = Vector(0,0,1);
+		int n = 20;
+		double size = 10;
+		
+		// Create n serial joints
+		for(int i = 0; i < n; ++i) {
+			Joint *j = new Joint(Point(size/n,0),z);
+			
+			if(_planarChainRootJoint) {
+				j->addChild(_planarChainRootJoint);
+			}
+			_planarChainRootJoint = j;
+		}
+	}
 	
-	leftLeg->addChild(leftFoot);
-
-	_rootJoint = _humanJoint;
-
-	_rootJoint = new Joint(0,0);
-	Joint *j1 = new Joint(1,0);
-	Joint *j2 = new Joint(1,90);
-	Joint *j3 = new Joint(1,90);
-
-	_rootJoint->addChild(j1);
-	_rootJoint->addChild(j2);
-	j1->addChild(j3);*/
+	// Create hand
+	{
+		Joint *wrist = new Joint(Point(0,0,0.5),Vector(1,0,0),10);
+		
+		wrist->setAngleInterval(0,45);
+		
+		int nfingers = 5;
+		
+		for(int i = 0; i < nfingers; ++i) {
+			Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5,0,1),Vector(1,0,0));
+			
+			fingerBase->setAngleInterval(0,0);
+			
+			Joint *finger1 = new Joint(Point(0,0,1),Vector(1,0,0));
+			
+			finger1->setAngleInterval(-15,90);
+			
+			Joint *finger2 = new Joint(Point(0,0,1),Vector(1,0,0));
+			
+			finger2->setAngleInterval(0,110);
+			
+			wrist->addChild(fingerBase);
+			fingerBase->addChild(finger1);
+			finger1->addChild(finger2);
+		}
+		
+		_handRootJoint = wrist;
+	}
+	
+	_rootJoint = _planarChainRootJoint;
 }
 
 void GLWidget::paintGL()
@@ -390,8 +366,8 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
 
 		// Change character views
-		case Qt::Key_1: _rootJoint = _planarJoint; break;
-		case Qt::Key_2: _rootJoint = _humanJoint; break;
+		case Qt::Key_1: _rootJoint = _planarChainRootJoint; _selectedJoint = 0; _endEffectorsMotion.clear(); break;
+		case Qt::Key_2: _rootJoint = _handRootJoint; _selectedJoint = 0; _endEffectorsMotion.clear(); break;
 		case Qt::Key_3: break;
 		case Qt::Key_4: break;
 	}
