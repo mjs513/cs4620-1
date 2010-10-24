@@ -115,7 +115,7 @@ void GLWidget::initializeGL()
 		// Create n serial joints
 		for(int i = 0; i < n; ++i) {
 			Joint *j = new Joint(Point(size/n,0),z);
-			
+
 			if(_planarChainRootJoint) {
 				j->addChild(_planarChainRootJoint);
 			}
@@ -126,7 +126,7 @@ void GLWidget::initializeGL()
 	// Create right hand
 	{
 		// Create wrist with 2 degrees of freedom
-		Joint *wrist = new Joint(Point(0,0,0.5), Vector(1,0,0), 0.1, 10);
+		Joint *wrist = new Joint(Point(0,0,0.5), Vector(1,0,0), 0.3, 10);
 		wrist->setAngleInterval(0, 45);
 		
 		Joint *wrist2 = new Joint(Point(0,0,0), Vector(0,1,0), 0.1, 10);
@@ -136,26 +136,26 @@ void GLWidget::initializeGL()
 
 		int nfingers = 5;
 
-		// Create 4 fingers (except toe)
+		// Create 4 fingers (except thumb)
 		for(int i = 0; i < nfingers - 1; ++i) {
 
 			// Create fingerBase with 2 degrees of freedom
-			Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5, 0, 1), Vector(1, 0, 0));
+			Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5, 0, 1), Vector(1, 0, 0), 0.3);
 			fingerBase->setAngleInterval(0, 0);
 
-			Joint *fingerBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0));
+			Joint *fingerBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0), 0.3);
 			fingerBase2->setAngleInterval(-15, 15);
 			
 			// First segment of finger
-			Joint *finger1 = new Joint(Point(0, 0, 1), Vector(1, 0, 0));
-			finger1->setAngleInterval(-15, 90);
+			Joint *finger1 = new Joint(Point(0, 0, 1), Vector(1, 0, 0), 0.3);
+			finger1->setAngleInterval(-15, 45);
 			
 			// Second segment of finger
-			Joint *finger2 = new Joint(Point(0, 0, 0.66), Vector(1, 0, 0));
-			finger2->setAngleInterval(0, 110);
+			Joint *finger2 = new Joint(Point(0, 0, 0.66), Vector(1, 0, 0), 0.25);
+			finger2->setAngleInterval(-15, 95);
 			
 			// Finger tip
-			Joint *fingerTip = new Joint(Point(0, 0, 0.33), Vector(1, 0, 0));
+			Joint *fingerTip = new Joint(Point(0, 0, 0.33), Vector(1, 0, 0), 0.2);
 			fingerTip->setAngleInterval(0, 35);
 			
 			wrist2->addChild(fingerBase);
@@ -165,30 +165,30 @@ void GLWidget::initializeGL()
 			finger2->addChild(fingerTip);
 		}
 		
-		// Create toe
+		// Create thumb
 		// Create fingerBase with 2 degrees of freedom
-		Joint *toeBase = new Joint(Point(5 - (nfingers - 1)*0.9, -0.5, 0.5), Vector(1, 0, 0));
-		toeBase->setAngleInterval(0, 0);
+		Joint *thumbBase = new Joint(Point(5 - (nfingers - 1)*0.9, -0.75, 0.5), Vector(1, 0, 0), 0.35);
+		thumbBase->setAngleInterval(0, 0);
 
-		Joint *toeBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0));
-		toeBase2->setAngleInterval(-15, 60);
+		Joint *thumbBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0), 0.35);
+		thumbBase2->setAngleInterval(-15, 60);
 
 		// First segment of finger (2 degrees of freedom)
-		Joint *toeSegment1 = new Joint(Point(0, 0, 1), Vector(0, -1, 0));
-		toeSegment1->setAngleInterval(-15, 15);
+		Joint *thumbSegment1 = new Joint(Point(0, 0, 1), Vector(0, -1, 0), 0.3);
+		thumbSegment1->setAngleInterval(-15, 15);
 
-		Joint *toeSegment12 = new Joint(Point(0, 0, 0), Vector(1, 0, 0));
-		toeSegment12->setAngleInterval(-15, 60);
+		Joint *thumbSegment12 = new Joint(Point(0, 0, 0), Vector(1, 0, 0), 0.3);
+		thumbSegment12->setAngleInterval(-15, 60);
 
 		// Second segment of finger
-		Joint *toeSegment2 = new Joint(Point(0, 0, 0.66), Vector(0, -1, 0));
-		toeSegment2->setAngleInterval(0, 90);
+		Joint *thumbSegment2 = new Joint(Point(0, 0, 0.66), Vector(0, -1, 0), 0.25);
+		thumbSegment2->setAngleInterval(0, 90);
 
-		wrist2->addChild(toeBase);
-		toeBase->addChild(toeBase2);
-		toeBase2->addChild(toeSegment1);
-		toeSegment1->addChild(toeSegment12);
-		toeSegment12->addChild(toeSegment2);
+		wrist2->addChild(thumbBase);
+		thumbBase->addChild(thumbBase2);
+		thumbBase2->addChild(thumbSegment1);
+		thumbSegment1->addChild(thumbSegment12);
+		thumbSegment12->addChild(thumbSegment2);
 
 		_handRootJoint = wrist;
 	}
@@ -235,24 +235,33 @@ void GLWidget::paintGL()
     
     _rootJoint->display();
 
+    // Draw selected joint as a cyan colored sphere
+    GLUquadric *q = gluNewQuadric();
+
 	if(_selectedJoint) {
 		OpenGL::color(Color::cyan());
 		
+		// Spheres are created on origin, so we need to transform to joint's center
 		GLMatrix m = _selectedJoint->calculateGlobalTransformation();
-		
-		glBegin(GL_POINTS); {
-			OpenGL::vertex(m*Point());
+
+		glPushMatrix();	{
+			OpenGL::translate(m*Point());
+			gluSphere(q, _selectedJoint->thickness()*1.15, 20, 20);
 		}
-		glEnd();
+		glPopMatrix();
 	}
 	
+	// Draw the target position for end effectors as yellow spheres
 	OpenGL::color(Color::yellow());
 	
 	for(std::map<Joint*,Point>::const_iterator i = _endEffectorsMotion.begin(); i != _endEffectorsMotion.end(); ++i) {
-		glBegin(GL_POINTS); {
-			OpenGL::vertex(i->second);
+
+		// Spheres are created on origin, so we need to transform to target's point and create sphere
+		glPushMatrix(); {
+			OpenGL::translate(i->second);
+			gluSphere(q, 0.1, 20, 20);
 		}
-		glEnd();
+		glPopMatrix();
 	}
 
 	static int frameCount = 0,fps = 0;
