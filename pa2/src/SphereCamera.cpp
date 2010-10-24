@@ -19,13 +19,20 @@ namespace {
 
 const Vector INITIAL_BACK(1,0,0),INITIAL_UP(0,0,1),INITIAL_RIGHT(0,1,0);
 const double DEFAULT_SENSITIVITY = 1;
-
+const double NEARVIEW = 1.0;
+const double FARVIEW = 100.0;
 
 }  // namespace
 
 
 SphereCamera::SphereCamera(double radius)
-	: _eye(radius,0,0), _up(0,0,1), _sensitivity(DEFAULT_SENSITIVITY) { }
+	: _eye(radius,0,0), _up(0,0,1), _sensitivity(DEFAULT_SENSITIVITY), theta(0.0), fi(M_PI/2), p(20.0) {
+
+	zpos=p*cos(fi);
+	r=sqrt(p*p-zpos*zpos);
+	xpos=r*cos(theta);
+	ypos=r*sin(theta);
+}
 
 double SphereCamera::sensitivity() const
 {
@@ -44,75 +51,74 @@ Point SphereCamera::eye() const
 	return _eye;
 }
 
-void SphereCamera::_moveVertical(int sign)
-{
-	Vector front = _center - _eye;
-	double length = front.length();
-	Vector right = Vector::cross(front.normalized(),_up);
-	
-	_eye += sign*_sensitivity*_up;
-	
-	front = (_center - _eye).normalized()*length;
-	
-	_eye = _center - front;
-	
-	_up = Vector::cross(right,front).normalized();
-
-	std::cout << "move vertical -- before: right = " << right << std::endl;
-	std::cout << "move vertical -- after:  right = " << Vector::cross(front.normalized(),_up) << std::endl;
-}
-
 void SphereCamera::moveUp()
 {
-	_moveVertical(1);
+	if (fi > 0.0) {
+		fi = fi - 0.0125;
+		p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
+		zpos = p*cos(fi);
+		r = sqrt (p*p - zpos*zpos);
+		xpos = r*cos(theta);
+		ypos = r*sin(theta);
+	}
 }
 
 void SphereCamera::moveDown()
 {
-	_moveVertical(-1);
-}
-
-void SphereCamera::_moveHorizontal(int sign)
-{
-	Vector front = _center - _eye;
-	double length = front.length();
-	Vector right = Vector::cross(front.normalized(),_up);
-	
-	_eye += sign*_sensitivity*right;
-
-	front = (_center - _eye).normalized()*length;
-
-	_eye = _center - front;
+	if (fi < M_PI/1.91) {
+		fi = fi + 0.0125;
+		p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
+		zpos = p*cos(fi);
+		r = sqrt (p*p - zpos*zpos);
+		xpos = r*cos(theta);
+		ypos = r*sin(theta);
+	}
 }
 
 void SphereCamera::moveRight()
 {
-	_moveHorizontal(1);
+	theta-=0.025;
+	r = sqrt(xpos*xpos + ypos*ypos);
+	xpos = r*cos(theta);
+	ypos = r*sin(theta);
 }
 
 void SphereCamera::moveLeft()
 {
-	_moveHorizontal(-1);
+	theta+=0.025;
+	r = sqrt(xpos*xpos + ypos*ypos);
+	xpos = r*cos(theta);
+	ypos = r*sin(theta);
 }
 
-void SphereCamera::_moveRadial(int sign)
-{
-	Vector front = (_center - _eye).normalized();
-	
-	_eye += sign*_sensitivity*front;
-}
 
 void SphereCamera::moveFront()
 {
-	_moveRadial(1);
+	p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
+	if (p<NEARVIEW) p = NEARVIEW;
+	zpos = (zpos * (p-0.25)) / p;
+	p = p-0.25;
+	if (p*p - zpos*zpos < 0) r = 1;			// Evita raiz de numero negativo
+	else r = sqrt (p*p - zpos*zpos);
+	xpos = r*cos(theta);
+	ypos = r*sin(theta);
 }
 
 void SphereCamera::moveBack()
 {
-	_moveRadial(-1);
+	p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
+	if (p>FARVIEW-30.0) p = FARVIEW-30.0;
+	else {
+		zpos = (zpos * (p+0.25)) / p;
+		p = p+0.25;
+	}
+	if (p*p - zpos*zpos < 0) r = 1;			// Evita raiz de numero negativo
+	else r = sqrt (p*p - zpos*zpos);
+	xpos = r*cos(theta);
+	ypos = r*sin(theta);
 }
 
 void SphereCamera::applyTransformation() const
 {
-	OpenGL::lookAt(_eye,_center,_up);
+	gluLookAt (xpos, ypos, zpos, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 }
