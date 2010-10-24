@@ -9,6 +9,7 @@
 #define GLWIDGET_H_
 
 #include <QtOpenGL/QGLWidget>
+#include <map>
 
 #include "Vector.h"
 #include "Point.h"
@@ -61,13 +62,14 @@ private:
 	int _width,_height;
 	
 	SphereCamera _camera;
+	GLMatrix projectionMatrix,modelviewMatrix;
 	
 	Joint *_rootJoint;
 	Joint *_planarJoint;
 	Joint *_humanJoint;
 	Joint *_selectedJoint;
-	Point _selectedPoint;
-	GLMatrix projectionMatrix,modelviewMatrix;
+	
+	std::map<Joint*,Point> _endEffectorsMotion;
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool _enableUserControl;

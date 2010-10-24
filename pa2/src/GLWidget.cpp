@@ -4,6 +4,7 @@
  *  Created on: Sep 1, 2010
  *      Author: Ivaylo Boyadzhiev
  */
+
 #include <QtGui>
 #include <QtOpenGL/QtOpenGL>
 #include <QTimer>
@@ -16,6 +17,8 @@
 #include "MainWindow.h"
 #include "OpenGL.h"
 #include "Color.h"
+#include "IKSolver.h"
+#include "JointTree.h"
 
 #include <vector>
 #include <cstdlib>
@@ -104,17 +107,16 @@ void GLWidget::initializeGL()
 	
 	Vector z = Vector(0,0,1);
 	
-	_rootJoint = new Joint(Point(),z);
-	
+	_rootJoint = new Joint(Point(1,0),z);
 	Joint *j1 = new Joint(Point(1,0),z);
 	Joint *j2 = new Joint(Point(1,0),z);
 	Joint *j3 = new Joint(Point(1,0),z);
+	Joint *j4 = new Joint(Point(1,1),z);
 	
 	_rootJoint->addChild(j1);
 	j1->addChild(j2);
 	j2->addChild(j3);
-	
-	
+	j1->addChild(j4);
 	
 	
 	//_rootJoint = new Joint(0,0);
@@ -199,13 +201,39 @@ void GLWidget::paintGL()
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
 
+    glBegin(GL_LINES); {
+    	OpenGL::color(Color::red());
+    	OpenGL::vertex(Point(0,0,0));
+    	OpenGL::vertex(Point(1,0,0));
+
+    	OpenGL::color(Color::green());
+    	OpenGL::vertex(Point(0,0,0));
+    	OpenGL::vertex(Point(0,1,0));
+
+    	OpenGL::color(Color::blue());
+    	OpenGL::vertex(Point(0,0,0));
+    	OpenGL::vertex(Point(0,0,1));
+    }
+    glEnd();
+    
     _rootJoint->display();
 
 	if(_selectedJoint) {
 		OpenGL::color(Color::cyan());
-
+		
+		GLMatrix m = _selectedJoint->calculateGlobalTransformation();
+		
 		glBegin(GL_POINTS); {
-			OpenGL::vertex(_selectedPoint);
+			OpenGL::vertex(m*Point());
+		}
+		glEnd();
+	}
+	
+	OpenGL::color(Color::yellow());
+	
+	for(std::map<Joint*,Point>::const_iterator i = _endEffectorsMotion.begin(); i != _endEffectorsMotion.end(); ++i) {
+		glBegin(GL_POINTS); {
+			OpenGL::vertex(i->second);
 		}
 		glEnd();
 	}
@@ -241,7 +269,6 @@ void GLWidget::paintGL()
 	}
 	
 	//----- Commands below removed because of Windows flickering issues -----//
-	
 	//glFlush(); // Send the commands to the OpenGL state machine
 	//this->swapBuffers(); // Display the off-screen rendered buffer
 
@@ -269,75 +296,80 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	const double PICKING_RANGE = 0.001;
-	
-	Point mouse(event->x(),event->y());
-	Point unprojected = OpenGL::unproject(mouse,modelviewMatrix,projectionMatrix);
-	Ray pickingRay(_camera.eye(),unprojected);
-	
-	std::vector<Joint*> jointStack;
-	std::vector<GLMatrix> matrixStack;
-	double minDist = 1e300/1e-300;
-	
-	jointStack.push_back(_rootJoint);
-	matrixStack.push_back(_rootJoint->transformation());
-	
-	Point cameraEye = _camera.eye();
-	
-	// Deselect current selection
-	_selectedJoint = 0;
-	
-	// Recursive stack
-	while(!jointStack.empty()) {
-		Joint *j = jointStack.back();
-		GLMatrix m = matrixStack.back();
-
-		jointStack.pop_back();
-		matrixStack.pop_back();
+	if(event->buttons() & Qt::LeftButton) {
+		const double PICKING_RANGE = 0.001;
 		
-		for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
-			jointStack.push_back(*i);
-			matrixStack.push_back((*i)->transformation()*m);
-		}
+		Point mouse(event->x(),event->y());
+		Point unprojected = OpenGL::unproject(mouse,modelviewMatrix,projectionMatrix);
+		Ray pickingRay(_camera.eye(),unprojected);
 		
-		// Only allow picking end effects
-		if(j->isEndEffector()) {
-			Point p = m*Point();
-			double sqCamDist = (p - cameraEye).squaredLength();
-			double d = pickingRay.distance(p);
+		std::vector<Joint*> jointStack;
+		std::vector<GLMatrix> matrixStack;
+		double minDist = 1e300/1e-300;
+		
+		jointStack.push_back(_rootJoint);
+		matrixStack.push_back(_rootJoint->transformation());
+		
+		Point cameraEye = _camera.eye();
+		
+		// Deselect current selection
+		_selectedJoint = 0;
+		
+		// Recursive stack
+		while(!jointStack.empty()) {
+			Joint *j = jointStack.back();
+			GLMatrix m = matrixStack.back();
+	
+			jointStack.pop_back();
+			matrixStack.pop_back();
 			
-			if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
-				minDist = d;
-				_selectedJoint = j;
-				_selectedPoint = p;
+			for(std::vector<Joint*>::const_iterator i = j->children().begin(); i != j->children().end(); ++i) {
+				jointStack.push_back(*i);
+				matrixStack.push_back((*i)->transformation()*m);
+			}
+			
+			// Only allow picking end effects
+			if(j->hasEndEffector()) {
+				Point p = m*Point();
+				double sqCamDist = (p - cameraEye).squaredLength();
+				double d = pickingRay.distance(p);
+				
+				if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
+					minDist = d;
+					_selectedJoint = j;
+				}
 			}
 		}
+	}
+	else if(!event->buttons()){
+		_endEffectorsMotion.clear();
 	}
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	if(event->buttons() & Qt::LeftButton) {
+	// Move selected joint
+	if(_selectedJoint && (event->buttons() & Qt::LeftButton)) {
 		GLint viewport[4];
 		
 		glGetIntegerv(GL_VIEWPORT,viewport);
 		
 		Point eye = _camera.eye();
+		GLMatrix selectedTransformation = _selectedJoint->calculateGlobalTransformation();
+		Point selected = selectedTransformation*Point();
 		
 		// Ray from camera to new mouse position
 		Ray ray(eye,OpenGL::unproject(Point(event->x(),event->y()),modelviewMatrix,projectionMatrix));
 		
 		// Plane normal to camera view that contains selected point
 		Vector normal = eye - OpenGL::unproject(Point(0.5*viewport[2],0.5*viewport[2]),modelviewMatrix,projectionMatrix);
-		double planeD = -Vector::dot(normal,Vector(_selectedPoint));
+		double planeD = -Vector::dot(normal,Vector(selected));
 		
 		// Intersect ray with plane
 		double t = -(planeD + Vector::dot(normal,Vector(ray.p)))/Vector::dot(normal,ray.dir);
 		Point newPos = ray.pointAt(t);
 		
-		
-		
-		_selectedPoint = newPos;
+		_endEffectorsMotion[_selectedJoint] = newPos;
 	}
 }
 
@@ -390,23 +422,15 @@ void GLWidget::setRecording(bool state)
 }
 
 void GLWidget::animate()
-{updateGL(); return;
-	Joint *i = _rootJoint;
-    double mult = 1;
-
-    while(true) {
-    	i->setAngle(i->angle() + mult);
-
-    	if(i->children().size()) {
-    		i = i->children().front();
-    	}
-    	else {
-    		break;
-    	}
-
-    	mult *= -2;
-    }
-
+{
+	if(!_endEffectorsMotion.empty()) {
+		IKSolver solver = IKSolver(JointTree(_rootJoint),1);
+		
+		for(int i = 0; i < 10; ++i) {
+			solver.solve(_endEffectorsMotion);
+		}
+	}
+	
 	updateGL();
 }
 

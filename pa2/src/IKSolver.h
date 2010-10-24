@@ -11,13 +11,15 @@
 
 #include "JointTree.h"
 
+#include <map>
+
 
 class IKSolver
 {
 public:
 	IKSolver(const JointTree &tree, double param = 1e-3);
 	
-	void solve() const;
+	void solve(const std::map<Joint*,Point> &endEffectorsMotion) const;
 	
 private:
 	const JointTree &_tree;

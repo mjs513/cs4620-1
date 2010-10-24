@@ -18,13 +18,14 @@
 class Joint
 {
 public:
-	Joint(const Point &pos, const Vector &rotAxis);
+	Joint(const Point &pos, const Vector &rotAxis, double thickness = 0.1);
 	~Joint();
 	
 	void addChild(Joint *joint);
 	
 	const std::vector<Joint*>& children() const;
 
+	Joint* parent();
 	const Joint* parent() const;
 	
 	int id() const;
@@ -40,29 +41,31 @@ public:
 	Vector rotAxis() const;
 	void setRotAxis(const Vector &rotAxis);
 
-	bool isEndEffector() const;
+	bool hasEndEffector() const;
 
 	const GLMatrix transformation() const;
+	const GLMatrix calculateGlobalTransformation() const;
 
 	void display();
 
-public:
-	
 private:
-
 	// Joint properties
 	int _id;
 	Point _pos;
 	Vector _rotAxis;
 	double _angle;
+	
+	// Angle limits
 	double _minAngle;		// Min permitted angle
 	double _maxAngle;		// Max permitted angle
 	double _maxDeltaAngle;	// Imposes restrictions to angle's convergence speed
-
 	
 	// Structures to access connected joints
 	std::vector<Joint*> _children;
 	Joint *_parent;
+
+	// Sphere radius around joint
+	double _thickness;
 };
 
 

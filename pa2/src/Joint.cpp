@@ -13,8 +13,8 @@
 #include <iostream>
 
 
-Joint::Joint(const Point &pos, const Vector &rotAxis)
-	: _id(-1), _pos(pos), _rotAxis(rotAxis), _angle(0), _parent(0) { }
+Joint::Joint(const Point &pos, const Vector &rotAxis, double thickness)
+	: _id(-1), _pos(pos), _rotAxis(rotAxis), _angle(0), _parent(0), _thickness(thickness) { }
 
 Joint::~Joint()
 {
@@ -33,6 +33,11 @@ void Joint::addChild(Joint *joint)
 const std::vector<Joint*>& Joint::children() const
 {
 	return _children;
+}
+
+Joint* Joint::parent()
+{
+	return _parent;
 }
 
 const Joint* Joint::parent() const
@@ -60,7 +65,8 @@ void Joint::setAngle(double angle)
 	_angle = angle;
 }
 
-void Joint::updateAngle(double deltaTheta) {
+void Joint::updateAngle(double deltaTheta)
+{
 	double newAngle = angle() + deltaTheta;
 	double deltaThetaMin = _minAngle - newAngle;
 	double deltaThetaMax = _maxAngle - newAngle;
@@ -94,51 +100,89 @@ void Joint::setRotAxis(const Vector &rotAxis)
 	_rotAxis = rotAxis;
 }
 
-bool Joint::isEndEffector() const
+bool Joint::hasEndEffector() const
 {
 	return _children.empty();
 }
 
 const GLMatrix Joint::transformation() const
 {
-	return GLMatrix::rotationTransform(_angle,_rotAxis)*GLMatrix::translationTransform(_pos);
+	return GLMatrix::translationTransform(_pos)*GLMatrix::rotationTransform(_angle,_rotAxis);
+}
+
+const GLMatrix Joint::calculateGlobalTransformation() const
+{
+	GLMatrix m;
+	const Joint *j = this;
+	
+	while(j) {
+		m = m*j->transformation();
+		
+		j = j->parent();
+	}
+	
+	return m;
 }
 
 void Joint::display()
 {
 	glPushMatrix();
 	
-	OpenGL::color(Color::white());
+	OpenGL::rotate(_angle,_rotAxis);
+
+	GLUquadric *q = gluNewQuadric();
 	
-	// Draw bones
+	if(_parent) {
+		OpenGL::color(Color::red());
+	}
+	else {
+		OpenGL::color(Color::green());
+	}
+	
+	// Draw joint
+	gluSphere(q,_thickness*1.2,20,20);
+
+	OpenGL::color(Color::white());
+
+	// Draw link
+	glPushMatrix();
+	
+	Vector v = Vector(_pos).normalized(),z(0,0,1);
+	double ang = std::acos(Vector::dot(v,z));
+	
+	if(v.z < 0) {
+		ang = 2*M_PI - ang;
+	}
+	
+	OpenGL::rotate(ang,Vector::cross(z,v));
+	
+	gluCylinder(q,_thickness,_thickness,(_pos - Point()).length(),20,20);
+	
+	glPopMatrix();
+	
+	
 	glBegin(GL_LINES); {
 		OpenGL::vertex(Point());
 		OpenGL::vertex(_pos);
 	}
 	glEnd();
 	
-	// Transform to this joint's frame
-	glMultMatrixd(transformation().v);
+	OpenGL::translate(_pos);
 	
-	if(isEndEffector()) {
+	if(hasEndEffector()) {
 		OpenGL::color(Color::blue());
+		
+		glBegin(GL_POINTS); {
+			OpenGL::vertex(Point());
+		}
+		glEnd();
 	}
-	else if(_parent) {
-		OpenGL::color(Color::red());
-	}
-	else {
-		OpenGL::color(Color::green());
-	}
-
-	// Draw joints
-	glBegin(GL_POINTS); {
-		OpenGL::vertex(Point());
-	}
-	glEnd();
 	
 	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
 		(*i)->display();
 	}
+	
+	gluDeleteQuadric(q);
 	
 	glPopMatrix();
 }
