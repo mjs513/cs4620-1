@@ -26,25 +26,11 @@ const std::vector<Joint*>& JointTree::joints() const
 	return _joints;
 }
 
-const std::vector<Joint*>& JointTree::endEffectors() const
-{
-	return _endEffectors;
-}
-
 void JointTree::_iterate(Joint *joint)
 {
-	int id;
+	joint->setId(_joints.size());
 	
-	if(joint->isEndEffector()) {
-		_endEffectors.push_back(joint);
-		id = _endEffectors.size();
-	}
-	else {
-		_joints.push_back(joint);
-		id = _joints.size();
-	}
-	
-	joint->setId(id);
+	_joints.push_back(joint);
 	
 	for(std::vector<Joint*>::const_iterator i = joint->children().begin(); i != joint->children().end(); ++i) {
 		_iterate(*i);

@@ -22,7 +22,6 @@ public:
 	Joint* root() const;
 
 	const std::vector<Joint*>& joints() const;
-	const std::vector<Joint*>& endEffectors() const;
 	
 private:
 	void _iterate(Joint *joint);
@@ -30,7 +29,6 @@ private:
 private:
 	Joint *_root;
 	std::vector<Joint*> _joints;
-	std::vector<Joint*> _endEffectors;
 };
 
 
