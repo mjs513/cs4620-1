@@ -65,8 +65,8 @@ private:
 	GLMatrix projectionMatrix,modelviewMatrix;
 	
 	Joint *_rootJoint;
-	Joint *_planarJoint;
-	Joint *_humanJoint;
+	Joint *_planarChainRootJoint;
+	Joint *_handRootJoint;
 	Joint *_selectedJoint;
 	
 	std::map<Joint*,Point> _endEffectorsMotion;

@@ -18,7 +18,7 @@
 class Joint
 {
 public:
-	Joint(const Point &pos, const Vector &rotAxis, double thickness = 0.1);
+	Joint(const Point &pos, const Vector &rotAxis, double weight = 1);
 	~Joint();
 	
 	void addChild(Joint *joint);
@@ -34,6 +34,13 @@ public:
 	double angle() const;
 	void setAngle(double angle);
 	void updateAngle(double deltaTheta);
+
+	double weight() const;
+	void setWeight(double weight);
+
+	double minAngle() const;
+	double maxAngle() const;
+	void setAngleInterval(double min, double max);
 	
 	Point pos() const;
 	void setPos(const Point &pos);
@@ -54,11 +61,11 @@ private:
 	Point _pos;
 	Vector _rotAxis;
 	double _angle;
+	double _weight;
 	
 	// Angle limits
 	double _minAngle;		// Min permitted angle
 	double _maxAngle;		// Max permitted angle
-	double _maxDeltaAngle;	// Imposes restrictions to angle's convergence speed
 	
 	// Structures to access connected joints
 	std::vector<Joint*> _children;
