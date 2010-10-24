@@ -33,14 +33,12 @@ public:
 	void applyTransformation() const;
 	
 private:
-	void _moveVertical(int sign);
-	void _moveHorizontal(int sign);
-	void _moveRadial(int sign);
-	
-private:
 	Point _center,_eye;
 	Vector _up;
 	double _sensitivity;
+
+	double theta, fi;
+	double p, zpos, r, xpos, ypos;
 };
 
 #endif /* SPHERECAMERA_H_ */
