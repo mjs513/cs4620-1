@@ -74,6 +74,7 @@ void fillGlobalValues(const JointTree &tree, const map<Joint*,Point> &endEffecto
 	jointStack.push_back(tree.root());
 	matrixStack.push_back(GLMatrix());
 	
+	// Iterate entire tree
 	while(!jointStack.empty()) {
 		Joint *j = jointStack.back();
 		GLMatrix parentM = matrixStack.back();
