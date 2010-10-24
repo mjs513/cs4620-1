@@ -199,10 +199,10 @@ void Joint::display()
 	}
 	glEnd();
 	
-	/*glPushMatrix();
+	glPushMatrix();
 	
 	Vector v = Vector(_pos).normalized();
-	double angX = std::acos(Vector::dot(v,Vector(1,0,0))),angY = std::acos(Vector::dot(v,Vector(0,1,0)));
+	double angX = std::acos(v.x),angY = std::acos(v.y);
 
 	if(v.x < 0) {
 		angX = 2*M_PI - angX;
@@ -212,12 +212,12 @@ void Joint::display()
 		angY = 2*M_PI - angY;
 	}
 	
-	OpenGL::rotate(angX,Vector(1,0,0));
-	OpenGL::rotate(angY,Vector(0,1,0));
+	OpenGL::rotate(90 - 180/M_PI*angX,Vector(0,1,0));
+	OpenGL::rotate(90 - 180/M_PI*angY,Vector(1,0,0));
 	
 	gluCylinder(q,_thickness,_thickness,(_pos - Point()).length(),20,20);
 	
-	glPopMatrix();*/
+	glPopMatrix();
 	
 	OpenGL::translate(_pos);
 
