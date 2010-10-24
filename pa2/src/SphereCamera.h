@@ -16,28 +16,12 @@
 class SphereCamera
 {
 public:
-	SphereCamera();
-	SphereCamera(const Vector &center, double angleXY, double angleZ, double radius);
+	SphereCamera(double radius);
 
-	const Point& center() const;
-	SphereCamera& setCenter(const Point &center);
-
-	double angleXY() const;
-	SphereCamera& setAngleXY(double angleXY);
-
-	double angleZ() const;
-	SphereCamera& setAngleZ(double angleZ);
-
-	double radius() const;
-	SphereCamera& setRadius(double radius);
-	
 	double sensitivity() const;
 	SphereCamera& setSensitivity(double s);
 
 	Point eye() const;
-	
-	bool positionChanged() const;
-	void markSceneWasRedrawn();
 	
 	void moveUp();
 	void moveDown();
@@ -49,11 +33,14 @@ public:
 	void applyTransformation() const;
 	
 private:
-	Point _center;
-	double _angleXY,_angleZ;
-	double _radius;
+	void _moveVertical(int sign);
+	void _moveHorizontal(int sign);
+	void _moveRadial(int sign);
+	
+private:
+	Point _center,_eye;
+	Vector _up;
 	double _sensitivity;
-	bool _positionChanged;
 };
 
 #endif /* SPHERECAMERA_H_ */

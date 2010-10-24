@@ -9,7 +9,9 @@
 
 #include "OpenGL.h"
 #include "GLMatrix.h"
+
 #include <cmath>
+#include <iostream>
 
 
 namespace {
@@ -22,68 +24,8 @@ const double DEFAULT_SENSITIVITY = 1;
 }  // namespace
 
 
-SphereCamera::SphereCamera()
-	: _angleXY(0), _angleZ(0), _radius(1), _sensitivity(DEFAULT_SENSITIVITY), _positionChanged(false) { }
-
-SphereCamera::SphereCamera(const Vector &center, double angleXY, double angleZ, double radius)
-	: _center(center), _angleXY(angleXY), _angleZ(angleZ), _radius(radius), _sensitivity(DEFAULT_SENSITIVITY),
-	  _positionChanged(false) { }
-
-const Point& SphereCamera::center() const
-{
-	return _center;
-}
-
-SphereCamera& SphereCamera::setCenter(const Point &center)
-{
-	_center = center;
-	
-	_positionChanged = true;
-	
-	return *this;
-}
-
-double SphereCamera::angleXY() const
-{
-	return _angleXY;
-}
-
-SphereCamera& SphereCamera::setAngleXY(double angleXY)
-{
-	_angleXY = angleXY;
-	
-	_positionChanged = true;
-	
-	return *this;
-}
-
-double SphereCamera::angleZ() const
-{
-	return _angleZ;
-}
-
-SphereCamera& SphereCamera::setAngleZ(double angleZ)
-{
-	_angleZ = angleZ;
-	
-	_positionChanged = true;
-	
-	return *this;
-}
-
-double SphereCamera::radius() const
-{
-	return _radius;
-}
-
-SphereCamera& SphereCamera::setRadius(double radius)
-{
-	_radius = radius;
-	
-	_positionChanged = true;
-	
-	return *this;
-}
+SphereCamera::SphereCamera(double radius)
+	: _eye(radius,0,0), _up(0,0,1), _sensitivity(DEFAULT_SENSITIVITY) { }
 
 double SphereCamera::sensitivity() const
 {
@@ -99,77 +41,78 @@ SphereCamera& SphereCamera::setSensitivity(double s)
 
 Point SphereCamera::eye() const
 {
-	Vector back = INITIAL_BACK;
-	GLMatrix m = GLMatrix::rotationTransform(_angleXY,Vector(0,0,1))*GLMatrix::rotationTransform(_angleZ,INITIAL_RIGHT);
-	
-	back = m*back;
-	
-	return _center + _radius*back;
+	return _eye;
 }
 
-bool SphereCamera::positionChanged() const
+void SphereCamera::_moveVertical(int sign)
 {
-	return _positionChanged;
-}
+	Vector front = _center - _eye;
+	double length = front.length();
+	Vector right = Vector::cross(front.normalized(),_up);
+	
+	_eye += sign*_sensitivity*_up;
+	
+	front = (_center - _eye).normalized()*length;
+	
+	_eye = _center - front;
+	
+	_up = Vector::cross(right,front).normalized();
 
-void SphereCamera::markSceneWasRedrawn()
-{
-	_positionChanged = false;
+	std::cout << "move vertical -- before: right = " << right << std::endl;
+	std::cout << "move vertical -- after:  right = " << Vector::cross(front.normalized(),_up) << std::endl;
 }
 
 void SphereCamera::moveUp()
 {
-	_angleZ -= _sensitivity;
-	
-	_positionChanged = true;
+	_moveVertical(1);
 }
 
 void SphereCamera::moveDown()
 {
-	_angleZ += _sensitivity;
+	_moveVertical(-1);
+}
+
+void SphereCamera::_moveHorizontal(int sign)
+{
+	Vector front = _center - _eye;
+	double length = front.length();
+	Vector right = Vector::cross(front.normalized(),_up);
 	
-	_positionChanged = true;
+	_eye += sign*_sensitivity*right;
+
+	front = (_center - _eye).normalized()*length;
+
+	_eye = _center - front;
 }
 
 void SphereCamera::moveRight()
 {
-	_angleXY += _sensitivity;
-	
-	_positionChanged = true;
+	_moveHorizontal(1);
 }
 
 void SphereCamera::moveLeft()
 {
-	_angleXY -= _sensitivity;
+	_moveHorizontal(-1);
+}
+
+void SphereCamera::_moveRadial(int sign)
+{
+	Vector front = (_center - _eye).normalized();
 	
-	_positionChanged = true;
+	_eye += sign*_sensitivity*front;
 }
 
 void SphereCamera::moveFront()
 {
-	_radius -= 0.5*_sensitivity;
-	
-	if(_radius < 0) {
-		_radius = 0;
-	}
-	
-	_positionChanged = true;
+	_moveRadial(1);
 }
 
 void SphereCamera::moveBack()
 {
-	_radius += 0.5*_sensitivity;
-	
-	_positionChanged = true;
+	_moveRadial(-1);
 }
 
 void SphereCamera::applyTransformation() const
 {
-	Vector back = INITIAL_BACK,up = INITIAL_UP;
-	GLMatrix m = GLMatrix::rotationTransform(_angleXY,Vector(0,0,1))*GLMatrix::rotationTransform(_angleZ,INITIAL_RIGHT);
-	
-	back = m*back;
-	up = m*up;
-	
-	OpenGL::lookAt(_center + _radius*back,_center,up);
+	OpenGL::lookAt(_eye,_center,_up);
 }
