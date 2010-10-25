@@ -12,6 +12,8 @@
 #include "Vector.h"
 #include "Point.h"
 
+#include <QtGui/QWidget>
+
 
 class SphereCamera
 {
@@ -29,6 +31,8 @@ public:
 	void moveLeft();
 	void moveFront();
 	void moveBack();
+	
+	void mouseMoved(QMouseEvent *event);
 	
 	void applyTransformation() const;
 	
