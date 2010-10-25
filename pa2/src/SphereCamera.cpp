@@ -18,116 +18,141 @@ namespace {
 
 
 const double DEFAULT_SENSITIVITY = 1;
-const double NEARVIEW = 1.0;
-const double FARVIEW = 100.0;
+const double NEARVIEW = 2.0; // Minimum camera distance from center
+const double FARVIEW = 90.0; // Maximum camera distance from center
+
+// Update step sizes on camera movements
+const double LEFT_RIGHT_STEPS = 0.015;
+const double UP_DOWN_STEPS = 0.0075;
+const double ZOOM_STEPS = 0.2;
 
 
 }  // namespace
 
 
 SphereCamera::SphereCamera(double radius)
-	: _sensitivity(DEFAULT_SENSITIVITY), theta(0.0), fi(M_PI/2 - 0.2), p(20.0) {
+	: _theta(0.0), _fi(M_PI/2 - 0.2), _p(20.0) {
 
-	zpos=p*cos(fi);
-	r=sqrt(p*p-zpos*zpos);
-	xpos=r*cos(theta);
-	ypos=r*sin(theta);
-}
-
-double SphereCamera::sensitivity() const
-{
-	return _sensitivity;
-}
-
-SphereCamera& SphereCamera::setSensitivity(double s)
-{
-	_sensitivity = s;
-	
-	return *this;
+	_zpos=_p*cos(_fi);
+	_r=sqrt(_p*_p-_zpos*_zpos);
+	_xpos=_r*cos(_theta);
+	_ypos=_r*sin(_theta);
 }
 
 Point SphereCamera::eye() const
 {
-	return Point(xpos, ypos, zpos);
+	return Point(_xpos, _ypos, _zpos);
 }
 
 void SphereCamera::moveUp()
 {
-	if (fi > 0.0) {
-		fi = fi - 0.0125;
-		p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
-		zpos = p*cos(fi);
-		r = sqrt (p*p - zpos*zpos);
-		xpos = r*cos(theta);
-		ypos = r*sin(theta);
+	if (_fi > 0.0) {
+		_fi -= UP_DOWN_STEPS;
+		_p = sqrt(_xpos*_xpos + _ypos*_ypos + _zpos*_zpos);
+		_zpos = _p*cos(_fi);
+		_r = sqrt (_p*_p - _zpos*_zpos);
+		_xpos = _r*cos(_theta);
+		_ypos = _r*sin(_theta);
 	}
 }
 
 void SphereCamera::moveDown()
 {
-	if (fi < M_PI/1.91) {
-		fi = fi + 0.0125;
-		p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
-		zpos = p*cos(fi);
-		r = sqrt (p*p - zpos*zpos);
-		xpos = r*cos(theta);
-		ypos = r*sin(theta);
+	if (_fi < M_PI/1.91) {
+		_fi += UP_DOWN_STEPS;
+		_p = sqrt(_xpos*_xpos + _ypos*_ypos + _zpos*_zpos);
+		_zpos = _p*cos(_fi);
+		_r = sqrt (_p*_p - _zpos*_zpos);
+		_xpos = _r*cos(_theta);
+		_ypos = _r*sin(_theta);
 	}
 }
 
 void SphereCamera::moveRight()
 {
-	theta+=0.025;
-	r = sqrt(xpos*xpos + ypos*ypos);
-	xpos = r*cos(theta);
-	ypos = r*sin(theta);
+	_theta+=LEFT_RIGHT_STEPS;
+	_r = sqrt(_xpos*_xpos + _ypos*_ypos);
+	_xpos = _r*cos(_theta);
+	_ypos = _r*sin(_theta);
 }
 
 void SphereCamera::moveLeft()
 {
-	theta-=0.025;
-	r = sqrt(xpos*xpos + ypos*ypos);
-	xpos = r*cos(theta);
-	ypos = r*sin(theta);
+	_theta-=LEFT_RIGHT_STEPS;
+	_r = sqrt(_xpos*_xpos + _ypos*_ypos);
+	_xpos = _r*cos(_theta);
+	_ypos = _r*sin(_theta);
 }
 
 
 void SphereCamera::moveFront()
 {
-	p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
+	_p = sqrt(_xpos*_xpos + _ypos*_ypos + _zpos*_zpos);
 	
-	if (p<NEARVIEW) p = NEARVIEW;
+	if (_p<NEARVIEW) _p = NEARVIEW;
 	
-	zpos = (zpos * (p-0.25)) / p;
-	p = p-0.25;
+	_zpos = (_zpos * (_p-ZOOM_STEPS)) / _p;
+	_p = _p-ZOOM_STEPS;
 
 	// Avoid sqrt of negative number
-	if (p*p - zpos*zpos < 0) r = 1;
-	else r = sqrt (p*p - zpos*zpos);
+	if (_p*_p - _zpos*_zpos < 0) _r = 1;
+	else _r = sqrt (_p*_p - _zpos*_zpos);
 	
-	xpos = r*cos(theta);
-	ypos = r*sin(theta);
+	_xpos = _r*cos(_theta);
+	_ypos = _r*sin(_theta);
 }
 
 void SphereCamera::moveBack()
 {
-	p = sqrt(xpos*xpos + ypos*ypos + zpos*zpos);
+	_p = sqrt(_xpos*_xpos + _ypos*_ypos + _zpos*_zpos);
 	
-	if (p>FARVIEW-30.0) p = FARVIEW-30.0;
+	if (_p>FARVIEW-30.0) _p = FARVIEW-30.0;
 	else {
-		zpos = (zpos * (p+0.25)) / p;
-		p = p+0.25;
+		_zpos = (_zpos * (_p+ZOOM_STEPS)) / _p;
+		_p = _p+ZOOM_STEPS;
 	}
 
 	// Avoid sqrt of negative number
-	if (p*p - zpos*zpos < 0) r = 1;
-	else r = sqrt (p*p - zpos*zpos);
+	if (_p*_p - _zpos*_zpos < 0) _r = 1;
+	else _r = sqrt (_p*_p - _zpos*_zpos);
 	
-	xpos = r*cos(theta);
-	ypos = r*sin(theta);
+	_xpos = _r*cos(_theta);
+	_ypos = _r*sin(_theta);
 }
 
 void SphereCamera::applyTransformation() const
 {
-	gluLookAt (xpos, ypos, zpos, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+	gluLookAt (_xpos, _ypos, _zpos, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+}
+
+void SphereCamera::mouseMoved(QMouseEvent *event) {
+	const double x = event->x();
+	const double y = event->y();
+
+	// Rotation handler
+	if (event->buttons() & Qt::RightButton) {
+		if (y - _yOld < 0) {
+			moveDown();
+		}
+		else if (y - _yOld > 0) {
+			moveUp();
+		}
+		if (x - _xOld < 0) {
+			moveRight();
+		}
+		else if (x - _xOld > 0) {
+			moveLeft();
+		}
+	}
+	// Zoom handler
+	if (event->buttons() & Qt::MiddleButton) {
+		if (y - _yOld < 0) {
+			moveFront();			// Zoom +
+		}
+		else if (y - _yOld > 0) {
+			moveBack();				// Zoom -
+		}
+	}
+	_xOld = x;
+	_yOld = y;
 }
