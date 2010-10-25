@@ -22,13 +22,14 @@ public:
 
 	Point eye() const;
 	
-	void moveUp();
-	void moveDown();
-	void moveRight();
-	void moveLeft();
-	void moveFront();
-	void moveBack();
-	
+	void moveUp(double k = 1);
+	void moveDown(double k = 1);
+	void moveRight(double k = 1);
+	void moveLeft(double k = 1);
+	void moveFront(double k = 1);
+	void moveBack(double k = 1);
+
+	void mouseClicked(QMouseEvent *event);
 	void mouseMoved(QMouseEvent *event);
 	
 	void applyTransformation() const;
@@ -37,6 +38,7 @@ private:
 	double _theta, _fi;
 	double _p, _zpos, _r, _xpos, _ypos;
 	double _xOld, _yOld;
+	double _mouseSensitivity;
 };
 
 #endif /* SPHERECAMERA_H_ */

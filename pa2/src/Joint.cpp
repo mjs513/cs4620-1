@@ -131,7 +131,10 @@ double Joint::maxAngle() const
 void Joint::setAngleInterval(double min, double max)
 {
 	if(min > max) {
-		max = min;
+		double t = min;
+		
+		min = max;
+		max = t;
 	}
 	
 	_minAngle = min;

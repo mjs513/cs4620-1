@@ -11,6 +11,9 @@
 
 #include "Character.h"
 
+#include <map>
+#include <QtGui>
+
 
 class WalkingBug : public Character
 {
@@ -20,6 +23,11 @@ public:
 	void update(GLWidget &glWidget);
 	
 private:
+	Point _updateLeg(Joint *joint, const Point &original, float tOffset);
+	
+private:
+	std::map<Joint*,Point> _originalLegPositions;
+	QTime _beginTime;
 };
 
 #endif /* WALKINGBUG_H_ */
