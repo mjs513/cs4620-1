@@ -26,7 +26,7 @@ const double FARVIEW = 100.0;
 
 
 SphereCamera::SphereCamera(double radius)
-	: _sensitivity(DEFAULT_SENSITIVITY), theta(0.0), fi(M_PI/2), p(20.0) {
+	: _sensitivity(DEFAULT_SENSITIVITY), theta(0.0), fi(M_PI/2 - 0.2), p(20.0) {
 
 	zpos=p*cos(fi);
 	r=sqrt(p*p-zpos*zpos);

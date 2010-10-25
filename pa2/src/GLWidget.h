@@ -16,6 +16,7 @@
 #include "SphereCamera.h"
 #include "Joint.h"
 #include "Ray.h"
+#include "Character.h"
 
 
 class GLWidget : public QGLWidget
@@ -28,6 +29,8 @@ public:
 
 	QSize minimumSizeHint() const;
 	QSize sizeHint() const;
+	
+	std::map<Joint*,Point>& endEffectorsTarget();
 
 private:
 	class FrameExporter
@@ -49,12 +52,12 @@ protected:
 	void resizeGL(int width, int height);
 
 	void mousePressEvent(QMouseEvent *event);
-	void mouseReleaseEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent *event);
 	void keyPressEvent(QKeyEvent* event);
 
 private:
 	void setRecording(bool state);
+	Point targetPointFromMouse(const Point &mouse, const Point &refPoint);
 	
 private slots:
 	void animate();
@@ -64,15 +67,14 @@ private:
 	
 	SphereCamera _camera;
 	GLMatrix _projectionMatrix,_modelviewMatrix;
-	GLMatrix _cameraRotationMatrix,_cameraSelectedRotationMatrix;
 	Point _mouseClick;
 	
-	Joint *_rootJoint;
-	Joint *_planarChainRootJoint;
-	Joint *_handRootJoint;
-	Joint *_selectedJoint;
+	Character *_character;
+	Character *_planarChain,*_humanHand,*_walkingBug;
 	
-	std::map<Joint*,Point> _endEffectorsMotion;
+	bool _canSelectJoints;
+	Joint *_selectedJoint;
+	std::map<Joint*,Point> _endEffectorsTarget;
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool _enableUserControl;

@@ -19,6 +19,8 @@
 #include "Color.h"
 #include "IKSolver.h"
 #include "JointTree.h"
+#include "HumanHand.h"
+#include "PlanarChain.h"
 
 #include <vector>
 #include <cstdlib>
@@ -42,8 +44,8 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(20), _rootJoint(0), _planarChainRootJoint(0), _handRootJoint(0), _selectedJoint(0),
-	  _enableUserControl(true), _isRecording(false), _frameExporter(0)
+	: QGLWidget(parent), _camera(20), _character(0), _planarChain(new PlanarChain()), _humanHand(new HumanHand()), _walkingBug(0),
+	  _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
 	_animationTimer = new QTimer(this);
 	connect(_animationTimer , SIGNAL(timeout()), this, SLOT(animate()));
@@ -52,6 +54,10 @@ GLWidget::GLWidget(QWidget *parent)
 
 GLWidget::~GLWidget()
 {
+	delete _planarChain;
+	delete _humanHand;
+	delete _walkingBug;
+	
 	delete _animationTimer;
 	delete _frameExporter;
 }
@@ -64,6 +70,11 @@ QSize GLWidget::minimumSizeHint() const
 QSize GLWidget::sizeHint() const
 {
 	return QSize(640, 480);
+}
+
+std::map<Joint*,Point>& GLWidget::endEffectorsTarget()
+{
+	return _endEffectorsTarget;
 }
 
 void GLWidget::initializeGL()
@@ -104,101 +115,7 @@ void GLWidget::initializeGL()
 	glPointSize(10);
 	glLineWidth(3);
 	
-	// Create planar chain
-	{
-		Vector z = Vector(0,0,1);
-		int n = 20;
-		double size = 10;
-		
-		// Create n serial joints
-		for(int i = 0; i < n; ++i) {
-			Joint *j = new Joint(Point(size/n,0),z);
-
-			if(_planarChainRootJoint) {
-				j->addChild(_planarChainRootJoint);
-			}
-			_planarChainRootJoint = j;
-		}
-	}
-	
-	// Create right hand
-	{
-		// Create wrist with 2 degrees of freedom
-		Joint *wrist = new Joint(Point(0,0,0.5), Vector(1,0,0), 0.3, 10);
-		wrist->setAngleInterval(0, 45);
-		
-		Joint *wrist2 = new Joint(Point(0,0,0), Vector(0,1,0), 0.1, 10);
-		wrist2->setAngleInterval(-45, 15);
-
-		wrist->addChild(wrist2);
-
-		int nfingers = 5;
-
-		// Create 4 fingers (except thumb)
-		for(int i = 0; i < nfingers - 1; ++i) {
-
-			// Create fingerBase with 2 degrees of freedom
-			Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5, 0, 1), Vector(1, 0, 0), 0.3);
-			fingerBase->setAngleInterval(0, 0);
-
-			Joint *fingerBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0), 0.3);
-			fingerBase2->setAngleInterval(-15, 15);
-			
-			// First segment of finger
-			Joint *finger1 = new Joint(Point(0, 0, 1), Vector(1, 0, 0), 0.3);
-			finger1->setAngleInterval(-15, 45);
-			
-			// Second segment of finger
-			Joint *finger2 = new Joint(Point(0, 0, 0.66), Vector(1, 0, 0), 0.25);
-			finger2->setAngleInterval(-15, 95);
-			
-			// Finger tip
-			Joint *fingerTip = new Joint(Point(0, 0, 0.33), Vector(1, 0, 0), 0.2);
-			fingerTip->setAngleInterval(0, 35);
-			
-			wrist2->addChild(fingerBase);
-			fingerBase->addChild(fingerBase2);
-			fingerBase2->addChild(finger1);
-			finger1->addChild(finger2);
-			finger2->addChild(fingerTip);
-		}
-		
-		// Create thumb
-		// Create fingerBase with 2 degrees of freedom
-		Joint *thumbBase = new Joint(Point(5 - (nfingers - 1)*0.9, -0.75, 0.5), Vector(1, 0, 0), 0.35);
-		thumbBase->setAngleInterval(0, 0);
-
-		Joint *thumbBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0), 0.35);
-		thumbBase2->setAngleInterval(-15, 60);
-
-		// First segment of finger (2 degrees of freedom)
-		Joint *thumbSegment1 = new Joint(Point(0, 0, 1), Vector(0, -1, 0), 0.3);
-		thumbSegment1->setAngleInterval(-15, 15);
-
-		Joint *thumbSegment12 = new Joint(Point(0, 0, 0), Vector(1, 0, 0), 0.3);
-		thumbSegment12->setAngleInterval(-15, 60);
-
-		// Second segment of finger
-		Joint *thumbSegment2 = new Joint(Point(0, 0, 0.66), Vector(0, -1, 0), 0.25);
-		thumbSegment2->setAngleInterval(0, 90);
-
-		wrist2->addChild(thumbBase);
-		thumbBase->addChild(thumbBase2);
-		thumbBase2->addChild(thumbSegment1);
-		thumbSegment1->addChild(thumbSegment12);
-		thumbSegment12->addChild(thumbSegment2);
-
-		_handRootJoint = wrist;
-	}
-	
-	//_rootJoint = _planarChainRootJoint;
-	
-	_rootJoint = new Joint(Point(0,0,1), Vector(1,0,0));
-	Joint *j1 = new Joint(Point(1,1,1), Vector(0,1,0));
-	Joint *j2 = new Joint(Point(-1,-1,-1), Vector(0,0,1));
-	
-	_rootJoint->addChild(j1);
-	_rootJoint->addChild(j2);
+	_character = _planarChain;
 }
 
 void GLWidget::paintGL()
@@ -224,53 +141,25 @@ void GLWidget::paintGL()
 	
 	// Place the light
     OpenGL::lightPosition(GL_LIGHT0,Vector(1,1,1));
-
-    // Draw 3 axis
-    glBegin(GL_LINES); {
-    	OpenGL::color(Color::red());
-    	OpenGL::vertex(Point(0,0,0));
-    	OpenGL::vertex(Point(1,0,0));
-
-    	OpenGL::color(Color::green());
-    	OpenGL::vertex(Point(0,0,0));
-    	OpenGL::vertex(Point(0,1,0));
-
-    	OpenGL::color(Color::blue());
-    	OpenGL::vertex(Point(0,0,0));
-    	OpenGL::vertex(Point(0,0,1));
-    }
-    glEnd();
     
-    _rootJoint->display();
+    _character->root()->display();
 
     // Draw selected joint as a cyan colored sphere
     GLUquadric *q = gluNewQuadric();
-
-	if(_selectedJoint) {
-		OpenGL::color(Color::cyan());
-		
-		// Spheres are created on origin, so we need to transform to joint's center
-		GLMatrix m = _selectedJoint->calculateGlobalTransformation();
-
-		glPushMatrix();	{
-			OpenGL::translate(m*Point());
-			gluSphere(q, 0.15, 20, 20);
-		}
-		glPopMatrix();
-	}
 	
 	// Draw the target position for end effectors as yellow spheres
 	OpenGL::color(Color::yellow());
 	
-	for(std::map<Joint*,Point>::const_iterator i = _endEffectorsMotion.begin(); i != _endEffectorsMotion.end(); ++i) {
-
+	for(std::map<Joint*,Point>::const_iterator i = _endEffectorsTarget.begin(); i != _endEffectorsTarget.end(); ++i) {
 		// Spheres are created on origin, so we need to transform to target's point and create sphere
 		glPushMatrix(); {
 			OpenGL::translate(i->second);
-			gluSphere(q, 0.2, 20, 20);
+			gluSphere(q, 0.12, 20, 20);
 		}
 		glPopMatrix();
 	}
+	
+	gluDeleteQuadric(q);
 	
 	// Draw floor plane
 	OpenGL::color(Color(0.6,0.6,0.6,0.8));
@@ -355,10 +244,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 		std::vector<GLMatrix> matrixStack;
 		double minDist = 1e300/1e-300;
 		
-		jointStack.push_back(_rootJoint);
-		matrixStack.push_back(_rootJoint->transformation());
+		jointStack.push_back(_character->root());
+		matrixStack.push_back(_character->root()->transformation());
 		
 		Point cameraEye = _camera.eye();
+		Point selectedPoint;
 		
 		// Deselect current selection
 		_selectedJoint = 0;
@@ -376,8 +266,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 				matrixStack.push_back((*i)->transformation()*m);
 			}
 			
-			// Only allow picking end effects
-			if(j->hasEndEffector()) {
+			// Only allow picking end effectors
+			if(true || j->hasEndEffector()) {
 				Point p = m*Point();
 				double sqCamDist = (p - cameraEye).squaredLength();
 				double d = pickingRay.distance(p);
@@ -385,16 +275,31 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 				if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
 					minDist = d;
 					_selectedJoint = j;
+					selectedPoint = p;
 				}
 			}
 		}
-	}
-}
 
-void GLWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-	_cameraRotationMatrix = _cameraSelectedRotationMatrix*_cameraRotationMatrix;
-	_cameraSelectedRotationMatrix = GLMatrix();
+		bool isTargetPoint = false;
+		
+		for(std::map<Joint*,Point>::iterator i = _endEffectorsTarget.begin(); i != _endEffectorsTarget.end(); ++i) {
+			Point p = i->second;
+			double sqCamDist = (p - cameraEye).squaredLength();
+			double d = pickingRay.distance(p);
+			
+			if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
+				minDist = d;
+				_selectedJoint = i->first;
+				selectedPoint = p;
+				isTargetPoint = true;
+			}
+		}
+		
+		// Create target point for joint
+		if(!isTargetPoint) {
+			_endEffectorsTarget[_selectedJoint] = selectedPoint;
+		}
+	}
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
@@ -402,35 +307,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	if(event->buttons() & Qt::LeftButton) {
 		// Move selected joint
 		if(_selectedJoint) {
-			GLint viewport[4];
+			std::map<Joint*,Point>::iterator selectedTarget = _endEffectorsTarget.find(_selectedJoint);
+			Point newPos = targetPointFromMouse(Point(event->x(),event->y()),selectedTarget->second);
 			
-			glGetIntegerv(GL_VIEWPORT,viewport);
-			
-			Point eye = _camera.eye();
-			GLMatrix selectedTransformation = _selectedJoint->calculateGlobalTransformation();
-			Point selected = selectedTransformation*Point();
-			
-			// Ray from camera to new mouse position
-			Ray ray(eye,OpenGL::unproject(Point(event->x(),event->y()),_modelviewMatrix,_projectionMatrix));
-			
-			// Plane normal to camera view that contains selected point
-			Vector normal = eye - OpenGL::unproject(Point(0.5*viewport[2],0.5*viewport[2]),_modelviewMatrix,_projectionMatrix);
-			double planeD = -Vector::dot(normal,Vector(selected));
-			
-			// Intersect ray with plane
-			double t = -(planeD + Vector::dot(normal,Vector(ray.p)))/Vector::dot(normal,ray.dir);
-			Point newPos = ray.pointAt(t);
-			
-			_endEffectorsMotion[_selectedJoint] = newPos;
-		}
-		
-		// Modify camera rotation
-		else {
-			Point mouse(event->x(),event->y());
-			Vector motion = (mouse - _mouseClick)*0.2;
-
-			_cameraSelectedRotationMatrix = GLMatrix::rotationTransform(-motion.y,Vector(0,1,0));
-			_cameraSelectedRotationMatrix *= GLMatrix::rotationTransform(motion.x,Vector(0,0,1));
+			selectedTarget->second = newPos;
 		}
 	}
 }
@@ -452,9 +332,9 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
 
 		// Change character views
-		case Qt::Key_1: _rootJoint = _planarChainRootJoint; _selectedJoint = 0; _endEffectorsMotion.clear(); break;
-		case Qt::Key_2: _rootJoint = _handRootJoint; _selectedJoint = 0; _endEffectorsMotion.clear(); break;
-		case Qt::Key_3: break;
+		case Qt::Key_1: _character = _planarChain; _canSelectJoints = true; _endEffectorsTarget.clear(); break;
+		case Qt::Key_2: _character = _humanHand; _canSelectJoints = true; _endEffectorsTarget.clear(); break;
+		case Qt::Key_3: _character = _walkingBug; _canSelectJoints = false; _endEffectorsTarget.clear(); break;
 		case Qt::Key_4: break;
 	}
 	
@@ -483,13 +363,34 @@ void GLWidget::setRecording(bool state)
 	}
 }
 
+Point GLWidget::targetPointFromMouse(const Point &mouse, const Point &refPoint)
+{
+	GLint viewport[4];
+	
+	glGetIntegerv(GL_VIEWPORT,viewport);
+	
+	Point eye = _camera.eye();
+	
+	// Ray from camera to new mouse position
+	Ray ray(eye,OpenGL::unproject(mouse,_modelviewMatrix,_projectionMatrix));
+	
+	// Plane normal to camera view that contains selected point
+	Vector normal = eye - OpenGL::unproject(Point(0.5*viewport[2],0.5*viewport[2]),_modelviewMatrix,_projectionMatrix);
+	double planeD = -Vector::dot(normal,Vector(refPoint));
+	
+	// Intersect ray with plane
+	double t = -(planeD + Vector::dot(normal,Vector(ray.p)))/Vector::dot(normal,ray.dir);
+	
+	return ray.pointAt(t);
+}
+
 void GLWidget::animate()
 {
-	if(!_endEffectorsMotion.empty()) {
-		IKSolver solver = IKSolver(JointTree(_rootJoint),1);
+	if(!_endEffectorsTarget.empty()) {
+		IKSolver solver = IKSolver(JointTree(_character->root()),1);
 		
 		for(int i = 0; i < 10; ++i) {
-			solver.solve(_endEffectorsMotion);
+			solver.solve(_endEffectorsTarget);
 		}
 	}
 	

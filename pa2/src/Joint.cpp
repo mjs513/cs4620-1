@@ -190,23 +190,20 @@ void Joint::display()
 
 	GLUquadric *q = gluNewQuadric();
 	
-	// Draw joint
-	if(_parent) {
-		OpenGL::color(Color::red());
-	}
-	else {
+	// Draw root joint origin
+	if(!_parent) {
 		OpenGL::color(Color::green());
+		
+		gluSphere(q,0.1,20,20);
 	}
 	
-	gluSphere(q,0.1,20,20);
-
 	// Draw link
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);
 	
-	OpenGL::color(Color::white());
-	
 	glBegin(GL_LINES); {
+		OpenGL::color(Color::white());
+		
 		OpenGL::vertex(Point());
 		OpenGL::vertex(_pos);
 	}
@@ -217,19 +214,17 @@ void Joint::display()
 	// Transform to link's extreme
 	OpenGL::translate(_pos);
 	
-	// Draw end effector
-	OpenGL::color(Color::blue());
-
-	if(hasEndEffector()) {
-		gluSphere(q,0.1,20,20);
-	}
+	// Draw tip at the end of link
+	OpenGL::color(Color::red());
 	
-	// Draw its children
+	gluSphere(q,0.1,20,20);
+	
+	gluDeleteQuadric(q);
+	
+	// Draw children
 	for(std::vector<Joint*>::iterator i = _children.begin(); i != _children.end(); ++i) {
 		(*i)->display();
 	}
-	
-	gluDeleteQuadric(q);
 	
 	glPopMatrix();
 }
