@@ -21,6 +21,7 @@
 #include "JointTree.h"
 #include "HumanHand.h"
 #include "PlanarChain.h"
+#include "WalkingBug.h"
 
 #include <vector>
 #include <cstdlib>
@@ -44,7 +45,7 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(20), _character(0), _planarChain(new PlanarChain()), _humanHand(new HumanHand()), _walkingBug(0),
+	: QGLWidget(parent), _camera(20), _character(0), _planarChain(0), _humanHand(0), _walkingBug(0), _canSelectJoints(true),
 	  _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
 	_animationTimer = new QTimer(this);
@@ -115,6 +116,10 @@ void GLWidget::initializeGL()
 	glPointSize(10);
 	glLineWidth(3);
 	
+	_planarChain = new PlanarChain();
+	_humanHand = new HumanHand();
+	_walkingBug = new WalkingBug();
+	
 	_character = _planarChain;
 }
 
@@ -146,23 +151,40 @@ void GLWidget::paintGL()
 
     // Draw selected joint as a cyan colored sphere
     GLUquadric *q = gluNewQuadric();
-	
-	// Draw the target position for end effectors as yellow spheres
-	OpenGL::color(Color::yellow());
-	
+
 	for(std::map<Joint*,Point>::const_iterator i = _endEffectorsTarget.begin(); i != _endEffectorsTarget.end(); ++i) {
-		// Spheres are created on origin, so we need to transform to target's point and create sphere
+		// Draw the target position
 		glPushMatrix(); {
+			OpenGL::color(Color::yellow());
+			
 			OpenGL::translate(i->second);
 			gluSphere(q, 0.12, 20, 20);
 		}
 		glPopMatrix();
+		
+		GLMatrix m = i->first->calculateGlobalTransformation();
+		
+		// Draw line from target position and current position
+		glBegin(GL_LINES); {
+			Color c = Color::yellow();
+			
+			OpenGL::color(c);
+			OpenGL::vertex(i->second);
+			
+			c = Color::red();
+			
+			OpenGL::color(c);
+			OpenGL::vertex(m*Point());
+		}
+		glEnd();
 	}
 	
 	gluDeleteQuadric(q);
 	
 	// Draw floor plane
 	OpenGL::color(Color(0.6,0.6,0.6,0.8));
+	
+	OpenGL::translate(Vector(0,0,-0.1));
 	
 	glBegin(GL_QUADS); {
 		OpenGL::normal(Vector(0,0,1));
@@ -232,7 +254,7 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	if(event->buttons() & Qt::LeftButton) {
+	if((event->buttons() & Qt::LeftButton) && _canSelectJoints) {
 		const double PICKING_RANGE = 0.001;
 
 		_mouseClick = Point(event->x(),event->y());
@@ -299,6 +321,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 		if(!isTargetPoint) {
 			_endEffectorsTarget[_selectedJoint] = selectedPoint;
 		}
+	}
+	
+	// Camera movements
+	else if(event->buttons() & (Qt::RightButton | Qt::MiddleButton)) {
+		_camera.mouseClicked(event);
 	}
 }
 
@@ -391,6 +418,8 @@ Point GLWidget::targetPointFromMouse(const Point &mouse, const Point &refPoint)
 
 void GLWidget::animate()
 {
+	_character->update(*this);
+	
 	if(!_endEffectorsTarget.empty()) {
 		IKSolver solver = IKSolver(JointTree(_character->root()),1);
 		
