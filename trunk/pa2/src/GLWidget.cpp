@@ -304,7 +304,12 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	if(event->buttons() & Qt::LeftButton) {
+	// Right and middle buttons control camera movements
+	if( event->buttons() & (Qt::RightButton | Qt::MiddleButton) ) {
+		_camera.mouseMoved(event);
+	}
+	// Left button control joints
+	else if(event->buttons() & Qt::LeftButton) {
 		// Move selected joint
 		if(_selectedJoint) {
 			std::map<Joint*,Point>::iterator selectedTarget = _endEffectorsTarget.find(_selectedJoint);

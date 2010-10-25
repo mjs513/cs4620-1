@@ -12,16 +12,13 @@
 #include "Vector.h"
 #include "Point.h"
 
-#include <QtGui/QWidget>
+#include <QtGui>
 
 
 class SphereCamera
 {
 public:
 	SphereCamera(double radius);
-
-	double sensitivity() const;
-	SphereCamera& setSensitivity(double s);
 
 	Point eye() const;
 	
@@ -37,9 +34,9 @@ public:
 	void applyTransformation() const;
 	
 private:
-	double _sensitivity;
-	double theta, fi;
-	double p, zpos, r, xpos, ypos;
+	double _theta, _fi;
+	double _p, _zpos, _r, _xpos, _ypos;
+	double _xOld, _yOld;
 };
 
 #endif /* SPHERECAMERA_H_ */
