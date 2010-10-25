@@ -80,10 +80,10 @@ WalkingBug::WalkingBug()
 	leg41->addChild(leg42);
 	leg42->addChild(leg43);
 
-	_originalLegPositions[leg13] = leg13->calculateGlobalTransformation()*Point();
-	_originalLegPositions[leg33] = leg33->calculateGlobalTransformation()*Point();
-	_originalLegPositions[leg23] = leg23->calculateGlobalTransformation()*Point();
-	_originalLegPositions[leg43] = leg43->calculateGlobalTransformation()*Point();
+	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg13,leg13->calculateGlobalTransformation()*Point()));
+	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg23,leg23->calculateGlobalTransformation()*Point()));
+	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg43,leg43->calculateGlobalTransformation()*Point()));
+	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg33,leg33->calculateGlobalTransformation()*Point()));
 }
 
 void WalkingBug::update(GLWidget &glWidget)
@@ -91,9 +91,7 @@ void WalkingBug::update(GLWidget &glWidget)
 	std::map<Joint*,Point> &targets = glWidget.endEffectorsTarget();
 	float tOffset = 0,n = _originalLegPositions.size();
 	
-	std::cout << "\n\nupdate:\n";
-	
-	for(std::map<Joint*,Point>::iterator i = _originalLegPositions.begin(); i != _originalLegPositions.end(); ++i) {
+	for(std::vector< std::pair<Joint*,Point> >::iterator i = _originalLegPositions.begin(); i != _originalLegPositions.end(); ++i) {
 		targets[i->first] = _updateLeg(i->first,i->second,tOffset);
 		
 		tOffset += 1.0/n;
@@ -108,8 +106,6 @@ Point WalkingBug::_updateLeg(Joint *joint, const Point &original, float tOffset)
 	float t = std::fmod(float(time%cycle)/cycle + tOffset,1);
 	Point p;
 
-	std::cout << "update leg " << joint << " -- original = " << original << ", t = " << t << std::endl;
-	
 	// Run half circle
 	if(t < 0.5) {
 		t *= 2;

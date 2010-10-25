@@ -158,7 +158,7 @@ void GLWidget::paintGL()
 			OpenGL::color(Color::yellow());
 			
 			OpenGL::translate(i->second);
-			gluSphere(q, 0.12, 20, 20);
+			gluSphere(q, 0.15, 20, 20);
 		}
 		glPopMatrix();
 		
