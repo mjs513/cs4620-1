@@ -7,7 +7,10 @@
 
 #include "PlanarChain.h"
 #include "GLWidget.h"
+
 #include <cmath>
+#include <iostream>
+
 
 PlanarChain::PlanarChain()
 {
@@ -26,37 +29,31 @@ PlanarChain::PlanarChain()
 	}
 }
 
-void PlanarChain::update(GLWidget &glWidget) {
-	//std::map<Joint*, float> &targets = glWidget.endEffectorsTarget();
-	/*
-	float tOffset = 0,n = _originalLegPositions.size();
-
-	for(std::vector< std::pair<Joint*,Point> >::iterator i = _originalLegPositions.begin(); i != _originalLegPositions.end(); ++i) {
-		targets[i->first] = _updateLeg(i->first,i->second,tOffset);
-
-		tOffset += 1.0/n;
-	}*/
-
-	_updateLink(_root);
-}
-
-void PlanarChain::_updateLink(Joint *joint) {
-
-	if( !joint->hasEndEffector() )  {
-		for(std::vector<Joint*>::const_iterator i = joint->children().begin(); i != joint->children().end(); i++ ) {
-			_updateLink(*i);
+void PlanarChain::update(GLWidget &glWidget)
+{
+	const double cycle = 10,angleSpan = 100;
+	double t = animationCycleTime(cycle);
+	
+	// Map root angle:
+	//	t = 0 or t = 1, angle = 0
+	//  t = 0.25, angle = -150
+	//  t = 0.5, angle = 0
+	//  t = 0.75, angle = 150
+	
+	_root->setAngle(angleSpan*std::sin(t*2*M_PI));
+	
+	if(!_root->children().empty()) {
+		Joint *j = _root->children().back();
+		
+		while(j) {
+			j->setAngle(j->parent()->angle()*0.95);
+			
+			if(!j->children().empty()) {
+				j = j->children().back();
+			}
+			else {
+				j = 0;
+			}
 		}
 	}
-	else {
-		float angle = std::fmod(float(joint->angle() + 5), 180);
-		joint->updateAngle(angle*2);
-	}
-
-
-
-	//Vector v = length*Vector(std::cos(angle),0,std::sin(angle));
-
 }
-
-
-

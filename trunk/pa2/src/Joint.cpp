@@ -164,11 +164,6 @@ void Joint::setRotAxis(const Vector &rotAxis)
 	_rotAxis = rotAxis;
 }
 
-bool Joint::hasEndEffector() const
-{
-	return _children.empty();
-}
-
 const GLMatrix Joint::transformation() const
 {
 	return GLMatrix::translationTransform(_pos)*GLMatrix::rotationTransform(_angle,_rotAxis);
