@@ -23,6 +23,9 @@ public:
 	void update(GLWidget &glWidget);
 	
 private:
+	std::pair<Joint*,Joint*> _createLeg(const Vector &orientation);
+	
+private:
 	Point _updateLeg(Joint *joint, const Point &original, double t);
 	
 private:

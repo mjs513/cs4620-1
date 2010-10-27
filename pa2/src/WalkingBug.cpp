@@ -19,75 +19,25 @@ WalkingBug::WalkingBug()
 
 	_root->setAngleInterval(0,0);
 	
-	Joint *leg10 = new Joint(Point(0,0,0),Vector(1,-1,0));
-	Joint *leg11 = new Joint(Point(1,1,0.5),Vector(0,0,1));
-	Joint *leg12 = new Joint(Point(0.5,0.5,-1),Vector(1,-1,0));
-	Joint *leg13 = new Joint(Point(0,0,-1.5),Vector(1,-1,0));
+	std::vector<std::pair<Joint*,Joint*> > legs;
+
+	legs.push_back(_createLeg(Vector(1,1)));
+	legs.push_back(_createLeg(Vector(-1,1)));
+	legs.push_back(_createLeg(Vector(-1,-1)));
+	legs.push_back(_createLeg(Vector(1,-1)));
+	legs.push_back(_createLeg(Vector(0,1)));
+	legs.push_back(_createLeg(Vector(0,-1)));
 	
-	leg10->setAngleInterval(-90,90);
-	leg11->setAngleInterval(-90,90);
-	leg12->setAngleInterval(-90,90);
-	leg13->setAngleInterval(-90,90);
-	
-	_root->addChild(leg10);
-	leg10->addChild(leg11);
-	leg11->addChild(leg12);
-	leg12->addChild(leg13);
-	
-	Joint *leg20 = new Joint(Point(0,0,0),Vector(1,1,0));
-	Joint *leg21 = new Joint(Point(1,-1,0.5),Vector(0,0,1));
-	Joint *leg22 = new Joint(Point(0.5,-0.5,-1),Vector(1,1,0));
-	Joint *leg23 = new Joint(Point(0,0,-1.5),Vector(1,1,0));
-
-	leg20->setAngleInterval(-90,90);
-	leg21->setAngleInterval(-90,90);
-	leg22->setAngleInterval(-90,90);
-	leg23->setAngleInterval(-90,90);
-
-	_root->addChild(leg20);
-	leg20->addChild(leg21);
-	leg21->addChild(leg22);
-	leg22->addChild(leg23);
-
-	Joint *leg30 = new Joint(Point(0,0,0),Vector(1,-1,0));
-	Joint *leg31 = new Joint(Point(-1,-1,0.5),Vector(0,0,1));
-	Joint *leg32 = new Joint(Point(-0.5,-0.5,-1),Vector(1,-1,0));
-	Joint *leg33 = new Joint(Point(0,0,-1.5),Vector(1,-1,0));
-
-	leg30->setAngleInterval(-90,90);
-	leg31->setAngleInterval(-90,90);
-	leg32->setAngleInterval(-90,90);
-	leg33->setAngleInterval(-90,90);
-
-	_root->addChild(leg30);
-	leg30->addChild(leg31);
-	leg31->addChild(leg32);
-	leg32->addChild(leg33);
-
-	Joint *leg40 = new Joint(Point(0,0,0),Vector(1,1,0));
-	Joint *leg41 = new Joint(Point(-1,1,0.5),Vector(0,0,1));
-	Joint *leg42 = new Joint(Point(-0.5,0.5,-1),Vector(1,1,0));
-	Joint *leg43 = new Joint(Point(0,0,-1.5),Vector(1,1,0));
-
-	leg40->setAngleInterval(-90,90);
-	leg41->setAngleInterval(-90,90);
-	leg42->setAngleInterval(-90,90);
-	leg43->setAngleInterval(-90,90);
-
-	_root->addChild(leg40);
-	leg40->addChild(leg41);
-	leg41->addChild(leg42);
-	leg42->addChild(leg43);
-
-	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg13,leg13->calculateGlobalTransformation()*Point()));
-	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg23,leg23->calculateGlobalTransformation()*Point()));
-	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg43,leg43->calculateGlobalTransformation()*Point()));
-	_originalLegPositions.push_back(std::pair<Joint*,Point>(leg33,leg33->calculateGlobalTransformation()*Point()));
+	for(std::vector< std::pair<Joint*,Joint*> >::iterator i = legs.begin(); i != legs.end(); ++i) {
+		_root->addChild(i->first);
+		
+		_originalLegPositions.push_back(std::pair<Joint*,Point>(i->second,i->second->calculateGlobalTransformation()*Point()));
+	}
 }
 
 void WalkingBug::update(GLWidget &glWidget)
 {
-	const double cycle = 2;
+	const double cycle = 1;
 	double t = animationCycleTime(cycle);
 	double tOffset = 0,n = _originalLegPositions.size();
 	std::map<Joint*,Point> &targets = glWidget.endEffectorsTarget();
@@ -101,7 +51,7 @@ void WalkingBug::update(GLWidget &glWidget)
 
 Point WalkingBug::_updateLeg(Joint *joint, const Point &original, double t)
 {
-	const Vector offset(1,0,0);
+	const Vector offset(0.5,0,0);
 	Point p;
 
 	// Run half circle
@@ -125,4 +75,27 @@ Point WalkingBug::_updateLeg(Joint *joint, const Point &original, double t)
 	}
 	
 	return p;
+}
+
+std::pair<Joint*,Joint*> WalkingBug::_createLeg(const Vector &orientation)
+{
+	Vector xy = orientation.normalized(),rotAxis(xy.y,-xy.x);
+	
+	xy.z = 0;
+	
+	Joint *leg0 = new Joint(Point(),rotAxis);
+	Joint *leg1 = new Joint(Point() + 1.4*xy + Vector(0,0,0.5),Vector(0,0,1));
+	Joint *leg2 = new Joint(Point() + 0.7*xy + Vector(0,0,-1),rotAxis);
+	Joint *leg3 = new Joint(Point() + Vector(0,0,-1.5),rotAxis);
+	
+	leg0->setAngleInterval(-90,90);
+	leg1->setAngleInterval(-90,90);
+	leg2->setAngleInterval(-90,90);
+	leg3->setAngleInterval(-90,90);
+	
+	leg0->addChild(leg1);
+	leg1->addChild(leg2);
+	leg2->addChild(leg3);
+	
+	return std::pair<Joint*,Joint*>(leg0,leg3);
 }

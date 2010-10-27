@@ -143,9 +143,9 @@ void GLWidget::paintGL()
 	
 	// Position the camera
 	_camera.applyTransformation();
-
-	//glMultMatrixd((_cameraSelectedRotationMatrix*_cameraRotationMatrix).v);
-
+	
+	glPushMatrix();
+	
 	// Save the matrices for ray picking
 	glGetDoublev(GL_MODELVIEW_MATRIX,_modelviewMatrix.v);
 	glGetDoublev(GL_PROJECTION_MATRIX,_projectionMatrix.v);
@@ -186,6 +186,8 @@ void GLWidget::paintGL()
 	}
 	
 	gluDeleteQuadric(q);
+
+	glPopMatrix();
 	
 	// Draw floor plane
 	OpenGL::color(Color(0.6,0.6,0.6,0.8));
