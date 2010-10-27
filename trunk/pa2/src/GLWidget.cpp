@@ -262,7 +262,7 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	if((event->buttons() & Qt::LeftButton) && _animationEnabled) {
+	if((event->buttons() & Qt::LeftButton) && !_animationEnabled) {
 		const double PICKING_RANGE = 0.001;
 
 		_mouseClick = Point(event->x(),event->y());
