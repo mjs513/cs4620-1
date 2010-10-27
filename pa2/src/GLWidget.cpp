@@ -224,7 +224,19 @@ void GLWidget::paintGL()
 	
 	char buffer[512];
 	
-	sprintf(buffer,"FPS: %d (not counting idle frames)",fps);
+	sprintf(buffer,"Move: W A S D / Right button");
+	renderText(20, _height - 60, buffer);
+	sprintf(buffer,"Zoom: Q Z / Middle button");
+	renderText(20, _height - 40, buffer);
+	sprintf(buffer,"Pick/drag: Left button");
+	renderText(20, _height - 20, buffer);
+
+	if( _animationEnabled == true ) {
+		sprintf(buffer,"Forward Kinematics");
+	}
+	else {
+		sprintf(buffer,"Inverse Kinematics");
+	}
 	renderText(20,20,buffer);
 	
 	if(elapsed > 1000) {
