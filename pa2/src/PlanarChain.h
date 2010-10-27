@@ -19,10 +19,6 @@ public:
 	PlanarChain();
 
 	void update(GLWidget &glWidget);
-
-private:
-	void _updateLink(Joint *joint);
-
 };
 
 

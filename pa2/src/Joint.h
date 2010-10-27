@@ -51,9 +51,7 @@ public:
 	
 	Vector rotAxis() const;
 	void setRotAxis(const Vector &rotAxis);
-
-	bool hasEndEffector() const;
-
+	
 	const GLMatrix transformation() const;
 	const GLMatrix calculateGlobalTransformation() const;
 
