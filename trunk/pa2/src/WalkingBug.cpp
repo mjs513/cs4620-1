@@ -14,7 +14,6 @@
 
 
 WalkingBug::WalkingBug()
-	: _beginTime(QTime::currentTime())
 {
 	_root = new Joint(Point(0,0,2),Vector(0,0,1));
 
@@ -88,22 +87,21 @@ WalkingBug::WalkingBug()
 
 void WalkingBug::update(GLWidget &glWidget)
 {
+	const double cycle = 2;
+	double t = animationCycleTime(cycle);
+	double tOffset = 0,n = _originalLegPositions.size();
 	std::map<Joint*,Point> &targets = glWidget.endEffectorsTarget();
-	float tOffset = 0,n = _originalLegPositions.size();
 	
 	for(std::vector< std::pair<Joint*,Point> >::iterator i = _originalLegPositions.begin(); i != _originalLegPositions.end(); ++i) {
-		targets[i->first] = _updateLeg(i->first,i->second,tOffset);
+		targets[i->first] = _updateLeg(i->first,i->second,std::fmod(t + tOffset,1));
 		
 		tOffset += 1.0/n;
 	}
 }
 
-Point WalkingBug::_updateLeg(Joint *joint, const Point &original, float tOffset)
+Point WalkingBug::_updateLeg(Joint *joint, const Point &original, double t)
 {
 	const Vector offset(1,0,0);
-	const int cycle = 2000;
-	int time = _beginTime.msecsTo(QTime::currentTime());
-	float t = std::fmod(float(time%cycle)/cycle + tOffset,1);
 	Point p;
 
 	// Run half circle

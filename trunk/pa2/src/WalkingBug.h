@@ -23,11 +23,10 @@ public:
 	void update(GLWidget &glWidget);
 	
 private:
-	Point _updateLeg(Joint *joint, const Point &original, float tOffset);
+	Point _updateLeg(Joint *joint, const Point &original, double t);
 	
 private:
 	std::vector< std::pair<Joint*,Point> > _originalLegPositions;
-	QTime _beginTime;
 };
 
 #endif /* WALKINGBUG_H_ */

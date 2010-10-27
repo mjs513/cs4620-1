@@ -355,6 +355,8 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 void GLWidget::keyPressEvent(QKeyEvent * event)
 {
+	Character *oldCharacter = _character;
+	
 	switch (event->key()) {
 		// Camera controls
 		case Qt::Key_W: _camera.moveUp(); break;
@@ -377,6 +379,11 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		case Qt::Key_2: _character = _humanHand; _endEffectorsTarget.clear(); break;
 		case Qt::Key_3: _character = _walkingBug; _endEffectorsTarget.clear(); break;
 		case Qt::Key_4: break;
+	}
+	
+	// Restart animation when switching characters with animation enabled
+	if(_animationEnabled && (oldCharacter != _character)) {
+		_character->startAnimation();
 	}
 	
 	update(); // update the screen
