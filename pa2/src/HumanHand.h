@@ -16,6 +16,8 @@ class HumanHand : public Character
 {
 public:
 	HumanHand();
+
+	void update(GLWidget &glWidget);
 };
 
 

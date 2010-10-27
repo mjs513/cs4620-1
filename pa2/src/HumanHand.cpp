@@ -6,7 +6,8 @@
  */
 
 #include "HumanHand.h"
-
+#include <cmath>
+#include <iostream>
 
 HumanHand::HumanHand()
 {
@@ -24,12 +25,9 @@ HumanHand::HumanHand()
 	// Create 4 fingers (except thumb)
 	for(int i = 0; i < nfingers - 1; ++i) {
 
-		// Create fingerBase with 2 degrees of freedom
-		Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5, 0, 1), Vector(1, 0, 0), 0.3);
-		fingerBase->setAngleInterval(0, 0);
-
-		Joint *fingerBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0), 0.3);
-		fingerBase2->setAngleInterval(-15, 15);
+		// Create fingerBase
+		Joint *fingerBase = new Joint(Point(i - (nfingers - 1)*0.5, 0, 1), Vector(0, 1, 0), 0.3);
+		fingerBase->setAngleInterval(-15, 15);
 		
 		// First segment of finger
 		Joint *finger1 = new Joint(Point(0, 0, 1), Vector(1, 0, 0), 0.3);
@@ -44,19 +42,15 @@ HumanHand::HumanHand()
 		fingerTip->setAngleInterval(0, 35);
 		
 		wrist2->addChild(fingerBase);
-		fingerBase->addChild(fingerBase2);
-		fingerBase2->addChild(finger1);
+		fingerBase->addChild(finger1);
 		finger1->addChild(finger2);
 		finger2->addChild(fingerTip);
 	}
 	
 	// Create thumb
-	// Create fingerBase with 2 degrees of freedom
-	Joint *thumbBase = new Joint(Point(5 - (nfingers - 1)*0.9, -0.75, 0.5), Vector(1, 0, 0), 0.35);
-	thumbBase->setAngleInterval(0, 0);
-
-	Joint *thumbBase2 = new Joint(Point(0, 0, 0), Vector(0, 1, 0), 0.35);
-	thumbBase2->setAngleInterval(-15, 60);
+	// Create fingerBase
+	Joint *thumbBase = new Joint(Point(5 - (nfingers - 1)*0.9, -0.75, 0.5), Vector(0, 1, 0), 0.35);
+	thumbBase->setAngleInterval(-15, 15);
 
 	// First segment of finger (2 degrees of freedom)
 	Joint *thumbSegment1 = new Joint(Point(0, 0, 1), Vector(0, -1, 0), 0.3);
@@ -70,10 +64,41 @@ HumanHand::HumanHand()
 	thumbSegment2->setAngleInterval(0, 90);
 
 	wrist2->addChild(thumbBase);
-	thumbBase->addChild(thumbBase2);
-	thumbBase2->addChild(thumbSegment1);
+	thumbBase->addChild(thumbSegment1);
 	thumbSegment1->addChild(thumbSegment12);
 	thumbSegment12->addChild(thumbSegment2);
 
 	_root = wrist;
+}
+
+void HumanHand::update(GLWidget &glWidget) {
+	const double cycle = 10;
+	double t = animationCycleTime(cycle);
+
+	if(!_root->children().empty()) {
+
+		// Get wrist part that is parent for all fingers
+		Joint *rootChild = _root->children().front();
+
+		// Auxiliary joint pointer for iterating on a finger
+		Joint *j;
+
+		// Iterate on each finger
+		for(std::vector<Joint*>::const_iterator i = rootChild->children().begin(); i != rootChild->children().end(); i++) {
+
+			j = (*i);
+
+			// Iterate on the whole finger and update angles
+			while(j) {
+				j->updateAngle( std::sin( t*5*M_PI) );
+
+				if(!j->children().empty()) {
+					j = j->children().back();
+				}
+				else {
+					j = 0;
+				}
+			}
+		}
+	}
 }
