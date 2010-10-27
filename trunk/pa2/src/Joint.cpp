@@ -83,6 +83,9 @@ void Joint::setAngle(double angle)
 	_angle = angle;
 }
 
+/**
+ *  Updates joint angle according to its restrictions
+ */
 void Joint::updateAngle(double deltaTheta)
 {
 	double newAngle = angle() + deltaTheta;

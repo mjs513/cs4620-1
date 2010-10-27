@@ -11,11 +11,18 @@
 
 #include "Character.h"
 
+#include <QtGui>
 
 class PlanarChain : public Character
 {
 public:
 	PlanarChain();
+
+	void update(GLWidget &glWidget);
+
+private:
+	void _updateLink(Joint *joint);
+
 };
 
 

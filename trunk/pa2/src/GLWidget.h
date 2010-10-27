@@ -57,6 +57,7 @@ protected:
 
 private:
 	void setRecording(bool state);
+	void setForwardKinematics(bool state);
 	Point targetPointFromMouse(const Point &mouse, const Point &refPoint);
 	
 private slots:
@@ -78,6 +79,8 @@ private:
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool _enableUserControl;
+
+	bool _isForwardMode;
 
 	bool _isRecording;
 	FrameExporter *_frameExporter;
