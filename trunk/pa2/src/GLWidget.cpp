@@ -45,15 +45,13 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(20), _character(0), _planarChain(0), _humanHand(0), _walkingBug(0), _canSelectJoints(true),
+	: QGLWidget(parent), _camera(20), _character(0), _planarChain(0), _humanHand(0), _walkingBug(0), _animationEnabled(false),
 	  _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
-	// Instantiate a timer for the forward kinematics
+	// Create update timer
 	_animationTimer = new QTimer(this);
-	// Connect it to the timeout event
 	connect(_animationTimer , SIGNAL(timeout()), this, SLOT(animate()));
-	// Activate forward kinematics
-	setForwardKinematics( true );
+	_animationTimer->start();
 }
 
 GLWidget::~GLWidget()
@@ -79,6 +77,11 @@ QSize GLWidget::sizeHint() const
 std::map<Joint*,Point>& GLWidget::endEffectorsTarget()
 {
 	return _endEffectorsTarget;
+}
+
+bool GLWidget::animationEnabled()
+{
+	return _animationEnabled;
 }
 
 void GLWidget::initializeGL()
@@ -206,6 +209,8 @@ void GLWidget::paintGL()
 	int elapsed = time.msecsTo(now);
 	
 	++frameCount;
+	
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -257,7 +262,7 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
-	if((event->buttons() & Qt::LeftButton) && _canSelectJoints) {
+	if((event->buttons() & Qt::LeftButton) && _animationEnabled) {
 		const double PICKING_RANGE = 0.001;
 
 		_mouseClick = Point(event->x(),event->y());
@@ -291,17 +296,15 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 				matrixStack.push_back((*i)->transformation()*m);
 			}
 			
-			// Only allow picking end effectors
-			if(true || j->hasEndEffector()) {
-				Point p = m*Point();
-				double sqCamDist = (p - cameraEye).squaredLength();
-				double d = pickingRay.distance(p);
-				
-				if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
-					minDist = d;
-					_selectedJoint = j;
-					selectedPoint = p;
-				}
+			// Test pick
+			Point p = m*Point();
+			double sqCamDist = (p - cameraEye).squaredLength();
+			double d = pickingRay.distance(p);
+			
+			if((d < minDist) && (d*d/sqCamDist < PICKING_RANGE)) {
+				minDist = d;
+				_selectedJoint = j;
+				selectedPoint = p;
 			}
 		}
 
@@ -362,7 +365,7 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		case Qt::Key_Z: _camera.moveBack(); break;
 		
 		// Toggle forward/inverse kinematics
-		case Qt::Key_Space: setForwardKinematics(!_isForwardMode); break;
+		case Qt::Key_Space: setAnimationEnabled(!_animationEnabled); break;
 
 		// Record
 		case Qt::Key_R: setRecording(!_isRecording); break;
@@ -370,9 +373,9 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
 
 		// Change character views
-		case Qt::Key_1: _character = _planarChain; _canSelectJoints = true; _endEffectorsTarget.clear(); break;
-		case Qt::Key_2: _character = _humanHand; _canSelectJoints = true; _endEffectorsTarget.clear(); break;
-		case Qt::Key_3: _character = _walkingBug; _canSelectJoints = false; _endEffectorsTarget.clear(); break;
+		case Qt::Key_1: _character = _planarChain; _endEffectorsTarget.clear(); break;
+		case Qt::Key_2: _character = _humanHand; _endEffectorsTarget.clear(); break;
+		case Qt::Key_3: _character = _walkingBug; _endEffectorsTarget.clear(); break;
 		case Qt::Key_4: break;
 	}
 	
@@ -401,21 +404,6 @@ void GLWidget::setRecording(bool state)
 	}
 }
 
-/**
- * 	Sets forward kinematics on/off and starts/stops timer that triggers animate() function
- */
-void GLWidget::setForwardKinematics(bool state) {
-
-	_isForwardMode = state;
-
-	if( _isForwardMode ) {
-		_animationTimer->start(1000/35);
-	}
-	else {
-		_animationTimer->stop();
-	}
-}
-
 Point GLWidget::targetPointFromMouse(const Point &mouse, const Point &refPoint)
 {
 	GLint viewport[4];
@@ -437,9 +425,22 @@ Point GLWidget::targetPointFromMouse(const Point &mouse, const Point &refPoint)
 	return ray.pointAt(t);
 }
 
+void GLWidget::setAnimationEnabled(bool enable)
+{
+	_animationEnabled = enable;
+	
+	if(_animationEnabled) {
+		_endEffectorsTarget.clear();
+		
+		_character->startAnimation();
+	}
+}
+
 void GLWidget::animate()
 {
-	_character->update(*this);
+	if(_animationEnabled) {
+		_character->update(*this);
+	}
 	
 	if(!_endEffectorsTarget.empty()) {
 		IKSolver solver = IKSolver(JointTree(_character->root()),1);
