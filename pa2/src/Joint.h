@@ -33,6 +33,7 @@ public:
 	
 	double angle() const;
 	void setAngle(double angle);
+
 	void updateAngle(double deltaTheta);
 
 	double thickness() const;

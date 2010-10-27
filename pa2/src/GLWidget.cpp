@@ -48,9 +48,12 @@ GLWidget::GLWidget(QWidget *parent)
 	: QGLWidget(parent), _camera(20), _character(0), _planarChain(0), _humanHand(0), _walkingBug(0), _canSelectJoints(true),
 	  _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
+	// Instantiate a timer for the forward kinematics
 	_animationTimer = new QTimer(this);
+	// Connect it to the timeout event
 	connect(_animationTimer , SIGNAL(timeout()), this, SLOT(animate()));
-	_animationTimer->start(1000/35);
+	// Activate forward kinematics
+	setForwardKinematics( true );
 }
 
 GLWidget::~GLWidget()
@@ -358,6 +361,9 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 		case Qt::Key_Q: _camera.moveFront(); break;
 		case Qt::Key_Z: _camera.moveBack(); break;
 		
+		// Toggle forward/inverse kinematics
+		case Qt::Key_Space: setForwardKinematics(!_isForwardMode); break;
+
 		// Record
 		case Qt::Key_R: setRecording(!_isRecording); break;
 		
@@ -392,6 +398,21 @@ void GLWidget::setRecording(bool state)
 	else {
 		((MainWindow*)parent())->statusBar()->clearMessage();
 		((MainWindow*)parent())->setFixedSize(false);
+	}
+}
+
+/**
+ * 	Sets forward kinematics on/off and starts/stops timer that triggers animate() function
+ */
+void GLWidget::setForwardKinematics(bool state) {
+
+	_isForwardMode = state;
+
+	if( _isForwardMode ) {
+		_animationTimer->start(1000/35);
+	}
+	else {
+		_animationTimer->stop();
 	}
 }
 
