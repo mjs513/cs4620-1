@@ -31,6 +31,8 @@ public:
 	QSize sizeHint() const;
 	
 	std::map<Joint*,Point>& endEffectorsTarget();
+	
+	bool animationEnabled();
 
 private:
 	class FrameExporter
@@ -57,8 +59,8 @@ protected:
 
 private:
 	void setRecording(bool state);
-	void setForwardKinematics(bool state);
 	Point targetPointFromMouse(const Point &mouse, const Point &refPoint);
+	void setAnimationEnabled(bool enable);
 	
 private slots:
 	void animate();
@@ -73,14 +75,12 @@ private:
 	Character *_character;
 	Character *_planarChain,*_humanHand,*_walkingBug;
 	
-	bool _canSelectJoints;
+	bool _animationEnabled;
 	Joint *_selectedJoint;
 	std::map<Joint*,Point> _endEffectorsTarget;
 
 	// Whether we can use mouse/keyboard to move the camera
 	bool _enableUserControl;
-
-	bool _isForwardMode;
 
 	bool _isRecording;
 	FrameExporter *_frameExporter;
