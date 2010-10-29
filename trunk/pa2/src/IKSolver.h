@@ -11,19 +11,30 @@
 
 #include "JointTree.h"
 
+#include "newmat/newmat.h"
+
 #include <map>
 
 
 class IKSolver
 {
 public:
-	IKSolver(const JointTree &tree, double param = 1e-3);
+	enum Method {
+		TRANSPOSE,
+		DAMPED_LEAST_SQUARES,
+		COUNT
+	};
+
+	IKSolver(Joint *root, double param = 1e-3);
 	
-	void solve(const std::map<Joint*,Point> &endEffectorsMotion) const;
+	void solve(const std::map<Joint*,Point> &endEffectorsMotion, Method method);
 	
 private:
-	const JointTree &_tree;
+	Joint *_root;
 	double _param;
+
+	NEWMAT::Matrix _transposeMethod(const NEWMAT::Matrix &Jacobian, const NEWMAT::Matrix &dp);
+	NEWMAT::Matrix _dampedLeastSquaresMethod(const NEWMAT::Matrix &Jacobian, const NEWMAT::Matrix &dp);
 };
 
 

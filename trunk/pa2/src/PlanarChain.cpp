@@ -31,7 +31,7 @@ PlanarChain::PlanarChain()
 
 void PlanarChain::update(GLWidget &glWidget)
 {
-	const double cycle = 10,angleSpan = 100;
+	const double cycle = 15,angleSpan = 100;
 	double t = animationCycleTime(cycle);
 	
 	// Map root angle:

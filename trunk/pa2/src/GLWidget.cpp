@@ -17,7 +17,6 @@
 #include "MainWindow.h"
 #include "OpenGL.h"
 #include "Color.h"
-#include "IKSolver.h"
 #include "JointTree.h"
 #include "HumanHand.h"
 #include "PlanarChain.h"
@@ -45,8 +44,9 @@ const double LOW_VISIBILITY = 400;
 
 
 GLWidget::GLWidget(QWidget *parent)
-	: QGLWidget(parent), _camera(20), _character(0), _planarChain(0), _humanHand(0), _walkingBug(0), _animationEnabled(false),
-	  _selectedJoint(0), _enableUserControl(true), _isRecording(false), _frameExporter(0)
+	: QGLWidget(parent), _camera(20), _character(0), _planarChain(0), _humanHand(0), _walkingBug(0),
+	  _currentIKMethod(IKSolver::DAMPED_LEAST_SQUARES), _animationEnabled(false), _selectedJoint(0),
+	  _enableUserControl(true), _isRecording(false), _frameExporter(0)
 {
 	// Create update timer
 	_animationTimer = new QTimer(this);
@@ -103,7 +103,7 @@ void GLWidget::initializeGL()
 	
 	glEnable(GL_ALPHA_TEST);
 	
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	
@@ -203,14 +203,6 @@ void GLWidget::paintGL()
 		OpenGL::vertex(Point(-100,100));
 	}
 	glEnd();
-
-	static int frameCount = 0,fps = 0;
-	static QTime time = QTime::currentTime();
-	
-	QTime now = QTime::currentTime();
-	int elapsed = time.msecsTo(now);
-	
-	++frameCount;
 	
 	glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -223,30 +215,47 @@ void GLWidget::paintGL()
 	glLoadIdentity();
 	
 	OpenGL::color(Color::white());
-	
+
 	char buffer[512];
-	
-	sprintf(buffer,"Move: W A S D / Right button");
+
+	sprintf(buffer,"Move: W A S D / Right mouse button");
+	renderText(20, _height - 80, buffer);
+
+	sprintf(buffer,"Zoom: Q Z / Middle mouse button");
 	renderText(20, _height - 60, buffer);
-	sprintf(buffer,"Zoom: Q Z / Middle button");
+
+	sprintf(buffer,"Pick/drag: Left mouse button");
 	renderText(20, _height - 40, buffer);
-	sprintf(buffer,"Pick/drag: Left button");
+
+	sprintf(buffer,"Toggle IK solving method: T");
 	renderText(20, _height - 20, buffer);
 
-	if( _animationEnabled == true ) {
-		sprintf(buffer,"Forward Kinematics");
+	if(_animationEnabled) {
+		sprintf(buffer,"Animations enabled / Picking disabled");
 	}
 	else {
-		sprintf(buffer,"Inverse Kinematics");
+		sprintf(buffer,"Animations disabled / Picking enabled");
 	}
+
 	renderText(20,20,buffer);
 	
-	if(elapsed > 1000) {
-		fps = frameCount;
-		
-		time = now;
-		frameCount = 0;
+	const char *ikName;
+
+	switch(_currentIKMethod) {
+		case IKSolver::DAMPED_LEAST_SQUARES: {
+			ikName = "Damped Least Squares";
+			break;
+		}
+
+		case IKSolver::TRANSPOSE: {
+			ikName = "Transpose";
+		}
+
+		default: { }
 	}
+
+	sprintf(buffer,"IK Method: %s",ikName);
+	renderText(20,40,buffer);
 	
 	//----- Commands below removed because of Windows flickering issues -----//
 	//glFlush(); // Send the commands to the OpenGL state machine
@@ -338,7 +347,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 		}
 		
 		// Create target point for joint
-		if(!isTargetPoint) {
+		if(_selectedJoint && !isTargetPoint) {
 			_endEffectorsTarget[_selectedJoint] = selectedPoint;
 		}
 	}
@@ -385,6 +394,7 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 
 		// Record
 		case Qt::Key_R: setRecording(!_isRecording); break;
+		case Qt::Key_T: cycleIKMethod(); break;
 		
 		//case Qt::Key_C: enableUserControl = !enableUserControl; break;
 
@@ -401,6 +411,11 @@ void GLWidget::keyPressEvent(QKeyEvent * event)
 	}
 	
 	update(); // update the screen
+}
+
+void GLWidget::cycleIKMethod()
+{
+	_currentIKMethod = IKSolver::Method((int(_currentIKMethod) + 1)%IKSolver::COUNT);
 }
 
 void GLWidget::setRecording(bool state)
@@ -464,10 +479,10 @@ void GLWidget::animate()
 	}
 	
 	if(!_endEffectorsTarget.empty()) {
-		IKSolver solver = IKSolver(JointTree(_character->root()),1);
+		IKSolver solver = IKSolver(_character->root(), 20);
 		
 		for(int i = 0; i < 10; ++i) {
-			solver.solve(_endEffectorsTarget);
+			solver.solve(_endEffectorsTarget, _currentIKMethod);
 		}
 	}
 	
@@ -489,12 +504,11 @@ bool GLWidget::FrameExporter::init()
 void GLWidget::FrameExporter::writeFrame(const QImage& frame) {
 	QChar ch = '0';
 	QString number = QString("%1").arg(nFrames, 5, 10, ch);
-	QString file_name = QString("%1/%2%3-%4.png").arg(BASE_CAP_FRAMES_DIR).\
-			arg(BASE_CAP_FRAMES_NAME).arg(exporterId).arg(number);
+	QString file_name = QString("%1/%2%3-%4.bmp").arg(BASE_CAP_FRAMES_DIR)
+		.arg(BASE_CAP_FRAMES_NAME).arg(exporterId).arg(number);
 
-	if ( !frame.save(file_name, "PNG") ) {
+	if ( !frame.save(file_name, "BMP") ) {
 		printf("Error writing frame to file %s\n", file_name.toStdString().c_str());
-	} else {
 	}
 
 	nFrames++;

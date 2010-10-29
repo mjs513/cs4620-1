@@ -12,10 +12,10 @@
 HumanHand::HumanHand()
 {
 	// Create wrist with 2 degrees of freedom
-	Joint *wrist = new Joint(Point(0,0,0.5), Vector(1,0,0), 0.3, 10);
+	Joint *wrist = new Joint(Point(0,0,0.5), Vector(1,0,0), 0.3, 10000);
 	wrist->setAngleInterval(0, 45);
 	
-	Joint *wrist2 = new Joint(Point(0,0,0), Vector(0,1,0), 0.1, 10);
+	Joint *wrist2 = new Joint(Point(0,0,0), Vector(0,1,0), 0.1, 10000);
 	wrist2->setAngleInterval(-45, 15);
 
 	wrist->addChild(wrist2);
@@ -71,7 +71,8 @@ HumanHand::HumanHand()
 	_root = wrist;
 }
 
-void HumanHand::update(GLWidget &glWidget) {
+void HumanHand::update(GLWidget &glWidget)
+{
 	const double cycle = 10;
 	double t = animationCycleTime(cycle);
 

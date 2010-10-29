@@ -37,7 +37,7 @@ WalkingBug::WalkingBug()
 
 void WalkingBug::update(GLWidget &glWidget)
 {
-	const double cycle = 1;
+	const double cycle = 1.5;
 	double t = animationCycleTime(cycle);
 	double tOffset = 0,n = _originalLegPositions.size();
 	std::map<Joint*,Point> &targets = glWidget.endEffectorsTarget();
