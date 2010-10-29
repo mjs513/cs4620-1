@@ -17,7 +17,7 @@
 #include "Joint.h"
 #include "Ray.h"
 #include "Character.h"
-
+#include "IKSolver.h"
 
 class GLWidget : public QGLWidget
 {
@@ -61,6 +61,7 @@ private:
 	void setRecording(bool state);
 	Point targetPointFromMouse(const Point &mouse, const Point &refPoint);
 	void setAnimationEnabled(bool enable);
+	void cycleIKMethod();
 	
 private slots:
 	void animate();
@@ -75,6 +76,7 @@ private:
 	Character *_character;
 	Character *_planarChain,*_humanHand,*_walkingBug;
 	
+	IKSolver::Method _currentIKMethod;
 	bool _animationEnabled;
 	Joint *_selectedJoint;
 	std::map<Joint*,Point> _endEffectorsTarget;

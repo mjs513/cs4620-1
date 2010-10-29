@@ -8,7 +8,6 @@
 #include "IKSolver.h"
 
 #include "GLMatrix.h"
-#include "newmat/newmat.h"
 
 #include <algorithm>
 #include <iostream>
@@ -57,7 +56,7 @@ int indexOfEndEffector(const std::vector<GlobalEndEffector> &v, Joint *j)
 }
 
 
-void fillGlobalValues(const JointTree &tree, const map<Joint*,Point> &endEffectorsMotion,
+void fillGlobalValues(Joint *root, const map<Joint*,Point> &endEffectorsMotion,
 		std::vector<GlobalEndEffector> &endEffectors, std::vector<GlobalJoint> &joints)
 {
 	endEffectors.reserve(endEffectorsMotion.size());
@@ -66,12 +65,10 @@ void fillGlobalValues(const JointTree &tree, const map<Joint*,Point> &endEffecto
 		endEffectors.push_back(GlobalEndEffector(i->first));
 	}
 	
-	joints.resize(tree.joints().size());
-	
 	std::vector<Joint*> jointStack;
 	std::vector<GLMatrix> matrixStack;
 	
-	jointStack.push_back(tree.root());
+	jointStack.push_back(root);
 	matrixStack.push_back(GLMatrix());
 	
 	// Iterate entire tree
@@ -91,7 +88,6 @@ void fillGlobalValues(const JointTree &tree, const map<Joint*,Point> &endEffecto
 		Point jointOrigin = parentM*Point();
 		Point linkEnd = jointM*Point();
 		Vector v = parentM*j->rotAxis();
-		int id = j->id();
 		int eeIndex = indexOfEndEffector(endEffectors,j);
 		
 		// Joint's end effector is in motion
@@ -100,8 +96,10 @@ void fillGlobalValues(const JointTree &tree, const map<Joint*,Point> &endEffecto
 			endEffectors[eeIndex].deltaPos = endEffectorsMotion.find(j)->second - linkEnd;
 		}
 		
-		// Fill joint values in world coordinates
-		joints[id] = GlobalJoint(j,jointOrigin,v);
+		// Fill joint id and values in world coordinates
+		j->setId(joints.size());
+
+		joints.push_back(GlobalJoint(j,jointOrigin,v));
 	}
 }
 
@@ -109,17 +107,21 @@ void fillGlobalValues(const JointTree &tree, const map<Joint*,Point> &endEffecto
 }  // namespace
 
 
-IKSolver::IKSolver(const JointTree &tree, double param)
-	: _tree(tree), _param(param) { }
+IKSolver::IKSolver(Joint *root, double param)
+	: _root(root), _param(param) { }
 
-void IKSolver::solve(const std::map<Joint*,Point> &endEffectorsMotion) const
+/**
+ * Solve the IK problem. Default method is damped least squares.
+ */
+void IKSolver::solve(const std::map<Joint*,Point> &endEffectorsMotion, Method method)
 {
 	std::vector<GlobalEndEffector> endEffectors;
 	std::vector<GlobalJoint> joints;
 
-	fillGlobalValues(_tree,endEffectorsMotion,endEffectors,joints);
+	fillGlobalValues(_root,endEffectorsMotion,endEffectors,joints);
 	
-	NEWMAT::Matrix J(3*endEffectors.size(),joints.size()),dp(J.Nrows(),1);
+	NEWMAT::Matrix J(3*endEffectors.size(),joints.size());
+	NEWMAT::Matrix dp(J.Nrows(),1);
 
 	// Fill dp vector
 	for(unsigned int i = 0; i < endEffectors.size(); ++i) {
@@ -130,14 +132,14 @@ void IKSolver::solve(const std::map<Joint*,Point> &endEffectorsMotion) const
 		dp.element(3*i + 2,0) = v.z;
 	}
 
-	// Fill J matrix with zeros
+	// Fill Jacobian matrix with zeros
 	for(int i = 0; i < J.Nrows(); ++i) {
 		for(int j = 0; j < J.Ncols(); ++j) {
 			J.element(i,j) = 0;
 		}
 	}
 
-	// Fill J matrix with dp/dtheta values
+	// Fill Jacobian matrix with dp/dtheta values
 	for(unsigned int i = 0; i < endEffectors.size(); ++i) {
 		GlobalEndEffector &ee = endEffectors[i];
 		const Joint *j = ee.joint;
@@ -154,13 +156,29 @@ void IKSolver::solve(const std::map<Joint*,Point> &endEffectorsMotion) const
 			p = p->parent();
 		}
 	}
-	
-	NEWMAT::Matrix JT = J.t();
-	NEWMAT::Matrix kI = NEWMAT::IdentityMatrix(J.Nrows())*_param;
 
 	// Calculate the damped least squares solution
-	NEWMAT::Matrix dTheta = JT*(J*JT + kI).i()*dp;
+	NEWMAT::Matrix dTheta;
+
+	if( method == DAMPED_LEAST_SQUARES ) {
+		dTheta = _dampedLeastSquaresMethod(J, dp);
+	}
+	else if ( method == TRANSPOSE ) {
+		dTheta = _transposeMethod(J, dp);
+	}
 	
+	NEWMAT::Matrix Winv(dTheta.Nrows(),dTheta.Nrows());
+
+	for(int i = 0; i < Winv.Nrows(); ++i) {
+		for(int j = 0; j < Winv.Ncols(); ++j) {
+			Winv.element(i,j) = 0;
+		}
+
+		Winv.element(i,i) = 1.0/joints[i].joint->weight();
+	}
+
+	dTheta = Winv*dTheta;
+
 	const double radianToDegree = 180/M_PI;
 	
 	// Update joint angles
@@ -170,4 +188,26 @@ void IKSolver::solve(const std::map<Joint*,Point> &endEffectorsMotion) const
 		//j->updateAngle(dTheta.element(i,0)*radianToDegree);
 		j->setAngle(j->angle() + dTheta.element(i,0)*radianToDegree);
 	}
+}
+
+NEWMAT::Matrix IKSolver::_transposeMethod(const NEWMAT::Matrix &J, const NEWMAT::Matrix &dp)
+{
+	NEWMAT::Matrix JJTdp = J*J.t()*dp,JJTdpT = JJTdp.t();
+	double alphaDen = NEWMAT::Matrix(JJTdpT*JJTdp).element(0,0);
+	double alpha = 0;
+
+	// Avoid infinity and NaN
+	if(std::fabs(alphaDen) > 1e-8) {
+		alpha = NEWMAT::Matrix(JJTdpT*dp).element(0,0)/alphaDen;
+	}
+
+	return alpha*J.t()*dp;
+}
+
+NEWMAT::Matrix IKSolver::_dampedLeastSquaresMethod(const NEWMAT::Matrix &J, const NEWMAT::Matrix &dp)
+{
+	NEWMAT::Matrix JT = J.t();
+	NEWMAT::Matrix kI = NEWMAT::IdentityMatrix(J.Nrows())*_param;
+
+	return JT*(J*JT + kI).i()*dp;
 }
