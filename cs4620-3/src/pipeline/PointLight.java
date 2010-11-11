@@ -2,7 +2,6 @@ package pipeline;
 
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
 
 public class PointLight {
 	Point3f position;
