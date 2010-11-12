@@ -7,24 +7,24 @@ import javax.vecmath.Vector3f;
 import pipeline.misc.Vertex;
 
 /**
- * This is the same vertex processor as SmoothShadedTP, but allows for
+ * This is the same vertex processor as SmoothShadedVP, but allows for
  * texturing in the fragment stage by interpolating texture coordinates.
  * 
  * @author ags
  */
-public class TexturedSmoothShadedVP extends SmoothShadedVP {
-
-	/**
-	 * @see VertexProcessor#nAttr()
-	 */
-	public int nAttr() {
-		// TODO
-		return 0;
+public class TexturedSmoothShadedVP extends SmoothShadedVP
+{
+	public int nAttr()
+	{
+		// 3 for color + 2 for texture
+		return 5;
 	}
+	
+	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t, Vertex output)
+	{
+		super.vertex(v, c, n, null, output);
 
-	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t, Vertex output) {
-		// TODO
-		// NOTE: You don't have to extend SmoothShadedVP to implement this class, but if you figure out how to, your code will be cleaner and less error-prone.
+		output.attrs[3] = t.x;
+		output.attrs[4] = t.y;
 	}
-
 }

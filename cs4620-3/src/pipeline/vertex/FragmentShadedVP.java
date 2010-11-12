@@ -78,7 +78,7 @@ public class FragmentShadedVP extends VertexProcessor
 	public void triangle(Vector3f[] vs, Color3f[] cs, Vector3f[] ns, Vector2f[] ts, Vertex[] outputs)
 	{
 		for (int k = 0; k < 3; k++) {
-			vertex(vs[k], cs[k], ns[k], null, outputs[k]);
+			vertex(vs[k], cs[k], ns[k], ts[k], outputs[k]);
 		}
 	}
 }
