@@ -1,5 +1,7 @@
 package pipeline.vertex;
 
+import java.util.Vector;
+
 import javax.vecmath.Color3f;
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -22,6 +24,7 @@ public class SmoothShadedVP extends ShadedVP
 	/** This is the composed modelling, viewing, projection, and viewport matrix. */
 	protected Matrix4f m = new Matrix4f();
 	protected Matrix4f modelview = new Matrix4f();
+	protected Vector<Vector4f> lightSources;
 	
 	/**
 	 * @see VertexProcessor#nAttr()
@@ -38,6 +41,15 @@ public class SmoothShadedVP extends ShadedVP
 		m.set(pipe.modelviewMatrix);
 		m.leftCompose(pipe.projectionMatrix);
 		m.leftCompose(pipe.viewportMatrix);
+	}
+
+	public void updateLightModel(Pipeline pipe)
+	{
+		lightSources = new Vector<Vector4f>();
+		
+		for(PointLight light : pipe.lights) {
+			// TODO: update lightSources -- lights are at the wrong position
+		}
 	}
 
 	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t_ignore, Vertex output)
@@ -87,7 +99,7 @@ public class SmoothShadedVP extends ShadedVP
 			
 			// Specular contribution
 			if(dot > 0) {
-				dot = (float) Math.pow(dot, Pipeline.specularExponent);
+				dot = (float) Math.pow(dot, 100);// Pipeline.specularExponent);
 				
 				c2.x += dot*Pipeline.specularColor.x*lc.x;
 				c2.y += dot*Pipeline.specularColor.y*lc.y;
