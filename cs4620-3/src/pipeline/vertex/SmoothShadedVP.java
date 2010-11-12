@@ -69,7 +69,7 @@ public class SmoothShadedVP extends ShadedVP
 			l.normalize();
 			
 			float dot = l.dot(n2);
-			
+
 			// Diffuse contribution
 			if(dot > 0) {
 				c2.x += c.x*dot*lc.x;
@@ -80,16 +80,14 @@ public class SmoothShadedVP extends ShadedVP
 			// Half vector for specular lighting
 			Vector4f h = new Vector4f(l);
 			
-			h.add(v2);
+			h.add(n2);
 			h.normalize();
 			
 			dot = h.dot(n2);
 			
-			System.out.println("h dot n = " + dot);
-			
 			// Specular contribution
 			if(dot > 0) {
-				//dot = (float) Math.pow(dot, Pipeline.specularExponent);
+				dot = (float) Math.pow(dot, Pipeline.specularExponent);
 				
 				c2.x += dot*Pipeline.specularColor.x*lc.x;
 				c2.y += dot*Pipeline.specularColor.y*lc.y;
@@ -110,8 +108,6 @@ public class SmoothShadedVP extends ShadedVP
 		
 		output.v.set(v.x, v.y, v.z, 1);
 		m.rightMultiply(output.v);
-
-		System.out.println("vertex color = " + c2);
 		
 		output.setAttrs(nAttr());
 		output.attrs[0] = c2.x;

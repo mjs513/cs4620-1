@@ -1,7 +1,5 @@
 package pipeline;
 
-import java.text.DecimalFormat;
-
 import javax.vecmath.Vector4f;
 
 import pipeline.fragment.FragmentProcessor;
@@ -89,17 +87,12 @@ public class Rasterizer {
 			
 			vData[iv][3] = posn[iv].z;
 			
-			System.out.println("invW = " + new DecimalFormat("0.000").format(invW));
-			
 			for (int ia = 0; ia < na; ia++) {
 				vData[iv][4 + ia] = invW * vs[iv].attrs[ia];
-				
-				System.out.println("raster v[" + iv + "].attrs[" + ia + "] = " + new DecimalFormat("0.000").format(vData[iv][4 + ia]));
 			}
 			
 			vData[iv][4 + na] = invW;
 		}
-
 		
 		// Compute the bounding box of the triangle; bail out if it is empty.
 		int ixMin = Math.max(0, ceil(min(posn[0].x, posn[1].x, posn[2].x)));
@@ -129,12 +122,6 @@ public class Rasterizer {
 			yInc[k] = (da2 * dx1 - da1 * dx2) / det;
 			
 			rowData[k] = vData[0][k] + (ixMin - posn[0].x) * xInc[k] + (iyMin - posn[0].y) * yInc[k];
-		}
-		
-		for(int i = 0; i < na; ++i) {
-			System.out.println("xInc[" + i + "] = " + xInc[4 + i]);
-			System.out.println("yInc[" + i + "] = " + yInc[4 + i]);
-			System.out.println("rowData[" + i + "] = " + rowData[4 + i]);
 		}
 		
 		// Rasterize: loop over the bounding box, updating the attribute values.
