@@ -46,14 +46,14 @@ public class SceneTriangle extends Scene {
       gl.glColor3f(c[ctr].x, c[ctr].y, c[ctr].z);
       gl.glVertex3f(v[ctr].x, v[ctr].y, v[ctr].z);
     }
-    /*
+
     gl.glNormal3f(n2[0].x, n2[0].y, n2[0].z);
 
     for (int ctr = 0; ctr < 3; ctr++) {
       gl.glTexCoord2f(t2[ctr].x, t2[ctr].y);
       gl.glColor3f(c2[ctr].x, c2[ctr].y, c2[ctr].z);
       gl.glVertex3f(v2[ctr].x, v2[ctr].y, v2[ctr].z);
-    }*/
+    }
     gl.glEnd();
   }
 
@@ -66,9 +66,8 @@ public class SceneTriangle extends Scene {
     pipeline.begin(Pipeline.TRIANGLES);
     for (int k = 0; k < 3; k++)
     	pipeline.vertex(v[k], c[k], n[k], t[k]);
-    /*
     for (int k = 0; k < 3; k++)
-    	pipeline.vertex(v2[k], c2[k], n2[k], t2[k]);*/
+    	pipeline.vertex(v2[k], c2[k], n2[k], t2[k]);
     pipeline.end();
   }
 
