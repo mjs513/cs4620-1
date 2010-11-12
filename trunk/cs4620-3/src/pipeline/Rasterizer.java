@@ -1,5 +1,7 @@
 package pipeline;
 
+import java.text.DecimalFormat;
+
 import javax.vecmath.Vector4f;
 
 import pipeline.fragment.FragmentProcessor;
@@ -78,20 +80,33 @@ public class Rasterizer {
 		// perspective correction.
 		for (int iv = 0; iv < 3; iv++) {
 			float invW = 1.0f / vs[iv].v.w;
+			
 			posn[iv].scale(invW, vs[iv].v);
-			for (int k = 0; k < 3; k++)
+			
+			for (int k = 0; k < 3; k++) {
 				vData[iv][k] = (k == iv ? 1 : 0);
+			}
+			
 			vData[iv][3] = posn[iv].z;
-			for (int ia = 0; ia < na; ia++)
+			
+			System.out.println("invW = " + new DecimalFormat("0.000").format(invW));
+			
+			for (int ia = 0; ia < na; ia++) {
 				vData[iv][4 + ia] = invW * vs[iv].attrs[ia];
+				
+				System.out.println("raster v[" + iv + "].attrs[" + ia + "] = " + new DecimalFormat("0.000").format(vData[iv][4 + ia]));
+			}
+			
 			vData[iv][4 + na] = invW;
 		}
+
 		
 		// Compute the bounding box of the triangle; bail out if it is empty.
 		int ixMin = Math.max(0, ceil(min(posn[0].x, posn[1].x, posn[2].x)));
 		int ixMax = Math.min(nx - 1, floor(max(posn[0].x, posn[1].x, posn[2].x)));
 		int iyMin = Math.max(0, ceil(min(posn[0].y, posn[1].y, posn[2].y)));
 		int iyMax = Math.min(ny - 1, floor(max(posn[0].y, posn[1].y, posn[2].y)));
+		
 		if (ixMin > ixMax || iyMin > iyMax)
 			return;
 		
@@ -100,6 +115,7 @@ public class Rasterizer {
 		float dx1 = posn[1].x - posn[0].x, dy1 = posn[1].y - posn[0].y;
 		float dx2 = posn[2].x - posn[0].x, dy2 = posn[2].y - posn[0].y;
 		float det = dx1 * dy2 - dx2 * dy1;
+		
 		if (det < 0)
 			return;
 		
@@ -108,9 +124,17 @@ public class Rasterizer {
 		for (int k = 0; k < 5 + na; k++) {
 			float da1 = vData[1][k] - vData[0][k];
 			float da2 = vData[2][k] - vData[0][k];
+			
 			xInc[k] = (da1 * dy2 - da2 * dy1) / det;
 			yInc[k] = (da2 * dx1 - da1 * dx2) / det;
+			
 			rowData[k] = vData[0][k] + (ixMin - posn[0].x) * xInc[k] + (iyMin - posn[0].y) * yInc[k];
+		}
+		
+		for(int i = 0; i < na; ++i) {
+			System.out.println("xInc[" + i + "] = " + xInc[4 + i]);
+			System.out.println("yInc[" + i + "] = " + yInc[4 + i]);
+			System.out.println("rowData[" + i + "] = " + rowData[4 + i]);
 		}
 		
 		// Rasterize: loop over the bounding box, updating the attribute values.
@@ -118,21 +142,29 @@ public class Rasterizer {
 		// a fragment.  In our case this means calling the fragment processor to
 		// process it immediately.
 		for (frag.y = iyMin; frag.y <= iyMax; frag.y++) {
-			for (int k = 0; k < 5 + na; k++)
+			for (int k = 0; k < 5 + na; k++) {
 				pixData[k] = rowData[k];
+			}
+			
 			for (frag.x = ixMin; frag.x <= ixMax; frag.x++) {
 				if (pixData[0] >= 0 && pixData[1] >= 0 && pixData[2] >= 0) {
 					frag.attrs[0] = pixData[3];
+					
 					float w = 1.0f / pixData[4 + na];
-					for (int ia = 0; ia < na; ia++)
+					
+					for (int ia = 0; ia < na; ia++) {
 						frag.attrs[1 + ia] = pixData[4 + ia] * w;
+					}
 					fp.fragment(frag, fb);
 				}
-				for (int k = 0; k < 5 + na; k++)
+				
+				for (int k = 0; k < 5 + na; k++) {
 					pixData[k] += xInc[k];
+				}
 			}
-			for (int k = 0; k < 5 + na; k++)
+			for (int k = 0; k < 5 + na; k++) {
 				rowData[k] += yInc[k];
+			}
 		}
 	}
 	
