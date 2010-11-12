@@ -136,7 +136,7 @@ public class SmoothShadedVP extends ShadedVP
 	public void triangle(Vector3f[] v, Color3f[] c, Vector3f[] n, Vector2f[] t, Vertex[] output)
 	{
 		for (int k = 0; k < 3; k++) {
-			vertex(v[k], c[k], n[k], null, output[k]);
+			vertex(v[k], c[k], n[k], t[k], output[k]);
 		}
 	}
 }

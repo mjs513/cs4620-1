@@ -21,15 +21,9 @@ public class PhongShadedFP extends FragmentProcessor
 		// 3 for color + 3 for position + 3 for normal
 		return 9;
 	}
-
-	public void fragment(Fragment f, FrameBuffer fb)
+	
+	protected Color3f colorForFragment(Fragment f)
 	{
-		float z = f.attrs[0];
-		
-		if(z >= fb.getZ(f.x, f.y)) {
-		    return;
-		}
-
 		Color3f c = new Color3f(f.attrs[1], f.attrs[2], f.attrs[3]);
 		Vector4f p = new Vector4f(f.attrs[4], f.attrs[5], f.attrs[6], 1);
 		Vector4f n = new Vector4f(f.attrs[7], f.attrs[8], f.attrs[9], 0);
@@ -84,6 +78,19 @@ public class PhongShadedFP extends FragmentProcessor
 			c2.z = 1;
 		}
 		
-		fb.set(f.x, f.y, c2.x, c2.y, c2.z, z);
+		return c2;
+	}
+
+	public void fragment(Fragment f, FrameBuffer fb)
+	{
+		float z = f.attrs[0];
+		
+		if(z >= fb.getZ(f.x, f.y)) {
+		    return;
+		}
+
+		Color3f c = colorForFragment(f);
+		
+		fb.set(f.x, f.y, c.x, c.y, c.z, z);
 	}
 }
