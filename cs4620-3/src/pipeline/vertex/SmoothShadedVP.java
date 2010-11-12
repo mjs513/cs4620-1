@@ -40,18 +40,18 @@ public class SmoothShadedVP extends ShadedVP
 		m.leftCompose(pipe.viewportMatrix);
 	}
 
-	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t, Vertex output)
+	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t_ignore, Vertex output)
 	{
 		Vector4f v2 = new Vector4f();
 		Vector4f n2 = new Vector4f();
-
+		
 		// Position of vextex in eye coordinates
 		v2.set(v.x, v.y, v.z, 1);
-		m.rightMultiply(v2);
+		modelview.rightMultiply(v2);
 		
 		// Normal in eye coordinates
 		n2.set(n.x, n.y, n.z, 0);
-		m.rightMultiply(n2);
+		modelview.rightMultiply(n2);
 		
 		n2.normalize();
 		
@@ -72,9 +72,9 @@ public class SmoothShadedVP extends ShadedVP
 			
 			// Diffuse contribution
 			if(dot > 0) {
-				c2.x += dot*lc.x;
-				c2.y += dot*lc.y;
-				c2.z += dot*lc.z;
+				c2.x += c.x*dot*lc.x;
+				c2.y += c.y*dot*lc.y;
+				c2.z += c.z*dot*lc.z;
 			}
 			
 			// Half vector for specular lighting
@@ -85,18 +85,18 @@ public class SmoothShadedVP extends ShadedVP
 			
 			dot = h.dot(n2);
 			
+			System.out.println("h dot n = " + dot);
+			
 			// Specular contribution
 			if(dot > 0) {
-				c2.x += dot*Pipeline.specularColor.x;
-				c2.y += dot*Pipeline.specularColor.y;
-				c2.z += dot*Pipeline.specularColor.z;
+				//dot = (float) Math.pow(dot, Pipeline.specularExponent);
+				
+				c2.x += dot*Pipeline.specularColor.x*lc.x;
+				c2.y += dot*Pipeline.specularColor.y*lc.y;
+				c2.z += dot*Pipeline.specularColor.z*lc.z;
 			}
 		}
-
-		c2.x *= c.x;
-		c2.y *= c.y;
-		c2.z *= c.z;
-
+		
 		// Clamp rgb to [0,1]
 		if(c2.x > 1) {
 			c2.x = 1;
@@ -110,6 +110,8 @@ public class SmoothShadedVP extends ShadedVP
 		
 		output.v.set(v.x, v.y, v.z, 1);
 		m.rightMultiply(output.v);
+
+		System.out.println("vertex color = " + c2);
 		
 		output.setAttrs(nAttr());
 		output.attrs[0] = c2.x;
@@ -124,9 +126,7 @@ public class SmoothShadedVP extends ShadedVP
 	public void triangle(Vector3f[] v, Color3f[] c, Vector3f[] n, Vector2f[] t, Vertex[] output)
 	{
 		for (int k = 0; k < 3; k++) {
-			vertex(v[k], c[k], n[k], t[k], output[k]);
+			vertex(v[k], c[k], n[k], null, output[k]);
 		}
 	}
-
-
 }
