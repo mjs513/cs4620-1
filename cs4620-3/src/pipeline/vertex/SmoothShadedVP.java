@@ -21,14 +21,12 @@ import pipeline.misc.Vertex;
  */
 public class SmoothShadedVP extends ShadedVP
 {
-	/** This is the composed modelling, viewing, projection, and viewport matrix. */
 	protected Matrix4f m = new Matrix4f();
 	protected Matrix4f modelview = new Matrix4f();
 	protected Vector<Vector4f> lightSources;
+	protected Vector<Color3f> lightColors;
 	
-	/**
-	 * @see VertexProcessor#nAttr()
-	 */
+	
 	public int nAttr()
 	{
 		return 3;
@@ -46,9 +44,17 @@ public class SmoothShadedVP extends ShadedVP
 	public void updateLightModel(Pipeline pipe)
 	{
 		lightSources = new Vector<Vector4f>();
+		lightColors = new Vector<Color3f>();
 		
-		for(PointLight light : pipe.lights) {
-			// TODO: update lightSources -- lights are at the wrong position
+		for(PointLight light : Pipeline.lights) {
+			Vector4f p = new Vector4f(light.getPosition());
+			
+			p.w = 1;
+			
+			pipe.modelviewMatrix.rightMultiply(p);
+			
+			lightSources.add(p);
+			lightColors.add(light.getIntensity());
 		}
 	}
 
@@ -95,11 +101,11 @@ public class SmoothShadedVP extends ShadedVP
 			h.add(n2);
 			h.normalize();
 			
-			dot = h.dot(n2);
+			dot = h.dot(l);
 			
 			// Specular contribution
 			if(dot > 0) {
-				dot = (float) Math.pow(dot, 100);// Pipeline.specularExponent);
+				dot = (float) Math.pow(dot, Pipeline.specularExponent);
 				
 				c2.x += dot*Pipeline.specularColor.x*lc.x;
 				c2.y += dot*Pipeline.specularColor.y*lc.y;
@@ -126,11 +132,7 @@ public class SmoothShadedVP extends ShadedVP
 		output.attrs[1] = c2.y;
 		output.attrs[2] = c2.z;
 	}
-
-	/**
-	 * @see VertexProcessor#triangle(Vector3f[], Color3f[], Vector3f[],
-	 *      Vector2f[], Vertex[])
-	 */
+	
 	public void triangle(Vector3f[] v, Color3f[] c, Vector3f[] n, Vector2f[] t, Vertex[] output)
 	{
 		for (int k = 0; k < 3; k++) {

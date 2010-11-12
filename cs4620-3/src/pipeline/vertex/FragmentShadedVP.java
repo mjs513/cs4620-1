@@ -1,5 +1,7 @@
 package pipeline.vertex;
 
+import java.util.Vector;
+
 import javax.vecmath.Color3f;
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -16,35 +18,67 @@ import pipeline.misc.Vertex;
  * 
  * @author ags
  */
-public class FragmentShadedVP extends VertexProcessor {
-  /**
-   * @see VertexProcessor#nAttr()
-   */
-  public int nAttr() {
-	  // TODO
-	  return 0;
-  }
+public class FragmentShadedVP extends VertexProcessor
+{
+	protected Matrix4f m = new Matrix4f();
+	protected Matrix4f modelview = new Matrix4f();
+	protected Vector<Vector4f> lightSources;
+	protected Vector<Color3f> lightColors;
+	
+	
+	public int nAttr()
+	{
+		// 3 for color + 3 for position + 3 for normal
+		return 9;
+	}
 
-  /**
-   * @see VertexProcessor#updateTransforms(Pipeline)
-   */
-  public void updateTransforms(Pipeline pipe) {
-	  // TODO
-  }
-
-  public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t, Vertex output) {
-	  // TODO
-  }
-
-  /**
-   * @see VertexProcessor#triangle(Vector3f[], Color3f[], Vector3f[],
-   *      Vector2f[], Vertex[])
-   */
-  public void triangle(Vector3f[] vs, Color3f[] cs, Vector3f[] ns, Vector2f[] ts, Vertex[] outputs) {
-
-    for (int k = 0; k < 3; k++) {
-      vertex(vs[k], cs[k], ns[k], null, outputs[k]);
-    }
-  }
-
+	public void updateTransforms(Pipeline pipe)
+	{
+		modelview.set(pipe.modelviewMatrix);
+		
+		m.set(pipe.modelviewMatrix);
+		m.leftCompose(pipe.projectionMatrix);
+		m.leftCompose(pipe.viewportMatrix);
+	}
+	
+	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t, Vertex output)
+	{
+		Vector4f v2 = new Vector4f();
+		Vector4f n2 = new Vector4f();
+		
+		// Position of vextex in eye coordinates
+		v2.set(v.x, v.y, v.z, 1);
+		modelview.rightMultiply(v2);
+		
+		// Normal in eye coordinates
+		n2.set(n.x, n.y, n.z, 0);
+		modelview.rightMultiply(n2);
+		
+		output.v.set(v.x, v.y, v.z, 1);
+		m.rightMultiply(output.v);
+		
+		output.setAttrs(nAttr());
+		
+		// Colors
+		output.attrs[0] = c.x;
+		output.attrs[1] = c.y;
+		output.attrs[2] = c.z;
+		
+		// Normal
+		output.attrs[3] = v2.x;
+		output.attrs[4] = v2.y;
+		output.attrs[5] = v2.z;
+		
+		// Normal
+		output.attrs[6] = n2.x;
+		output.attrs[7] = n2.y;
+		output.attrs[8] = n2.z;
+	}
+	
+	public void triangle(Vector3f[] vs, Color3f[] cs, Vector3f[] ns, Vector2f[] ts, Vertex[] outputs)
+	{
+		for (int k = 0; k < 3; k++) {
+			vertex(vs[k], cs[k], ns[k], null, outputs[k]);
+		}
+	}
 }
