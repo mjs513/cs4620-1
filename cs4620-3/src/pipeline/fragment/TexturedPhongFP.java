@@ -13,6 +13,10 @@ import pipeline.misc.FrameBuffer;
  */
 public class TexturedPhongFP extends PhongShadedFP
 {
+	// Texture color
+	Color3f tc = new Color3f();
+	
+	
 	public int nAttr()
 	{
 		// 3 for color + 3 for position + 3 for normal + 2 for texture
@@ -28,7 +32,6 @@ public class TexturedPhongFP extends PhongShadedFP
 		}
 
 		Color3f c = colorForFragment(f);
-		Color3f tc = new Color3f();
 		
 		texture.sample(new Vector2f(f.attrs[10], f.attrs[11]), tc);
 		

@@ -24,6 +24,9 @@ public class FragmentShadedVP extends VertexProcessor
 	protected Matrix4f modelview = new Matrix4f();
 	protected Vector<Vector4f> lightSources;
 	protected Vector<Color3f> lightColors;
+
+	Vector4f v2 = new Vector4f();
+	Vector4f n2 = new Vector4f();
 	
 	
 	public int nAttr()
@@ -43,9 +46,6 @@ public class FragmentShadedVP extends VertexProcessor
 	
 	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t, Vertex output)
 	{
-		Vector4f v2 = new Vector4f();
-		Vector4f n2 = new Vector4f();
-		
 		// Position of vextex in eye coordinates
 		v2.set(v.x, v.y, v.z, 1);
 		modelview.rightMultiply(v2);
