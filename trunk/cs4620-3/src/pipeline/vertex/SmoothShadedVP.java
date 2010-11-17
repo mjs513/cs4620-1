@@ -1,7 +1,5 @@
 package pipeline.vertex;
 
-import java.util.Vector;
-
 import javax.vecmath.Color3f;
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -23,11 +21,9 @@ public class SmoothShadedVP extends ShadedVP
 {
 	protected Matrix4f m = new Matrix4f();
 	protected Matrix4f modelview = new Matrix4f();
-	protected Vector<Vector4f> lightSources;
-	protected Vector<Color3f> lightColors;
 
 	// Vectors needed to calculate specular and diffuse lighting contributions
-	Vector3f E = new Vector3f(), L = new Vector3f(), N = new Vector3f(), H = new Vector3f();
+	Vector3f E = new Vector3f(), L = new Vector3f(), N = new Vector3f(), H = new Vector3f(), V = new Vector3f();
 	
 	// Position of vertex and normal in eye coordinates
 	Vector4f v2 = new Vector4f(), n2 = new Vector4f();
@@ -50,34 +46,18 @@ public class SmoothShadedVP extends ShadedVP
 		m.leftCompose(pipe.viewportMatrix);
 	}
 
-	public void updateLightModel(Pipeline pipe)
-	{
-		lightSources = new Vector<Vector4f>();
-		lightColors = new Vector<Color3f>();
-		
-		for(PointLight light : Pipeline.lights) {
-			Vector4f p = new Vector4f(light.getPosition());
-			
-			p.w = 1;
-			
-			pipe.modelviewMatrix.rightMultiply(p);
-			
-			lightSources.add(p);
-			lightColors.add(light.getIntensity());
-		}
-	}
-
 	public void vertex(Vector3f v, Color3f c, Vector3f n, Vector2f t_ignore, Vertex output)
 	{
 		// Position of vextex in eye coordinates
 		v2.set(v.x, v.y, v.z, 1);
 		modelview.rightMultiply(v2);
+		V.set(v2.x, v2.y, v2.z);
 
 		// Normal in eye coordinates
 		n2.set(n.x, n.y, n.z, 0);
 		modelview.rightMultiply(n2);
 		
-		E.set(-v2.x, -v2.y, -v2.z);
+		E.set(-V.x, -V.y, -V.z);
 		E.normalize();
 		
 		N.set(n2.x, n2.y, n2.z);
@@ -93,6 +73,7 @@ public class SmoothShadedVP extends ShadedVP
 
 			// Vector from vertex to light source -- normalized
 			L.set(light.getPosition());
+			L.sub(V);
 			L.normalize();
 			
 			float dot = L.dot(N);

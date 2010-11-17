@@ -30,6 +30,9 @@ public class TexturedPhongFP extends PhongShadedFP
 		if(z >= fb.getZ(f.x, f.y)) {
 		    return;
 		}
+		
+		// Do not combine with fragment color
+		f.attrs[1] = f.attrs[2] = f.attrs[3] = 1;
 
 		Color3f c = colorForFragment(f);
 		
