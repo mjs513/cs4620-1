@@ -64,7 +64,7 @@ public class FragmentShadedVP extends VertexProcessor
 		output.attrs[1] = c.y;
 		output.attrs[2] = c.z;
 		
-		// Normal
+		// Point
 		output.attrs[3] = v2.x;
 		output.attrs[4] = v2.y;
 		output.attrs[5] = v2.z;
