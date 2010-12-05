@@ -123,6 +123,22 @@ public class Image {
 	}
 	
 	/**
+	 * Add to the color of a pixel.
+	 * @param inPixel Color value of pixel (inX,inY)
+	 * @param inX inX coordinate
+	 * @param inY inY Coordinate
+	 */
+	public void setSampledPixelColor(Color c, int x, int y, int nsamples)
+	{
+		int idx = calcIdx(x/nsamples, y/nsamples);
+		int ns2 = nsamples*nsamples;
+		
+		data[idx + 0] += (float) c.r/ns2;
+		data[idx + 1] += (float) c.g/ns2;
+		data[idx + 2] += (float) c.b/ns2;
+	}
+	
+	/**
 	 * Set the color of a pixel using rgb data.
 	 * @param inX inX coordinate
 	 * @param inY inY Coordinate

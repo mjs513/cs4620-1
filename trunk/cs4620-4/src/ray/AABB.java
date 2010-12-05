@@ -2,8 +2,8 @@ package ray;
 
 import java.util.Arrays;
 import java.util.Comparator;
+
 import ray.math.Point3;
-import ray.math.Vector3;
 import ray.surface.Surface;
 /**
  * Class for Axis-Aligned-Bounding-Box to speed up the intersection look up time.

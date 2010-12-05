@@ -40,17 +40,24 @@ public abstract class Shader {
 	 */
 	public abstract void shade(Color outColor, Scene scene, ArrayList<Light> lights, Vector3 toEye, 
 			IntersectionRecord record, int depth, double contribution, boolean internal);
+
+	Ray shadowRay = new Ray();
+	Vector3 v = new Vector3();
 	
 	/**
 	 * Utility method to compute shadows.
 	 */
 	protected boolean isShadowed(Scene scene, Light light, IntersectionRecord record) {
 		
-		Ray shadowRay = new Ray();
-		
 		// Setup the shadow ray to start at surface and end at light
 		shadowRay.origin.set(record.location);
 		shadowRay.direction.sub(light.position, record.location);
+
+		v.set(shadowRay.direction);
+		v.normalize();
+		v.scale(1e-10);
+		
+		shadowRay.origin.add(v);
 		
 		//Set the ray to end at the light
 		shadowRay.makeOffsetSegment(1.0);

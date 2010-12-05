@@ -29,6 +29,8 @@ public class Phong extends Shader {
 	public void setExponent(double exponent) { this.exponent = exponent; }
 	
 	public Phong() { }
+
+	Vector3 L = new Vector3(), H = new Vector3();
 	
 	/**
 	 * Calculate the BRDF value for this material at the intersection described in record.
@@ -43,7 +45,8 @@ public class Phong extends Shader {
 	 * @param internal You can ignore this parameter.
 	 */
 	public void shade(Color outColor, Scene scene, ArrayList<Light> lights, Vector3 toEye, 
-			IntersectionRecord record, int depth, double contribution, boolean internal) {	
+			IntersectionRecord record, int depth, double contribution, boolean internal)
+	{
 		// TODO(A): fill in this function.
 		// Hint: 
 		//   1. Add contribution to the final pixel from each light source. 
@@ -54,6 +57,32 @@ public class Phong extends Shader {
 		// Compute the specular scale factor
 		// Compute the BRDF value
 		
+		for(Light light : scene.getLights()) {
+			L.sub(light.position, record.location);
+			L.normalize();
+			
+			double dot = L.dot(record.normal);
+			
+			if(dot > 0) {
+				outColor.r += dot*light.intensity.r*diffuseColor.r;
+				outColor.g += dot*light.intensity.g*diffuseColor.g;
+				outColor.b += dot*light.intensity.b*diffuseColor.b;
+			}
+			
+			H.set(L);
+			H.add(toEye);
+			H.normalize();
+			
+			dot = H.dot(record.normal);
+			
+			if(dot > 0) {
+				dot = Math.pow(dot, exponent);
+				
+				outColor.r += dot*light.intensity.r*specularColor.r;
+				outColor.g += dot*light.intensity.g*specularColor.g;
+				outColor.b += dot*light.intensity.b*specularColor.b;
+			}
+		}
 	}
 	
 	/**

@@ -89,8 +89,8 @@ public class RayTracer {
 	 *
 	 * @param scene The scene to be rendered
 	 */
-	public static void renderImage(Scene scene) {
-
+	public static void renderImage(Scene scene)
+	{
 		// Get the output image
 		Image image = scene.getImage();
 		Camera cam = scene.getCamera();
@@ -107,26 +107,20 @@ public class RayTracer {
 		Ray ray = work.eyeRay;
 		Color pixelColor = work.pixelColor;
 		Color rayColor = work.rayColor;
-
-
-		int total = height * width;
+		
 		int counter = 0;
 		int lastShownPercent = 0;
-		int samples = scene.getSamples();
+		int nsamples = scene.getSamples();
+		int sampledW = nsamples*width, sampledH = nsamples*height;
+		int total = sampledW*sampledH;
 		
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
-				double pctx = (x + 0.5)/width, pcty = (y + 0.5)/height;
+		for(int y = 0; y < sampledH; ++y) {
+			double v = (y + 0.5)/sampledH - 0.5;
+			
+			for(int x = 0; x < sampledW; ++x) {
+				double u = (x + 0.5)/sampledW - 0.5;
 				
-				ray = cam.getRay(pctx, pcty);
-				
-				// TODO(B): Support Anti-Aliasing
-				
-				// TODO(A): Compute the "ray"
-				
-			    // solving the quadratic equation for t at the pts of intersection
-				// don't forget to check the discriminant and update the intersection record
-								
+				cam.getRay(ray, u, v);
 				
 				shadeRay(rayColor, scene, ray, work, scene.getLights(), 1, 1, false);
 				pixelColor.set(rayColor);
@@ -134,7 +128,7 @@ public class RayTracer {
 				//Gamma correct and clamp pixel values
 				pixelColor.gammaCorrect(2.2);
 				pixelColor.clamp(0, 1);
-				image.setPixelColor(pixelColor, x, y);
+				image.setSampledPixelColor(pixelColor, x, y, nsamples);
 				
 				counter ++;
 				if((int)(100.0 * counter / total) != lastShownPercent) {
@@ -161,28 +155,27 @@ public class RayTracer {
 	public static void shadeRay(Color outColor, Scene scene, Ray ray, Workspace workspace, 
 			ArrayList<Light> lights, int depth, double contribution, boolean internal)
 	{
-		// TODO(B): Set base case for recursive ray tracing
+		// Stop when contribution is low or depth is high
+		if((contribution < 1e-3) || (depth > 16)) {
+			return;
+		}
 		
 		// Reset the output color
-		double x = ray.direction.length() - 7;
-		outColor.set(x/3, x/3, x/3);
-		
+		outColor.set(0, 0, 0);
 		
 		// Rename all the workspace entries to avoid field accesses
 		// and alot of typing "workspace."
 		IntersectionRecord eyeRecord = workspace.eyeRecord;
 		Vector3 toEye = workspace.toEye;
-
-		// TODO(A): Find the first intersection of "ray" with the scene.
-		// Record intersection in eyeRecord. If it doesn't hit anything, just return (exit function).
 		
-		
-		// TODO(A): Compute "toEye" from eyeRecord.
-		// toEye is the ray from the hit position to the eye.
-
-
-		// Compute color
-		//eyeRecord.surface.getShader().shade(outColor, scene, lights, toEye, eyeRecord, depth, contribution, internal);
+		if(scene.getFirstIntersection(eyeRecord, ray)) {
+			toEye.sub(scene.getCamera().viewPoint, eyeRecord.location);
+			toEye.normalize();
+			
+			eyeRecord.surface.getShader().shade(outColor, scene, lights, toEye, eyeRecord, depth, contribution, internal);
+			
+			outColor.clamp(0, 1);
+		}
 	}
 
 }

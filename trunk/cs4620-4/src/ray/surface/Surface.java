@@ -45,14 +45,17 @@ public abstract class Surface {
 	public Point3 getAveragePosition() { return averagePosition; } 
 	public Point3 getMinBound() { return minBound; }
 	public Point3 getMaxBound() { return maxBound; }
-	
+
+	Ray ray = new Ray();
 	/**
 	 * Un-transform rayIn using tMatInv 
 	 * @param rayIn Input ray
 	 * @return tMatInv * rayIn
 	 */
-	public Ray untransformRay(Ray rayIn) {
-		Ray ray = new Ray(rayIn.origin, rayIn.direction);
+	public Ray untransformRay(Ray rayIn)
+	{
+		ray.set(rayIn.origin, rayIn.direction);
+		
 		ray.start = rayIn.start;
 		ray.end = rayIn.end;
 

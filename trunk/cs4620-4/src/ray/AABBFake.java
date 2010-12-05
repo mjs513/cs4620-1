@@ -1,9 +1,5 @@
 package ray;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import ray.math.Point3;
-import ray.math.Vector3;
 import ray.surface.Surface;
 /**
  * Provide a fake AABB that performs a linear search.
@@ -37,7 +33,8 @@ public class AABBFake {
 	public static AABBFake createTree(int left, int right) {
 		return new AABBFake(left, right);
 	}
-	
+
+	IntersectionRecord tmp = new IntersectionRecord();
 	/**
 	 * Set outRecord to the first intersection of ray with the scene. Return true
 	 * if there was an intersection and false otherwise. If no intersection was
@@ -50,7 +47,6 @@ public class AABBFake {
 	 */
 	public boolean intersect(IntersectionRecord outRecord, Ray rayIn, boolean anyIntersection) {
 		boolean ret = false;
-		IntersectionRecord tmp = new IntersectionRecord();
 		Ray ray = new Ray(rayIn.origin, rayIn.direction);
 		ray.start = rayIn.start;
 		ray.end = rayIn.end;
