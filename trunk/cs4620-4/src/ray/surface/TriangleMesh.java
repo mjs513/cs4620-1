@@ -2,9 +2,7 @@ package ray.surface;
 
 import ray.IntersectionRecord;
 import ray.Ray;
-import ray.math.Point2;
 import ray.math.Point3;
-import ray.math.Vector2;
 import ray.math.Vector3;
 import ray.shader.Shader;
 
@@ -55,7 +53,14 @@ public class TriangleMesh extends Surface {
 	 * @param ray the ray to intersect
 	 * @return true if the surface intersects the ray
 	 */
-	public boolean intersect(IntersectionRecord outRecord, Ray rayIn) {
+	public boolean intersect(IntersectionRecord outRecord, Ray rayIn)
+	{
+		// intersect with plane
+		// find dominant axis of normal
+		// project points of triangle to plane that has normal = 1 where domaxis, 0 else
+		//   (do by zeroing the dom axis)
+		// 
+		
 		// TODO(B): fill in this function.
 		// Hint: This object can be transformed by a transformation matrix.
 		// So the rayIn needs to be processed so that it is in the same coordinate as the object.
@@ -63,7 +68,8 @@ public class TriangleMesh extends Surface {
 		return false;
 	}
 
-	public void computeBoundingBox() {
+	public void computeBoundingBox()
+	{
 		// TODO(B): Compute the bounding box and store the result in
 		// averagePosition, minBound, and maxBound.
 	}

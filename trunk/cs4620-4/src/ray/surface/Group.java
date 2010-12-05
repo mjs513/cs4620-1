@@ -31,7 +31,8 @@ public class Group extends Surface {
 	 * @param cMatInv The inverse of cMat.
 	 * @param cMatTInv The inverse of the transpose of cMat.
 	 */
-	public void setTransformation(Matrix4 cMat, Matrix4 cMatInv, Matrix4 cMatTInv) {
+	public void setTransformation(Matrix4 cMat, Matrix4 cMatInv, Matrix4 cMatTInv)
+	{
 		// TODO(A): Compute tMat, tMatInv, tMatTInv using transformMat.
 		// Hint: We apply the transformation from bottom up the tree. 
 		// i.e. The child's transformation will be applied to objects before its parent's.
@@ -40,16 +41,19 @@ public class Group extends Surface {
 	}
 	
 	
-	public void setTranslate(Vector3 T) { 
+	public void setTranslate(Vector3 T)
+	{ 
 		tmp.setTranslate(T);
 		transformMat.rightCompose(tmp);
 	}
 	
-	public void setRotate(Point3 R) {
+	public void setRotate(Point3 R)
+	{
 		// TODO(A): add rotation to transformMat
 	}
 	
-	public void setScale(Vector3 S) { 
+	public void setScale(Vector3 S)
+	{ 
 		// TODO(A): add scale to transformMat
 	}
 	
