@@ -21,6 +21,8 @@ public class Lambertian extends Shader {
 	public void setDiffuseColor(Color inDiffuseColor) { diffuseColor.set(inDiffuseColor); }
 	
 	public Lambertian() { }
+
+	Vector3 L = new Vector3();
 	
 	/**
 	 * Calculate the BRDF value for this material at the intersection described in record.
@@ -35,16 +37,27 @@ public class Lambertian extends Shader {
 	 * @param internal You can ignore this parameter.
 	 */
 	public void shade(Color outColor, Scene scene, ArrayList<Light> lights, Vector3 toEye, 
-			IntersectionRecord record, int depth, double contribution, boolean internal) {
+			IntersectionRecord record, int depth, double contribution, boolean internal)
+	{
 		// TODO(A): fill in this function.
 		// Hint: 
 		//   1. Add contribution to the final pixel from each light source. 
 		//   2. See how to use isShadowed().
 		
-		// Get the light direction
-		// Compute the BRDF value
-		
-		
+		for(Light light : scene.getLights()) {
+			if(!isShadowed(scene, light, record)) {
+				L.sub(light.position, record.location);
+				L.normalize();
+				
+				double dot = L.dot(record.normal);
+				
+				if(dot > 0) {
+					outColor.r += dot*light.intensity.r*diffuseColor.r;
+					outColor.g += dot*light.intensity.g*diffuseColor.g;
+					outColor.b += dot*light.intensity.b*diffuseColor.b;
+				}
+			}
+		}
 	}
 	
 	/**

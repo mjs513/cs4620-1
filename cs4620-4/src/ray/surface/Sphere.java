@@ -10,8 +10,8 @@ import ray.math.Vector3;
  *
  * @author ags
  */
-public class Sphere extends Surface {
-	
+public class Sphere extends Surface
+{
 	/** The center of the sphere. */
 	protected final Point3 center = new Point3();
 	public void setCenter(Point3 center) { this.center.set(center); }
@@ -21,6 +21,9 @@ public class Sphere extends Surface {
 	public void setRadius(double radius) { this.radius = radius; }
 	
 	public Sphere() { }
+
+	Vector3 v = new Vector3();
+	Point3 p = new Point3();
 	
 	/**
 	 * Tests this surface for intersection with ray. If an intersection is found
@@ -32,15 +35,59 @@ public class Sphere extends Surface {
 	 * @param ray the ray to intersect
 	 * @return true if the surface intersects the ray
 	 */
-	public boolean intersect(IntersectionRecord outRecord, Ray rayIn) {
-		// TODO(A): fill in this function.
-		// Hint: This object can be transformed by a transformation matrix.
-		// So the rayIn needs to be processed so that it is in the same coordinate as the object.
+	public boolean intersect(IntersectionRecord outRecord, Ray rayIn)
+	{
+		Ray ray = untransformRay(rayIn);
+		double A, B, C;
 		
-		return false;
+		// A = dot(rayD, rayD)
+		v.set(ray.direction);
+		A = v.dot(v);
+		
+		// B = 2*dot(rayD, rayP - center)
+		v.sub(ray.origin, center);
+		B = 2*ray.direction.dot(v);
+		
+		// C = dot(rayP - center, rayP - center) - R*R
+		C = v.dot(v) - radius*radius;
+		
+		double discr = B*B - 4*A*C;
+		
+		if(discr < 0) {
+			return false;
+		}
+		
+		discr = Math.sqrt(discr);
+		
+		double t2 = (-B - discr)/(2*A), t1 = (-B + discr)/(2*A);
+		
+		// t2 positive and before t1
+		if((t2 > 0) && (t2 < t1)) {
+			t1 = t2;
+		}
+		
+		// Intersection must be positive
+		if(t1 < 0) {
+			return false;
+		}
+		
+		rayIn.evaluate(p, t1);
+		
+		outRecord.surface = this;
+		outRecord.t = t1;
+		outRecord.location.set(p);
+		
+		// n = p - center
+		v.sub(p, center);
+		v.normalize();
+		
+		outRecord.normal.set(v);
+		
+		return true;
 	}
 	
-	public void computeBoundingBox() {
+	public void computeBoundingBox()
+	{
 		// TODO(B): Compute the bounding box and store the result in
 		// averagePosition, minBound, and maxBound.
 	}

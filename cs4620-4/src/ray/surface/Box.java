@@ -25,7 +25,8 @@ public class Box extends Surface {
 	 * @param ray the ray to intersect
 	 * @return true if the surface intersects the ray
 	 */
-	public boolean intersect(IntersectionRecord outRecord, Ray rayIn) {
+	public boolean intersect(IntersectionRecord outRecord, Ray rayIn)
+	{
 		// TODO(A): fill in this function.
 		// Hint: This object can be transformed by a transformation matrix.
 		// So the rayIn needs to be processed so that it is in the same coordinate as the object.
@@ -34,7 +35,8 @@ public class Box extends Surface {
 		return false;
 	}
 
-	public void computeBoundingBox() {
+	public void computeBoundingBox()
+	{
 		// TODO(B): Compute the bounding box and store the result in
 		// averagePosition, minBound, and maxBound.
 		// Hint: The bounding box is not the same as just minPt and maxPt, because 
