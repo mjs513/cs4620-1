@@ -123,11 +123,13 @@ public class RayTracer {
 				cam.getRay(ray, u, v);
 				
 				shadeRay(rayColor, scene, ray, work, scene.getLights(), 1, 1, false);
+				
 				pixelColor.set(rayColor);
 				
 				//Gamma correct and clamp pixel values
 				pixelColor.gammaCorrect(2.2);
 				pixelColor.clamp(0, 1);
+				
 				image.setSampledPixelColor(pixelColor, x, y, nsamples);
 				
 				counter ++;
@@ -173,8 +175,6 @@ public class RayTracer {
 			toEye.normalize();
 			
 			eyeRecord.surface.getShader().shade(outColor, scene, lights, toEye, eyeRecord, depth, contribution, internal);
-			
-			outColor.clamp(0, 1);
 		}
 	}
 

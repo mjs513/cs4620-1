@@ -45,7 +45,6 @@ public class Camera {
 	protected final Vector3 basisW = new Vector3();
 	protected final Vector3 centerDir = new Vector3();
 	protected final Vector3 projCenter = new Vector3();
-	protected final Vector3 viewRight = new Vector3();
 	
 	// Has the view been initialized?
 	protected boolean initialized = false;
@@ -57,8 +56,6 @@ public class Camera {
 	{
 		viewUp.normalize();
 		viewDir.normalize();
-		viewRight.cross(viewDir, viewUp);
-		viewRight.normalize();
 		
 		Vector3 v = new Vector3();
 		Point3 planeP = new Point3();
