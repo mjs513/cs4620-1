@@ -20,6 +20,7 @@ public class Group extends Surface {
 	/** A shared temporary matrix */
 	static Matrix4 tmp = new Matrix4();
 	
+	
 	public Group() {
 		transformMat = new Matrix4();
 		transformMat.setIdentity();
@@ -33,10 +34,32 @@ public class Group extends Surface {
 	 */
 	public void setTransformation(Matrix4 cMat, Matrix4 cMatInv, Matrix4 cMatTInv)
 	{
-		// TODO(A): Compute tMat, tMatInv, tMatTInv using transformMat.
-		// Hint: We apply the transformation from bottom up the tree. 
-		// i.e. The child's transformation will be applied to objects before its parent's.
+		for(Surface s : objs) {
+			Matrix4 sm = s.tMat, sminv = s.tMatInv, smtinv = s.tMatTInv;
 			
+			if(sm == null) {
+				sm = s.tMat = new Matrix4();
+			}
+			
+			// Compose: SM = CMAT*SM
+			sm.rightCompose(cMat);
+
+			if(sminv == null) {
+				sminv = s.tMatInv = new Matrix4();
+			}
+			
+			// Invert SM
+			sminv.invert(sm);
+
+			if(smtinv == null) {
+				smtinv = s.tMatTInv = new Matrix4();
+			}
+			
+			// Invert the transposed SM
+			smtinv.transpose(sm);
+			smtinv.invert(smtinv);
+		}
+		
 		computeBoundingBox();
 	}
 	

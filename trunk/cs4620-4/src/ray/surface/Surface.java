@@ -46,7 +46,8 @@ public abstract class Surface {
 	public Point3 getMinBound() { return minBound; }
 	public Point3 getMaxBound() { return maxBound; }
 
-	Ray ray = new Ray();
+	private Ray ray = new Ray();
+	
 	/**
 	 * Un-transform rayIn using tMatInv 
 	 * @param rayIn Input ray
