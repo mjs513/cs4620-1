@@ -77,7 +77,7 @@ public class Camera {
 		v.scale(viewUp.dot(planeN));
 		basisV.sub(v);
 		basisV.normalize();
-		basisV.scale(viewWidth);
+		basisV.scale(viewHeight);
 		
 		// w = planeN
 		basisW.set(planeN);
@@ -85,7 +85,7 @@ public class Camera {
 		// u = cross(v, w)
 		basisU.cross(basisV, basisW);
 		basisU.normalize();
-		basisU.scale(viewHeight);
+		basisU.scale(viewWidth);
 		
 		projCenter.set(planeP);
 
