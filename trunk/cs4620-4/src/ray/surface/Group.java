@@ -34,6 +34,8 @@ public class Group extends Surface {
 	 */
 	public void setTransformation(Matrix4 cMat, Matrix4 cMatInv, Matrix4 cMatTInv)
 	{
+		System.out.println("Group.setTransformation(" + cMat + ")");
+		
 		for(Surface s : objs) {
 			Matrix4 sm = s.tMat, sminv = s.tMatInv, smtinv = s.tMatTInv;
 			
@@ -65,19 +67,38 @@ public class Group extends Surface {
 	
 	
 	public void setTranslate(Vector3 T)
-	{ 
+	{
+		System.out.println("Group.setTranslate(" + T + ")");
+		
 		tmp.setTranslate(T);
 		transformMat.rightCompose(tmp);
 	}
 	
+	private Vector3 v = new Vector3();
+	
 	public void setRotate(Point3 R)
 	{
-		// TODO(A): add rotation to transformMat
+		System.out.println("Group.setRotate(" + R + ")");
+		
+		v.set(1, 0, 0);
+		tmp.setRotate(R.x, v);
+		transformMat.rightCompose(tmp);
+		
+		v.set(0, 1, 0);
+		tmp.setRotate(R.y, v);
+		transformMat.rightCompose(tmp);
+
+		v.set(0, 0, 1);
+		tmp.setRotate(R.z, v);
+		transformMat.rightCompose(tmp);
 	}
 	
 	public void setScale(Vector3 S)
 	{ 
-		// TODO(A): add scale to transformMat
+		System.out.println("Group.setScale(" + S + ")");
+		
+		tmp.setScale(S);
+		transformMat.rightCompose(tmp);
 	}
 	
 	public void addSurface(Surface a) {

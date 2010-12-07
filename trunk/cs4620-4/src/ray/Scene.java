@@ -5,7 +5,6 @@ import java.util.Iterator;
 
 import ray.light.Light;
 import ray.math.Matrix4;
-import ray.math.Point3;
 import ray.shader.Shader;
 import ray.surface.Surface;
 
