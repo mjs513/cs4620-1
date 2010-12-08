@@ -40,43 +40,47 @@ public class Glazed extends Shader {
 	 * @param internal You can ignore this for glazed.
 	 */
 	public void shade(Color outColor, Scene scene, ArrayList<Light> lights, Vector3 toEye, 
-			IntersectionRecord record, int depth, double contribution, boolean internal) {
-		// TODO(B): fill in this function.
-		//Implement Fresnel equations, make a new Workspace and recursive call to shadeRay
+			IntersectionRecord record, int depth, double contribution, boolean internal)
+	{
 		
-		// Schlick's approximation to Fresnel
-		double r0 = (refractiveIndex-1)/(refractiveIndex+1);
-		r0 = r0*r0;
-		
-		
-		substrate.shade(outColor, scene, lights, toEye, record, depth, contribution, internal);
-		/*
 		// r = 2(n.v)n - v
 		double d = 2.0*(record.normal.dot(toEye));
-		Vector3 reflectedVector = new Vector3();
-		reflectedVector.set(record.normal);
-		reflectedVector.scale(d);
-		reflectedVector.sub(toEye);*/
+		Vector3 reflectedRay = new Vector3();
 		
-		Vector3 r = new Vector3();
-		
-		r.set(record.normal);
-		r.scale(2);
-		r.add(toEye);
-		
-		//System.out.println(reflectedVector);
-		
-		Ray reflectedRay = new Ray(record.location, r);
+		reflectedRay.set(record.normal);
+		reflectedRay.scale(d);
+		reflectedRay.sub(toEye);
 		
 		Workspace workspace = new Workspace();
+		Ray ray = workspace.eyeRay;
 		
-		// Increment depth
-		depth++;
+		ray.set(record.location, reflectedRay);
+		ray.direction.normalize();
+		ray.makeOffsetRay();
 		
+		// Schlick's approximation to Fresnel
 		
-		RayTracer.shadeRay(workspace.color, scene, reflectedRay, workspace, lights, depth, contribution*0.75, internal);
+		double cos = ray.direction.dot(record.normal);
+		double schlick = 0;
 		
-		outColor.add(workspace.color);
+		if(cos >= 0) {
+			double temp = 1.0 - ray.direction.dot(record.normal);
+			double r0 = (refractiveIndex - 1.0)/(refractiveIndex + 1.0);
+			
+			r0 = r0*r0;
+			
+			schlick = r0 + (1.0 - r0)*temp*temp*temp*temp*temp;
+		}
 		
+		if(schlick > 0) {
+			RayTracer.shadeRay(workspace.rayColor, scene, ray, workspace, lights, depth + 1, contribution, internal);
+		}
+		
+		substrate.shade(outColor, scene, lights, toEye, record, depth, contribution, internal);
+		
+		workspace.rayColor.scale(schlick);
+		outColor.scale(1 - schlick);
+		
+		outColor.add(workspace.rayColor);
 	}
 }
