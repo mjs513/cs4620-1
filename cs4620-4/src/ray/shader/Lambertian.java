@@ -39,12 +39,7 @@ public class Lambertian extends Shader {
 	public void shade(Color outColor, Scene scene, ArrayList<Light> lights, Vector3 toEye, 
 			IntersectionRecord record, int depth, double contribution, boolean internal)
 	{
-		// TODO(A): fill in this function.
-		// Hint: 
-		//   1. Add contribution to the final pixel from each light source. 
-		//   2. See how to use isShadowed().
-		
-		for(Light light : scene.getLights()) {
+		for(Light light : lights) {
 			if(!isShadowed(scene, light, record)) {
 				L.sub(light.position, record.location);
 				L.normalize();

@@ -43,6 +43,12 @@ public class TriangleMesh extends Surface {
 		this.setShader(material);
 	}
 
+	Vector3 planeN = new Vector3();
+	Vector3 v21 = new Vector3(), v31 = new Vector3();
+	Vector3 v = new Vector3();
+	Vector3 v1 = new Vector3(), v2 = new Vector3(), v3 = new Vector3();
+	Point3 p = new Point3();
+	
 	/**
 	 * Tests this surface for intersection with ray. If an intersection is found
 	 * record is filled out with the information about the intersection and the
@@ -53,27 +59,109 @@ public class TriangleMesh extends Surface {
 	 * @param ray the ray to intersect
 	 * @return true if the surface intersects the ray
 	 */
-	public boolean intersect(IntersectionRecord outRecord, Ray rayIn)
+	public boolean intersect(IntersectionRecord record, Ray rayIn)
 	{
-		// intersect with plane
-		// find dominant axis of normal
-		// project points of triangle to plane that has normal = 1 where domaxis, 0 else
-		//   (do by zeroing the dom axis)
-		// 
+		Ray ray = untransformRay(rayIn);
+		Point3 p1 = owner.getVertex(index[0]), p2 = owner.getVertex(index[1]), p3 = owner.getVertex(index[2]);
 		
-		// TODO(B): fill in this function.
-		// Hint: This object can be transformed by a transformation matrix.
-		// So the rayIn needs to be processed so that it is in the same coordinate as the object.
-		
-		return false;
-	}
+		// planeN = cross(p2 - p1, p3 - p1);   planeP = p1
+		v21.sub(p2, p1);
+		v31.sub(p3, p1);
+		planeN.cross(v21, v31);
 
+		double t;
+		
+		// t = dot(planeN, planeP - rayP)/dot(planeN, rayD)
+		v.sub(p1, ray.origin);
+		t = planeN.dot(v)/planeN.dot(ray.direction);
+		
+		ray.evaluate(p, t);
+		/*
+		// v[i] = p[i] - p
+		v1.sub(p1, p);
+		v2.sub(p2, p);
+		v3.sub(p3, p);
+		
+		// Test if point is inside: dot(planeN, cross(v[i], v[i + 1])) >= 0
+		// i = 1
+		v.cross(v1, v2);
+		if(planeN.dot(v) < 0) {
+			return false;
+		}
+		
+		// i = 2
+		v.cross(v2, v3);
+		if(planeN.dot(v) < 0) {
+			return false;
+		}
+		
+		// i = 3
+		v.cross(v3, v1);
+		if(planeN.dot(v) < 0) {
+			return false;
+		}*/
+		
+		double a1, a2, a3;
+		double detT = (p1.x - p3.x)*(p2.y - p3.y) - (p2.x - p3.x)*(p1.y - p3.y);
+		
+		a1 = ((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y))/detT;
+		a2 = ((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y))/detT;
+		a3 = 1 - a1 - a2;
+		
+		// Barycentric coordinates must sum 1 and be all positive
+		if((a1 < 0) || (a2 < 0) || (a3 < 0)) {
+			return false;
+		}
+
+		record.surface = this;
+		record.t = t;
+		
+		rayIn.evaluate(record.location, record.t);
+		
+		// v[i] = a[i]*normal[i]
+		v1.set(owner.getNormal(index[0]));
+		v1.scale(a1);
+
+		v2.set(owner.getNormal(index[1]));
+		v2.scale(a2);
+
+		v3.set(owner.getNormal(index[2]));
+		v3.scale(a3);
+		
+		// normal = sum(a[i]*normal[i]); i = 0,1,2
+		record.normal.set(0, 0, 0);
+		record.normal.add(v1);
+		record.normal.add(v2);
+		record.normal.add(v3);
+		
+		return true;
+	}
+	
 	public void computeBoundingBox()
 	{
-		// TODO(B): Compute the bounding box and store the result in
-		// averagePosition, minBound, and maxBound.
-	}
+		Point3 min = new Point3(1,1,1), max = new Point3(1,1,1);
+		
+		for(int i = 0; i < 3; ++i) {
+			for(int j = 0; j < 3; ++j) {
+				double x = owner.getVertex(index[i]).getE(j);
 
+				if(x < min.getE(j)) {
+					min.setE(j, x);
+				}
+
+				if(x > max.getE(j)) {
+					max.setE(j, x);
+				}
+			}
+		}
+
+		minBound = new Point3();
+		maxBound = new Point3();
+		averagePosition = new Point3();
+		
+		Box.boundingBoxOfTransformedBox(min, max, tMat, minBound, maxBound, averagePosition);
+	}
+	
 	/**
 	 * @see Object#toString()
 	 */
