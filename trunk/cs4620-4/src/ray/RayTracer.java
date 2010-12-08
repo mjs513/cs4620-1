@@ -158,7 +158,7 @@ public class RayTracer {
 			ArrayList<Light> lights, int depth, double contribution, boolean internal)
 	{
 		// Stop when contribution is low or depth is high
-		if((contribution < 1e-3) || (depth > 16)) {
+		if((contribution < 1e-2) || (depth > 10)) {
 			return;
 		}
 		
@@ -171,7 +171,7 @@ public class RayTracer {
 		Vector3 toEye = workspace.toEye;
 		
 		if(scene.getFirstIntersection(eyeRecord, ray)) {
-			toEye.sub(scene.getCamera().viewPoint, eyeRecord.location);
+			toEye.sub(ray.origin, eyeRecord.location);
 			toEye.normalize();
 			
 			eyeRecord.surface.getShader().shade(outColor, scene, lights, toEye, eyeRecord, depth, contribution, internal);
