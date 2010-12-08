@@ -44,13 +44,28 @@ public class Glazed extends Shader {
 		// TODO(B): fill in this function.
 		//Implement Fresnel equations, make a new Workspace and recursive call to shadeRay
 		
+		substrate.shade(outColor, scene, lights, toEye, record, depth, contribution, internal);
+		
+		//Color thisOutColor = new Color(outColor);
+		
 		// r = 2(n.v)n - v
 		double d = 2.0*(record.normal.dot(toEye));
-		Vector3 reflectedRay = new Vector3();
-		reflectedRay.set(record.normal);
-		reflectedRay.scale(d);
-		reflectedRay.sub(toEye);
+		Vector3 reflectedVector = new Vector3();
+		reflectedVector.set(record.normal);
+		reflectedVector.scale(d);
+		reflectedVector.sub(toEye);
 		
+		Ray reflectedRay = new Ray(record.location, reflectedVector);
+		
+		Workspace workspace = new Workspace();
+		
+		// Increment depth
+		depth++;
+		
+		// Schlick's approximation to Fresnel
+		
+		
+		RayTracer.shadeRay(workspace.color, scene, reflectedRay, workspace, lights, depth, contribution, internal);
 		
 		
 		
