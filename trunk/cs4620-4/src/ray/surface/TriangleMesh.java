@@ -134,6 +134,8 @@ public class TriangleMesh extends Surface {
 		record.normal.add(v2);
 		record.normal.add(v3);
 		
+		record.normal.normalize();
+		
 		return true;
 	}
 	
