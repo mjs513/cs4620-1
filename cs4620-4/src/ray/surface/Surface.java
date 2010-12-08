@@ -69,6 +69,7 @@ public abstract class Surface {
 		tMat = a;
 		tMatInv = aInv;
 		tMatTInv = aTInv;
+		
 		computeBoundingBox();
 	}
 	

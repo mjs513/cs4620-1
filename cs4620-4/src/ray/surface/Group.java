@@ -34,10 +34,6 @@ public class Group extends Surface {
 	 */
 	public void setTransformation(Matrix4 cMat, Matrix4 cMatInv, Matrix4 cMatTInv)
 	{
-		// TODO(A): Compute tMat, tMatInv, tMatTInv using transformMat.
-        // Hint: We apply the transformation from bottom up the tree. 
-		// i.e. The child's transformation will be applied to objects before its parent's.
-		
 		tMat = new Matrix4();
 		tMatInv = new Matrix4();
 		tMatTInv = new Matrix4();
@@ -47,30 +43,24 @@ public class Group extends Surface {
 		tMatTInv.transpose(tMat);
 		tMatTInv.invert();
 		
-		// TODO: implementei aqui... não sei o que eu fiz direito
 		for(Surface s : objs) {
+			Matrix4 m = new Matrix4(), mInv = new Matrix4(), mTInv = new Matrix4();
 			
-			if(s.tMat == null) {
-				s.tMat = new Matrix4();
+			if(s.tMat != null) {
+				m.set(s.tMat);
 			}
 			
-			if(s.tMatInv == null) {
-				s.tMatInv = new Matrix4();
-			}
-
-			if(s.tMatTInv == null) {
-				s.tMatTInv = new Matrix4();
-			}
+			// Compose surface transformation with this.tMat
+			tMat.rightMultiply(m, m);
 			
-			// Compose: s.tMat = cMat*transformMat*s.tMat
-			tMat.rightMultiply(s.tMat, s.tMat);
-
-			// Invert SM
-			s.tMatInv.invert(s.tMat);
-
-			// Invert the transposed SM
-			s.tMatTInv.transpose(s.tMat);
-			s.tMatTInv.invert(s.tMatTInv);
+			// Invert surface transformation
+			mInv.invert(m);
+			
+			// Invert the transpose of the surface transformation
+			mTInv.transpose(m);
+			mTInv.invert();
+			
+			s.setTransformation(m, mInv, mTInv);
 		}
 		
 		computeBoundingBox();
@@ -79,7 +69,6 @@ public class Group extends Surface {
 	
 	public void setTranslate(Vector3 T)
 	{
-		// TODO: esse já tava implementado assim
 		tmp.setTranslate(T);
 		transformMat.rightCompose(tmp);
 	}
@@ -88,9 +77,6 @@ public class Group extends Surface {
 	
 	public void setRotate(Point3 R)
 	{
-		// TODO(A): add rotation to transformMat
-		// implementei esse como no setTranslate
-
 		v.set(0, 0, 1);
 		tmp.setRotate(R.z, v);
 		transformMat.rightCompose(tmp);
@@ -106,8 +92,6 @@ public class Group extends Surface {
 	
 	public void setScale(Vector3 S)
 	{
-		// TODO(A): add scale to transformMat
-		// TODO: implementei esse como no setTranslate
 		tmp.setScale(S);
 		transformMat.rightCompose(tmp);
 	}
@@ -121,7 +105,11 @@ public class Group extends Surface {
 	public void computeBoundingBox() {	}
 
 	public void appendRenderableSurfaces (ArrayList<Surface> in) {
-		for (Iterator<Surface> iter = objs.iterator(); iter.hasNext();)
-			iter.next().appendRenderableSurfaces(in);
+		System.out.println("appendRenderableSurfaces()");
+		for (Iterator<Surface> iter = objs.iterator(); iter.hasNext();) {
+			Surface s = iter.next();
+			System.out.println("  >> " + s);
+			s.appendRenderableSurfaces(in);
+		}
 	}
 }

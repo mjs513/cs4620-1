@@ -78,14 +78,14 @@ public class Mesh extends Surface
 	
 	public void setTransformation(Matrix4 cMat, Matrix4 cMatInv, Matrix4 cMatTInv)
 	{
-			tMat = cMat;
-			tMatInv = cMatInv;
-			tMatTInv = cMatTInv;
-			for(int i=0;i<numTriangles;i++) {
-				triangles[i].setTransformation(cMat, cMatInv, cMatTInv);
-			}
-			computeBoundingBox();
+		tMat = cMat;
+		tMatInv = cMatInv;
+		tMatTInv = cMatTInv;
+		for(int i=0;i<numTriangles;i++) {
+			triangles[i].setTransformation(cMat, cMatInv, cMatTInv);
 		}
+		computeBoundingBox();
+	}
 	
 	/**
 	 * Sets the mesh data and builds the triangle array.
@@ -212,7 +212,8 @@ public class Mesh extends Surface
 	public void computeBoundingBox() {	}
 	
 	public void appendRenderableSurfaces (ArrayList<Surface> in) {
-		for (TriangleMesh triangle : triangles)
+		for (TriangleMesh triangle : triangles) {
 			in.add(triangle);
+		}
 	}
 }

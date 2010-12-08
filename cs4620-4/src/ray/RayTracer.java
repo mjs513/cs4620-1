@@ -64,6 +64,8 @@ public class RayTracer {
 			ArrayList<String> fileLists = getFileLists(args[ctr]);
 			
 			for (String inputFilename : fileLists) {
+				System.out.println("Input file: " + inputFilename);
+				
 				String outputFilename = inputFilename + ".png";
 	
 				// Parse the input file
@@ -146,7 +148,7 @@ public class RayTracer {
 				+ (totalTime / 1000.0) + " seconds");
 
 	}
-
+	
 	/**
 	 * This method returns the color along a single ray in outColor.
 	 *

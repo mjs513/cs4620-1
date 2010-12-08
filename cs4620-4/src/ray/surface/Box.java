@@ -98,7 +98,7 @@ public class Box extends Surface {
 		
 		tMatTInv.rightMultiply(record.normal);
 		record.normal.normalize();
-
+		
 		return true;
 	}
 
@@ -118,6 +118,15 @@ public class Box extends Surface {
 		return "Box ";
 	}
 	
+	/**
+	 * 
+	 * @param boxMin	Min of input points
+	 * @param boxMax	Max of input points
+	 * @param m			Object transformation
+	 * @param outMin	Output: minBounds
+	 * @param outMax	Output: maxBounds
+	 * @param outAvg	Output: averagePosition
+	 */
 	public static void boundingBoxOfTransformedBox(Point3 boxMin, Point3 boxMax, Matrix4 m, Point3 outMin,
 			Point3 outMax, Point3 outAvg)
 	{
@@ -128,7 +137,7 @@ public class Box extends Surface {
 		
 		outMax.set(1,1,1);
 		outMax.scale(Double.NEGATIVE_INFINITY);
-		
+
 		// Transform each point of the cube and get axis aligned min and max values
 		for(int i = 0; i <= 1; ++i) {
 			for(int j = 0; j <= 1; ++j) {
@@ -157,13 +166,12 @@ public class Box extends Surface {
 		// avg = min + (max - min)/2
 		diff.sub(outMax, outMin);
 		diff.scale(0.5);
-		outAvg = new Point3(outMin);
+		outAvg.set(outMin);
 		outAvg.add(diff);
 	}
 
 	private static Vector3 stmin = new Vector3(), stmax = new Vector3();
 	private static Vector3 stfirst = new Vector3(), stsecond = new Vector3();
-	private static Vector3 sinv = new Vector3();
 	
 	public static boolean intersects(Ray ray, Point3 minPt, Point3 maxPt)
 	{
@@ -186,16 +194,10 @@ public class Box extends Surface {
 			if(tminv < tmaxv) {
 				stfirst.setE(i, tminv);
 				stsecond.setE(i, tmaxv);
-			
-				// First normal is from min plane
-				sinv.setE(i, -1);
 			}
 			else {
 				stsecond.setE(i, tminv);
 				stfirst.setE(i, tmaxv);
-				
-				// First normal is from max plane
-				sinv.setE(i, 1);
 			}
 		}
 		

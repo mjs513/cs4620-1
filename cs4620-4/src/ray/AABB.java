@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import ray.math.Point3;
+import ray.surface.Box;
 import ray.surface.Surface;
 /**
  * Class for Axis-Aligned-Bounding-Box to speed up the intersection look up time.
@@ -17,6 +18,8 @@ public class AABB
 	 *  (minPt.x, minPt.y, minPt.z) - (maxBound.x, maxBound.y, maxBound.z). */
 	Point3 minBound, maxBound;
 	
+	int ntotal = 0,nfailed = 0;
+	
 	/** child[0] is the left child. child[1] is the right child. */
 	AABB leftChild, rightChild;
 	
@@ -26,13 +29,13 @@ public class AABB
 	/** left and right are indices for []surfaces,
 	 * meaning that this tree node contains a set of surfaces 
 	 * from surfaces[left] to surfaces[right-1]. */
-	int leftIndex, rightIndex;
+	int begin, end;
 	
 	/** A comparator class that can sort surfaces by x, y, or z coordinate. */
 	static MyComparator cmp = new MyComparator();
 	
 	
-	public AABB(boolean ___, Point3 minBound, Point3 maxBound, AABB leftChild, AABB rightChild, int leftIndex, int rightIndex)
+	public AABB(boolean ___, Point3 minBound, Point3 maxBound, AABB leftChild, AABB rightChild, int begin, int end)
 	{
 		this.minBound = minBound;
 		this.maxBound = maxBound;
@@ -40,8 +43,8 @@ public class AABB
 		this.leftChild = leftChild;
 		this.rightChild = rightChild;
 		
-		this.leftIndex = leftIndex;
-		this.rightIndex = rightIndex;
+		this.begin = begin;
+		this.end = end;
 	}
 	
 	public AABB() {	}
@@ -65,21 +68,15 @@ public class AABB
 	 * @param left The left index of []surfaces
 	 * @param left The right index of []surfaces
 	 */
-	public static AABB createTree(int left, int right)
+	public static AABB createTree(int begin, int end)
 	{
-		// TODO(B): fill in this function.
-		
-		// ==== Step 1 ====
-		// Find out the BIG bounding box enclosing all the surfaces in the range [left, right)
-		// and store them in minB and maxB.
-		// Hint: To find the bounding box for each surface, use getMinBound() and getMaxBound() */
 		Point3 min = new Point3(1,1,1); 
 		Point3 max = new Point3(1,1,1);
 		
 		min.scale(Double.POSITIVE_INFINITY);
 		max.scale(Double.NEGATIVE_INFINITY);
 		
-		for(int i = left; i <= right; ++i) {
+		for(int i = begin; i < end; ++i) {
 			Point3 smin = surfaces[i].getMinBound(), smax = surfaces[i].getMaxBound();
 			
 			for(int j = 0; j < 3; ++j) {
@@ -94,11 +91,11 @@ public class AABB
 				}
 			}
 		}
-
+		
 		AABB leftChild = null, rightChild = null;
 		
 		// Enough surfaces to justify using the tree
-		if(right - left > 9) {
+		if(end - begin > 10) {
 			int maxDiffIndex = -1;
 			double maxDiff = Double.NEGATIVE_INFINITY;
 			
@@ -114,19 +111,20 @@ public class AABB
 			
 			cmp.setIndex(maxDiffIndex);
 			
-			Arrays.sort(surfaces, left, right, cmp);
+			Arrays.sort(surfaces, begin, end, cmp);
 			
-			int middle = left + (right - left)/2;
+			int middle = begin + (end - begin)/2;
 			
-			leftChild = createTree(left, middle);
-			rightChild = createTree(middle + 1, right);
+			leftChild = createTree(begin, middle);
+			rightChild = createTree(middle, end);
 		}
-
+		
 		// Reminder: First parameter is ignored
-		return new AABB(false, min, max, leftChild, rightChild, left, right);
+		return new AABB(false, min, max, leftChild, rightChild, begin, end);
 	}
 
-	IntersectionRecord tmp = new IntersectionRecord();
+	IntersectionRecord tmp = new IntersectionRecord(), tmp2 = new IntersectionRecord();
+	Ray ray = new Ray();
 	
 	/**
 	 * Set outRecord to the first intersection of ray with the scene. Return true
@@ -140,18 +138,31 @@ public class AABB
 	 */
 	public boolean intersect(IntersectionRecord outRecord, Ray rayIn, boolean anyIntersection)
 	{
+		++ntotal;
+		
+		if(!Box.intersects(rayIn, minBound, maxBound)) {
+			++nfailed;
+			
+			return false;
+		}
+		
 		// Leaf uses linear search
 		if(isLeaf()) {
 			boolean ret = false;
-			Ray ray = new Ray(rayIn.origin, rayIn.direction);
+			
+			ray.set(rayIn.origin, rayIn.direction);
 			ray.start = rayIn.start;
 			ray.end = rayIn.end;
 			
-			for(int i = leftIndex; i < rightIndex; i++) {
+			for(int i = begin; i < end; i++) {
 				if(surfaces[i].intersect(tmp, ray) && (tmp.t < ray.end) && (tmp.t > ray.start) ) {
-					if(anyIntersection) return true;
+					if(anyIntersection) {
+						return true;
+					}
+					
 					ret = true;
 					ray.end = tmp.t;
+					
 					if(outRecord != null) {
 						outRecord.set(tmp);
 					}
@@ -161,24 +172,33 @@ public class AABB
 			return ret;
 		}
 		
-		//
+		// Intersect with leaves
 		else {
+			boolean ret = false;
 			
+			ray.set(rayIn.origin, rayIn.direction);
+			ray.start = rayIn.start;
+			ray.end = rayIn.end;
 			
-			return false;
+			if(leftChild.intersect(tmp, ray, anyIntersection)) {
+				ret = true;
+				ray.end = tmp.t;
+				
+				if(outRecord != null) {
+					outRecord.set(tmp);
+				}
+			}
+			
+			if(rightChild.intersect(tmp, ray, anyIntersection)) {
+				ret = true;
+				
+				if(outRecord != null) {
+					outRecord.set(tmp);
+				}
+			}
+			
+			return ret;
 		}
-	}
-	
-	/** 
-	 * Check if the ray intersects this bounding box.
-	 * @param ray
-	 * @return true if ray intersects this bounding box
-	 */
-	private boolean isIntersect(Ray ray)
-	{
-		// TODO(B): fill in this function.
-		// Hint: reuse your code from box intersection.
-		return false;
 	}
 }
 
