@@ -42,6 +42,20 @@ public class Glazed extends Shader {
 	public void shade(Color outColor, Scene scene, ArrayList<Light> lights, Vector3 toEye, 
 			IntersectionRecord record, int depth, double contribution, boolean internal) {
 		// TODO(B): fill in this function.
-		//Implement Fresnel equations, make a new Workspace and recursive call to shadeRay  
+		//Implement Fresnel equations, make a new Workspace and recursive call to shadeRay
+		
+		// r = 2(n.v)n - v
+		double d = 2.0*(record.normal.dot(toEye));
+		Vector3 reflectedRay = new Vector3();
+		reflectedRay.set(record.normal);
+		reflectedRay.scale(d);
+		reflectedRay.sub(toEye);
+		
+		
+		
+		
+		
+		
+		
 	}
 }

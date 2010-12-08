@@ -137,7 +137,6 @@ public class TriangleMesh extends Surface {
 		tMatTInv.rightMultiply(record.normal);
 		record.normal.normalize();
 		
-		
 		return true;
 	}
 	
