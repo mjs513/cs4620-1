@@ -46,7 +46,7 @@ public class Scene {
 	public void setSamples(int n) {	samples = (int)Math.round(Math.sqrt(n)); }
 	
 	// TODO(B): change AABBFake to AABB when you have implemented AABB
-	protected AABBFake aabbTree;
+	protected AABB aabbTree;
 	
 	/**
 	 * Work space for an intersection record needed in the
@@ -70,8 +70,8 @@ public class Scene {
 			surfaceArray[count++] = iter.next();
 		
 		// TODO(B): change AABBFake to AABB when you have implemented AABB
-		AABBFake.setSurfaces(surfaceArray);
-		aabbTree = AABBFake.createTree(0, surfaceArray.length);
+		AABB.setSurfaces(surfaceArray);
+		aabbTree = AABB.createTree(0, surfaceArray.length);
 	}
 	
 	/**

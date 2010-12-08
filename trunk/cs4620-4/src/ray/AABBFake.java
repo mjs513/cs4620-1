@@ -35,6 +35,8 @@ public class AABBFake {
 	}
 
 	IntersectionRecord tmp = new IntersectionRecord();
+	Ray ray = new Ray();
+	
 	/**
 	 * Set outRecord to the first intersection of ray with the scene. Return true
 	 * if there was an intersection and false otherwise. If no intersection was
@@ -45,11 +47,14 @@ public class AABBFake {
 	 * @param anyIntersection if true, will immediately return when found an intersection
 	 * @return true if and intersection is found.
 	 */
-	public boolean intersect(IntersectionRecord outRecord, Ray rayIn, boolean anyIntersection) {
+	public boolean intersect(IntersectionRecord outRecord, Ray rayIn, boolean anyIntersection)
+	{
 		boolean ret = false;
-		Ray ray = new Ray(rayIn.origin, rayIn.direction);
+		
+		ray.set(rayIn.origin, rayIn.direction);
 		ray.start = rayIn.start;
 		ray.end = rayIn.end;
+		
 		for(int i = left; i < right; i++) {
 			if(surfaces[i].intersect(tmp, ray) && (tmp.t < ray.end) && (tmp.t > ray.start) ) {
 				if(anyIntersection) return true;
@@ -59,6 +64,7 @@ public class AABBFake {
 					outRecord.set(tmp);
 			}
 		}
+		
 		return ret;
 	}
 }

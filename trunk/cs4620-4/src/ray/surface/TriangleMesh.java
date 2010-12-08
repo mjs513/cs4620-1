@@ -68,7 +68,20 @@ public class TriangleMesh extends Surface {
 		v21.sub(p2, p1);
 		v31.sub(p3, p1);
 		planeN.cross(v21, v31);
+		
+		int domAxis = -1;
+		double maxAxis = Double.NEGATIVE_INFINITY;
+		
+		for(int i = 0; i < 3; ++i) {
+			double x = Math.abs(planeN.getE(i));
+			
+			if(x > maxAxis) {
+				maxAxis = x;
+				domAxis = i;
+			}
+		}
 
+		int i1 = (domAxis + 1)%3, i2 = (domAxis + 2)%3;
 		double t;
 		
 		// t = dot(planeN, planeP - rayP)/dot(planeN, rayD)
@@ -76,37 +89,22 @@ public class TriangleMesh extends Surface {
 		t = planeN.dot(v)/planeN.dot(ray.direction);
 		
 		ray.evaluate(p, t);
+		
+		double a1, a2, a3;
+		double p1x = p1.getE(i1), p1y = p1.getE(i2), p2x = p2.getE(i1), p2y = p2.getE(i2);
+		double p3x = p3.getE(i1), p3y = p3.getE(i2), px = p.getE(i1), py = p.getE(i2);
+		double detT = (p1x - p3x)*(p2y - p3y) - (p2x - p3x)*(p1y - p3y);
+		
+		a1 = ((p2y - p3y)*(px - p3x) + (p3x - p2x)*(py - p3y))/detT;
+		a2 = ((p3y - p1y)*(px - p3x) + (p1x - p3x)*(py - p3y))/detT;
+		a3 = 1 - a1 - a2;
 		/*
-		// v[i] = p[i] - p
-		v1.sub(p1, p);
-		v2.sub(p2, p);
-		v3.sub(p3, p);
-		
-		// Test if point is inside: dot(planeN, cross(v[i], v[i + 1])) >= 0
-		// i = 1
-		v.cross(v1, v2);
-		if(planeN.dot(v) < 0) {
-			return false;
-		}
-		
-		// i = 2
-		v.cross(v2, v3);
-		if(planeN.dot(v) < 0) {
-			return false;
-		}
-		
-		// i = 3
-		v.cross(v3, v1);
-		if(planeN.dot(v) < 0) {
-			return false;
-		}*/
-		
 		double a1, a2, a3;
 		double detT = (p1.x - p3.x)*(p2.y - p3.y) - (p2.x - p3.x)*(p1.y - p3.y);
 		
 		a1 = ((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y))/detT;
 		a2 = ((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y))/detT;
-		a3 = 1 - a1 - a2;
+		a3 = 1 - a1 - a2;*/
 		
 		// Barycentric coordinates must sum 1 and be all positive
 		if((a1 < 0) || (a2 < 0) || (a3 < 0)) {
@@ -118,21 +116,31 @@ public class TriangleMesh extends Surface {
 		
 		rayIn.evaluate(record.location, record.t);
 		
-		// v[i] = a[i]*normal[i]
-		v1.set(owner.getNormal(index[0]));
-		v1.scale(a1);
+		// Use model's normals
+		if(owner.existsNormals()) {
+			Vector3 n1 = owner.getNormal(index[0]), n2 = owner.getNormal(index[1]), n3 = owner.getNormal(index[2]);
 
-		v2.set(owner.getNormal(index[1]));
-		v2.scale(a2);
+			// v[i] = a[i]*normal[i]
+			v1.set(n1);
+			v1.scale(a1);
 
-		v3.set(owner.getNormal(index[2]));
-		v3.scale(a3);
+			v2.set(n2);
+			v2.scale(a2);
+
+			v3.set(n3);
+			v3.scale(a3);
+			
+			// normal = sum(a[i]*normal[i]); i = 0,1,2
+			record.normal.set(0, 0, 0);
+			record.normal.add(v1);
+			record.normal.add(v2);
+			record.normal.add(v3);
+		}
 		
-		// normal = sum(a[i]*normal[i]); i = 0,1,2
-		record.normal.set(0, 0, 0);
-		record.normal.add(v1);
-		record.normal.add(v2);
-		record.normal.add(v3);
+		// Use plane's normal
+		else {
+			record.normal.set(planeN);
+		}
 		
 		tMatTInv.rightMultiply(record.normal);
 		record.normal.normalize();
@@ -143,6 +151,9 @@ public class TriangleMesh extends Surface {
 	public void computeBoundingBox()
 	{
 		Point3 min = new Point3(1,1,1), max = new Point3(1,1,1);
+		
+		min.scale(Double.POSITIVE_INFINITY);
+		max.scale(Double.NEGATIVE_INFINITY);
 		
 		for(int i = 0; i < 3; ++i) {
 			for(int j = 0; j < 3; ++j) {
