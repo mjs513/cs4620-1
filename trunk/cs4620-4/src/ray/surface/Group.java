@@ -105,10 +105,8 @@ public class Group extends Surface {
 	public void computeBoundingBox() {	}
 
 	public void appendRenderableSurfaces (ArrayList<Surface> in) {
-		System.out.println("appendRenderableSurfaces()");
 		for (Iterator<Surface> iter = objs.iterator(); iter.hasNext();) {
 			Surface s = iter.next();
-			System.out.println("  >> " + s);
 			s.appendRenderableSurfaces(in);
 		}
 	}
