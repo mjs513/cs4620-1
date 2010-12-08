@@ -157,5 +157,61 @@ public class Box extends Surface {
 		outAvg = new Point3(outMin);
 		outAvg.add(diff);
 	}
+
+	private static Vector3 stmin = new Vector3(), stmax = new Vector3();
+	private static Vector3 stfirst = new Vector3(), stsecond = new Vector3();
+	private static Vector3 sinv = new Vector3();
+	
+	public static boolean intersects(Ray ray, Point3 minPt, Point3 maxPt)
+	{
+		// t[i] = (planeP[i] - rayP[i])/rayD[i]
+		stmin.sub(minPt, ray.origin);
+		stmax.sub(maxPt, ray.origin);
+		
+		stmin.x /= ray.direction.x;
+		stmin.y /= ray.direction.y;
+		stmin.z /= ray.direction.z;
+		
+		stmax.x /= ray.direction.x;
+		stmax.y /= ray.direction.y;
+		stmax.z /= ray.direction.z;
+		
+		// Order intervals
+		for(int i = 0; i < 3; ++i) {
+			double tminv = stmin.getE(i), tmaxv = stmax.getE(i);
+
+			if(tminv < tmaxv) {
+				stfirst.setE(i, tminv);
+				stsecond.setE(i, tmaxv);
+			
+				// First normal is from min plane
+				sinv.setE(i, -1);
+			}
+			else {
+				stsecond.setE(i, tminv);
+				stfirst.setE(i, tmaxv);
+				
+				// First normal is from max plane
+				sinv.setE(i, 1);
+			}
+		}
+		
+		double maxtfirst = Double.NEGATIVE_INFINITY, mintsecond = Double.POSITIVE_INFINITY;
+		
+		// Intersect all t ranges found
+		for(int i = 0; i < 3; ++i) {
+			double tfv = stfirst.getE(i), tsv = stsecond.getE(i);
+			
+			if(tfv > maxtfirst) {
+				maxtfirst = tfv;
+			}
+			
+			if(tsv < mintsecond) {
+				mintsecond = tsv;
+			}
+		}
+		
+		return !((maxtfirst > mintsecond) || (mintsecond < 0));
+	}
 }
 
