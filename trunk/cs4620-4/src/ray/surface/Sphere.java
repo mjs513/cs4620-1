@@ -88,8 +88,19 @@ public class Sphere extends Surface
 	
 	public void computeBoundingBox()
 	{
-		// TODO(B): Compute the bounding box and store the result in
-		// averagePosition, minBound, and maxBound.
+		Point3 min = new Point3(center), max = new Point3(center);
+		Vector3 v = new Vector3(radius, radius, radius);
+
+		// min = center - (R,R,R)
+		// max = center + (R,R,R)
+		min.sub(v);
+		max.add(v);
+		
+		minBound = new Point3();
+		maxBound = new Point3();
+		averagePosition = new Point3();
+		
+		Box.boundingBoxOfTransformedBox(min, max, tMat, minBound, maxBound, averagePosition);
 	}
 	
 	/**

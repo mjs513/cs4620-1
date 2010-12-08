@@ -2,6 +2,7 @@ package ray.surface;
 
 import ray.IntersectionRecord;
 import ray.Ray;
+import ray.math.Matrix4;
 import ray.math.Point3;
 import ray.math.Vector3;
 
@@ -100,10 +101,11 @@ public class Box extends Surface {
 
 	public void computeBoundingBox()
 	{
-		// TODO(B): Compute the bounding box and store the result in
-		// averagePosition, minBound, and maxBound.
-		// Hint: The bounding box is not the same as just minPt and maxPt, because 
-		// this object can be transformed by a transformation matrix.
+		minBound = new Point3();
+		maxBound = new Point3();
+		averagePosition = new Point3();
+		
+		boundingBoxOfTransformedBox(minPt, maxPt, tMat, minBound, maxBound, averagePosition);
 	}
 	
 	/**
@@ -111,6 +113,49 @@ public class Box extends Surface {
 	 */
 	public String toString() {
 		return "Box ";
+	}
+	
+	public static void boundingBoxOfTransformedBox(Point3 boxMin, Point3 boxMax, Matrix4 m, Point3 outMin,
+			Point3 outMax, Point3 outAvg)
+	{
+		Point3[] minmax = { boxMin, boxMax };
+		
+		outMin.set(1,1,1);
+		outMin.scale(Double.POSITIVE_INFINITY);
+		
+		outMax.set(1,1,1);
+		outMax.scale(Double.NEGATIVE_INFINITY);
+		
+		// Transform each point of the cube and get axis aligned min and max values
+		for(int i = 0; i <= 1; ++i) {
+			for(int j = 0; j <= 1; ++j) {
+				for(int k = 0; k <= 1; ++k) {
+					Point3 p = new Point3(minmax[i].x, minmax[j].y, minmax[k].z);
+					
+					m.rightMultiply(p);
+					
+					for(int l = 0; l < 3; ++l) {
+						double x = p.getE(l);
+						
+						if(x < outMin.getE(l)) {
+							outMin.setE(l, x);
+						}
+						
+						if(x > outMax.getE(l)) {
+							outMax.setE(l, x);
+						}
+					}
+				}
+			}
+		}
+		
+		Vector3 diff = new Vector3();
+		
+		// avg = min + (max - min)/2
+		diff.sub(outMax, outMin);
+		diff.scale(0.5);
+		outAvg = new Point3(outMin);
+		outAvg.add(diff);
 	}
 }
 

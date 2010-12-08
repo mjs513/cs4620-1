@@ -51,7 +51,7 @@ public class AABBFake {
 		ray.start = rayIn.start;
 		ray.end = rayIn.end;
 		for(int i = left; i < right; i++) {
-			if(surfaces[i].intersect(tmp, ray) && tmp.t < ray.end ) {
+			if(surfaces[i].intersect(tmp, ray) && (tmp.t < ray.end) && (tmp.t > ray.start) ) {
 				if(anyIntersection) return true;
 				ret = true;
 				ray.end = tmp.t;
