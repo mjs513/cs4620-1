@@ -70,18 +70,23 @@ public class Sphere extends Surface
 		if(t1 < 0) {
 			return false;
 		}
-		
-		rayIn.evaluate(p, t1);
+
+		outRecord.t = t1;
+		rayIn.evaluate(outRecord.location, outRecord.t);
 		
 		outRecord.surface = this;
-		outRecord.t = t1;
-		outRecord.location.set(p);
 		
-		// n = p - center
+		ray.evaluate(p, t1);
+		
+		// n = p - center   (in object coords(
 		v.sub(p, center);
 		v.normalize();
 		
 		outRecord.normal.set(v);
+		
+		// Transform normal to world coords and normalize
+		tMatTInv.rightMultiply(outRecord.normal);
+		outRecord.normal.normalize();
 		
 		return true;
 	}
