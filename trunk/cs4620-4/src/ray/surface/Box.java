@@ -95,6 +95,9 @@ public class Box extends Surface {
 		
 		record.normal.set(0, 0, 0);
 		record.normal.setE(firstAxis, inv.getE(firstAxis));
+		
+		tMatTInv.rightMultiply(record.normal);
+		record.normal.normalize();
 
 		return true;
 	}
