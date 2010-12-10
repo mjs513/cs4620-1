@@ -73,10 +73,10 @@ public class Glazed extends Shader {
 		}
 		
 		if(schlick > 0) {
-			RayTracer.shadeRay(workspace.rayColor, scene, ray, workspace, lights, depth + 1, contribution, internal);
+			RayTracer.shadeRay(workspace.rayColor, scene, ray, workspace, lights, depth + 1, contribution*schlick, internal);
 		}
 		
-		substrate.shade(outColor, scene, lights, toEye, record, depth, contribution, internal);
+		substrate.shade(outColor, scene, lights, toEye, record, depth, contribution*schlick, internal);
 		
 		workspace.rayColor.scale(schlick);
 		outColor.scale(1 - schlick);
